@@ -1,5 +1,5 @@
 {
-  "app.name": "Ateşböceği Korusu",
+  "app.name": "Glowjar",
   "hud.perJar": "{{count}}/{{capacity}}",
   "zone.1": "Karanlık Koru",
   "zone.2": "Sisli Bataklık",

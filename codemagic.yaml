@@ -16,8 +16,8 @@ workflows:
         distribution_type: app_store
         bundle_identifier: com.atesbocegi.game
       vars:
-        XCODE_WORKSPACE: Atesbocegi.xcworkspace
-        XCODE_SCHEME: Atesbocegi
+        XCODE_WORKSPACE: Glowjar.xcworkspace
+        XCODE_SCHEME: Glowjar
         # Test build'lerinde FPS sayacını göster (mağaza sürümünde 0 yapılacak).
         EXPO_PUBLIC_SHOW_FPS: "1"
         # Test build'lerinde Google test reklamları (mağaza sürümünde kaldırılacak).

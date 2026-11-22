@@ -1,4 +1,4 @@
-# Ateşböceği
+# Glowjar (Ateşböceği)
 
 2D idle/incremental ateşböceği toplama oyunu. Expo + React Native + Skia.
 

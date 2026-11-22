@@ -1,5 +1,5 @@
 {
-  "app.name": "Firefly Grove",
+  "app.name": "Glowjar",
   "hud.perJar": "{{count}}/{{capacity}}",
   "zone.1": "Dark Grove",
   "zone.2": "Misty Marsh",

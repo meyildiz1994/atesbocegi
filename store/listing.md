@@ -4,7 +4,7 @@ Sınırlar: App Store adı 30, alt başlık 30, tanıtım metni 170, anahtar kel
 
 ## English
 
-**App name (App Store / Google Play):** Firefly Grove: Idle Light
+**App name (App Store / Google Play):** Glowjar: Idle Fireflies
 
 **Subtitle (App Store):** Gather fireflies, light the night
 
@@ -33,7 +33,7 @@ Put your phone down for a while and come back to a jar full of light.
 
 ## Türkçe
 
-**Uygulama adı:** Ateşböceği Korusu: Işık Topla
+**Uygulama adı:** Glowjar: Ateşböceği Topla
 
 **Alt başlık (App Store):** Ateşböceği topla, geceyi aydınlat
 
