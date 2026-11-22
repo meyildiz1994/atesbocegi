@@ -124,9 +124,9 @@ describe('statlar', () => {
 describe('bölgeler ve prestij', () => {
   it('bölge açılma eşikleri', () => {
     expect(unlockedZoneCount(0)).toBe(1);
-    expect(unlockedZoneCount(4_999)).toBe(1);
-    expect(unlockedZoneCount(5_000)).toBe(2);
-    expect(unlockedZoneCount(2e8)).toBe(5);
+    expect(unlockedZoneCount(1_999)).toBe(1);
+    expect(unlockedZoneCount(2_000)).toBe(2);
+    expect(unlockedZoneCount(3e7)).toBe(5);
   });
   it('Yıldız Tozu = floor(sqrt(ışık/1e6))', () => {
     expect(canPrestige(PRESTIGE.unlockAt - 1)).toBe(false);

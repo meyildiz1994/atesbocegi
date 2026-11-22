@@ -2,22 +2,33 @@ import { useEffect, useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { COLORS, UI, ZONES } from "../config/balance";
+import { COLORS, RATE_WINDOW_SECONDS, UI, ZONES } from "../config/balance";
 import { unlockedZoneCount } from "../game/economy";
 import { formatNumber } from "../game/numbers";
-import { lightPerSecond, useGame, useStats } from "../game/state";
+import { lightPerSecond, statsOf, useGame, useStats } from "../game/state";
 import { TUTORIAL_STEP } from "../game/tutorial";
 import { t, type I18nKey } from "../i18n";
 import { UI_ICONS } from "./icons";
 
-/** Işık/sn göstergesi: saniyede bir yeniden hesaplanır. */
+/**
+ * Işık/sn göstergesi: yakalanan böceklerin değeri de sayılır (kavanoz boşaltılmasa da artar).
+ * Her saniye "kazanılmış + kavanozdaki" Işık örneklenir; son pencere üzerinden ortalama alınır.
+ */
 function useLightPerSecond(): number {
   const [rate, setRate] = useState(0);
   useEffect(() => {
-    const id = setInterval(
-      () => setRate(lightPerSecond(useGame.getState(), Date.now())),
-      1000,
-    );
+    const samples: [number, number][] = [];
+    const id = setInterval(() => {
+      const s = useGame.getState();
+      const now = Date.now();
+      const potential = s.lifetimeLight + s.jarCount * statsOf(s).valuePerFirefly;
+      samples.push([now, potential]);
+      while (samples.length > 1 && now - samples[0]![0] > RATE_WINDOW_SECONDS * 1000) samples.shift();
+      const first = samples[0]!;
+      const dt = (now - first[0]) / 1000;
+      // Kavanoz boşalınca boost çarpanı sıçrama yapabilir; negatif farkı (Şafak) sıfırla.
+      setRate(dt > 0 ? Math.max(0, (potential - first[1]) / dt) : lightPerSecond(s, now));
+    }, 1000);
     return () => clearInterval(id);
   }, []);
   return rate;

@@ -135,3 +135,5 @@ Belirsiz kalan konularda en basit makul seçenek uygulandı. Değiştirmek isted
 93. Alt çubuk: kavanoz tam ortada; iki yanında yazısız, yuvarlak ikon butonlar (Mağaza, Şafak | Yükseltmeler, Ayarlar). Ayarlar üstten alta taşındı. Alınabilir yükseltme sayısı ve hazır Şafak için rozet.
 94. Onboarding'e ikon tanıtımı adımı eklendi (adım 5, bitiş 6): dört ikon sırayla vurgulanır, "Başla" ile biter. Eski kayıtlar da tanıtımı bir kez görür.
 95. Üst bilgi: bölge adı oklarla birlikte panel kapsülde; kilitli sonraki bölge için ilerleme çubuğu ve "1.2M / 5.0M Işık"; Işık/sn ve kavanoz sayısı küçük kapsüllerde.
+96. Tempo (Emre: "yarım saattir 5M'ye ulaşmaya çalışıyorum, sıkıldım"): bölge eşikleri 2K / 100K / 2M / 30M (önce 5K / 150K / 5M / 200M); böcek doğma hızı 5/sn (önce 3), Kalabalık Orman seviye başına +%20 doğma (önce +%10). Yeni hedefler: Bölge 2 ~3 dk, Bölge 3 ~8 dk, Şafak ~18 dk, Bölge 4 ~26 dk, ilk Şafak ~1 saat (simülasyon hedefte).
+97. Işık/sn göstergesi artık kavanoza yakalanan böcekleri de sayar (önce yalnızca kavanoz boşaltınca artıyordu, bu yüzden çoğu zaman 0/sn görünüyordu).
