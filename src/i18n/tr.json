@@ -1,1 +1,12 @@
-{ "app.name": "Ateşböceği Korusu" }
+{
+  "app.name": "Ateşböceği Korusu",
+  "hud.perJar": "{{count}}/{{capacity}}",
+  "zone.1": "Karanlık Koru",
+  "zone.2": "Sisli Bataklık",
+  "zone.3": "Mantar Vadisi",
+  "zone.4": "Kristal Mağara",
+  "zone.5": "Gök Kanyonu",
+  "hint.drag": "Sürükle ve topla",
+  "hint.tapJar": "Kavanoza dokun",
+  "a11y.jar": "Kavanoz, {{capacity}} böcekten {{count}} tanesi dolu. Boşaltmak için dokun."
+}

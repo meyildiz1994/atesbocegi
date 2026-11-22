@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { COLORS, DEV } from '../config/balance';
+import { useGame } from '../game/state';
 
 /**
  * Yalnızca geliştirme modunda gösterilen FPS sayacı.
@@ -13,6 +14,7 @@ import { COLORS, DEV } from '../config/balance';
 export function FpsOverlay() {
   const insets = useSafeAreaInsets();
   const [fps, setFps] = useState(0);
+  const active = useGame((s) => s.activeFireflies);
   const frames = useSharedValue(0);
   const windowStart = useSharedValue(0);
 
@@ -30,7 +32,9 @@ export function FpsOverlay() {
 
   return (
     <View pointerEvents="none" style={[styles.box, { top: insets.top + 4 }]}>
-      <Text style={styles.text}>{fps} FPS</Text>
+      <Text style={styles.text}>
+        {fps} FPS · {active} 🪲
+      </Text>
     </View>
   );
 }

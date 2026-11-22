@@ -17,3 +17,15 @@ Belirsiz kalan konularda en basit makul seçenek uygulandı. Değiştirmek isted
 11. **Test dağıtımı Codemagic + TestFlight** (Emre'de Xcode/Android Studio yok). `codemagic.yaml` her `main` push'unda typecheck/test/lint çalıştırır, `expo prebuild` ile iOS projesini üretir, IPA'yı imzalayıp TestFlight'a yükler. `ios/` ve `android/` klasörleri depoya girmez (CNG). Build numarası Codemagic'in `BUILD_NUMBER`'ı.
 12. **FPS sayacı test build'lerinde de açık**: `EXPO_PUBLIC_SHOW_FPS=1` (Codemagic'te ayarlı). Mağaza sürümünde kapatılacak.
 13. **Görsel stil: yumuşak ışık** (Emre seçti). Kodla çizilen gradyan ve additive glow; piksel-art yok. Referanslar (bataklık sahnesi, amber orman fotoğrafı) yalnızca atmosfer ve palet için.
+
+## Faz 2
+
+14. **Simülasyon tek bir `SharedValue<SimState>` içinde, düz sayı dizileriyle** tutulur ve UI thread'de `useFrameCallback` içinde `modify(..., true)` ile yerinde güncellenir. React state her karede değişmez; HUD'a saniyede 10 kez veri gider (`UI.hudUpdatesPerSecond`).
+15. **Böcekler tek `Atlas` ile çizilir** (tek draw call). Doku: kodla çizilen radyal glow (parlak çekirdek + soluk hale tek dokuda). Renk ve yanıp sönme `colors` buffer'ı ve `modulate` ile, sahneye `plus` (additive) blend ile basılır. Ayrı iki katmanlı glow Faz 5'te değerlendirilecek.
+16. **Buffer kapasitesi 1.600** (`SIM.capacity`). Ölü böcekler ekran dışına, sıfır ölçekle yazılır.
+17. **Rastgelelik deterministik LCG** (state içinde tohum). Testlerde tekrarlanabilir; oyunda tohum açılış zamanından gelir.
+18. **Uçuştaki böcekler kavanozda yer ayırır**, böylece kavanoz taşmaz. Kavanoz doluyken halka böcek yakalamaz.
+19. **Toplama alanı ekranın üst %78'i** (`SIM.playAreaBottom`), kavanozun üstü. Böcekler kenara yaklaşınca merkeze döner.
+20. **Ağaç siluetleri prosedürel** (sabit tohumlu çam sıraları, 3 katman + çimen). Aydınlık arttıkça gradyan açılır ve siluetin bir kopyası 1.5 px yukarıda, arkada çizilerek üst kenarlar ışık alır.
+21. **Web önizlemesi** (`index.web.ts`, CanvasKit) yalnızca geliştirme ve otomatik ekran görüntüsü testi içindir; mağaza hedefi değil. `package.json` `main` alanı platform uzantısı çözülebilsin diye `index` yapıldı.
+22. **i18n** için küçük bir `t()` fonksiyonu yazıldı (bağımlılık yok). Varsayılan dil İngilizce; cihaz dili ve ayar Faz 11'de.

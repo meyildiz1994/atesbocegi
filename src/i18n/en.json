@@ -1,1 +1,12 @@
-{ "app.name": "Firefly Grove" }
+{
+  "app.name": "Firefly Grove",
+  "hud.perJar": "{{count}}/{{capacity}}",
+  "zone.1": "Dark Grove",
+  "zone.2": "Misty Marsh",
+  "zone.3": "Mushroom Valley",
+  "zone.4": "Crystal Cave",
+  "zone.5": "Sky Canyon",
+  "hint.drag": "Drag to gather",
+  "hint.tapJar": "Tap the jar",
+  "a11y.jar": "Jar, {{count}} of {{capacity}} fireflies. Tap to empty."
+}

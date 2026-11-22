@@ -24,6 +24,7 @@ Expo Go **desteklenmez** (MMKV ve ileride reklam/satın alma native modülleri y
 | `npm run typecheck` | TypeScript kontrolü (strict) |
 | `npm test` | Jest birim testleri |
 | `npm run lint` | ESLint |
+| `npm run web:export` | Web önizleme build'i (`dist/`), yalnızca geliştirme için |
 
 ## Yapı
 
