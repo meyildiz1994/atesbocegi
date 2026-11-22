@@ -97,3 +97,13 @@ Belirsiz kalan konularda en basit makul seçenek uygulandı. Değiştirmek isted
 67. **Kimlik:** rastgele cihaz kimliği (UUID); kişisel bilgi, reklam kimliği ya da konum gönderilmez. Her olaya platform ve uygulama sürümü eklenir.
 68. **Olay listesi:** `tutorial_step`, `tutorial_complete`, `upgrade_purchased` (id, seviye, oyun süresi), `skill_purchased`, `zone_unlocked`, `prestige` (kaçıncı, Yıldız Tozu, oyun süresi), `ad_offer_shown` / `ad_watched` (yer), `golden_caught`, `iap_view` / `iap_purchase`, `session_start` / `session_end` (süre).
 69. **Debug görünümü:** test build'lerinde FPS yazısına basılı tutunca son 60 olay ve gönderim durumu listelenir.
+
+## Faz 10
+
+70. **Sonuç (`npm run simulate`, aktif oynayan sanal oyuncu):** Bölge 2 7:39, Bölge 3 24:46, Bölge 4 2s 01dk, ilk Şafak 3s 50dk. Dördü de ±%20 içinde, üçü tam hedefte. #35'teki kaçak ekonomi çözüldü.
+71. **Bölge çarpanları ×4 / ×15 / ×60 / ×250 → ×3 / ×8 / ×20 / ×50.** Spec'teki eşiklerle (5K, 150K, 5M, 200M) spec çarpanları birlikte hedeflere matematiksel olarak ulaşamıyordu: Bölge 2'yi 23 dakikada geçecek gelir ×15'le çarpılınca 5M'e yükseltme almadan bile ~3 saatten kısa sürede varılıyor. Eşikleri oyuncu ekranda gördüğü için onları korudum, çarpanları düşürdüm.
+72. **Kalabalık Orman'ın doğma hızı artık katlanmıyor**, toplanıyor (seviye başına tabanın +%10'u). ×1.1^seviye, 80 seviyede doğma hızını 2.000 katına çıkarıp ekonomiyi kaçırıyordu.
+73. **Maliyet büyümeleri:** Parlak Böcekler 1.35 → 2.1, Kalabalık Orman 1.25 → 1.8, Işık Ruhu 1.5 → 2.4 (taban 500 → 300, ilk ruh ~5. dk). Başlangıç doğma hızı 2.5 → 3. Halka, Kavanoz ve Mıknatıs aynı.
+74. **"İlk Şafak" tanımı:** Şafak 1M'de açılır (spec), ama sanal oyuncu 5 Yıldız Tozu kazanacakken (koşuda 25M Işık) yapar. 1M'de yapmak yalnızca 1 Toz verdiği için gerçek oyuncu için de mantıklı an budur. Şafak düğmesi 47. dakikada belirir.
+75. **Sınırlar:** sanal oyuncu hiç durmadan, kusursuz oynuyor. Gerçek oyuncu daha yavaş ilerler ama offline kazanç, ×2 Işık ve Altın Ateşböceği bunu kısmen dengeler. Soft launch'ta gerçek verilerle (analitik) yeniden ayarlanmalı. Bot Mıknatıs'ı hiç almıyor (tahmin fonksiyonu değerini düşük görüyor); oyuncular için faydalı, değiştirmedim.
+76. **Ayar denemesi:** `BALANCE_OVERRIDES='{"UPGRADES":{"bright":{"growth":2}}}' SIM_QUIET=1 npm run simulate` ile balance.ts'e dokunmadan değerler denenebilir.

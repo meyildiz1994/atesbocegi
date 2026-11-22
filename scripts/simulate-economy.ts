@@ -8,12 +8,41 @@
  * Çalıştırma:  npm run simulate            (varsayılan 300 dk)
  *              npm run simulate -- 20       (ilk 20 dk)
  */
-import { BOT, UPGRADE_ORDER, ZONES, type UpgradeId } from '../src/config/balance';
-import { canPrestige, levelsLeft, spiritLightPerSecond, unlockedZoneCount, upgradeCost, type Stats } from '../src/game/economy';
+import { BALANCE_TARGETS, BOT, UPGRADE_ORDER, ZONES, type UpgradeId } from '../src/config/balance';
+import {
+  canPrestige,
+  levelsLeft,
+  spiritLightPerSecond,
+  stardustForPrestige,
+  unlockedZoneCount,
+  upgradeCost,
+  type Stats,
+} from '../src/game/economy';
 import { formatNumber } from '../src/game/numbers';
 import { createSimState, STATUS_FREE, stepSimulation } from '../src/game/simulation';
 import { statsOf, useGame } from '../src/game/state';
 import { advanceTutorial, TUTORIAL_STEP, tutorialFireflyCap } from '../src/game/tutorial';
+
+import * as BALANCE from '../src/config/balance';
+
+/**
+ * Ayar denemesi için: BALANCE_OVERRIDES='{"UPGRADES":{"bright":{"growth":1.5}}}' gibi bir JSON
+ * balance.ts değerlerinin üzerine yazılır (yalnızca bu çalıştırmada).
+ */
+function deepAssign(target: Record<string, unknown>, src: Record<string, unknown>): void {
+  for (const [k, v] of Object.entries(src)) {
+    const cur = target[k];
+    if (v && typeof v === 'object' && !Array.isArray(v) && cur && typeof cur === 'object') {
+      deepAssign(cur as Record<string, unknown>, v as Record<string, unknown>);
+    } else {
+      target[k] = v;
+    }
+  }
+}
+if (process.env.BALANCE_OVERRIDES) {
+  deepAssign(BALANCE as unknown as Record<string, unknown>, JSON.parse(process.env.BALANCE_OVERRIDES) as Record<string, unknown>);
+}
+const QUIET = process.env.SIM_QUIET === '1';
 
 const minutes = Number(process.argv[2] ?? BOT.defaultMinutes);
 const DT = BOT.dt;
@@ -42,6 +71,10 @@ const sim = createSimState();
 const events: { t: number; what: string }[] = [];
 const log = (t: number, what: string) => events.push({ t, what });
 const firstBuy = new Set<UpgradeId>();
+const milestones = new Map<string, number>();
+const mark = (t: number, label: string) => {
+  if (!milestones.has(label)) milestones.set(label, t);
+};
 let zonesSeen = 1;
 let prestigeLogged = false;
 let tutorialStep: number = TUTORIAL_STEP.drag;
@@ -58,7 +91,7 @@ const fmtTime = (t: number) => {
   return m >= 60 ? `${Math.floor(m / 60)}s ${String(m % 60).padStart(2, '0')}dk` : `${m}:${String(s).padStart(2, '0')}`;
 };
 
-for (let t = 0; t < minutes * 60; t += DT) {
+for (let t = 0; t < minutes * 60 && !milestones.has('İlk Şafak'); t += DT) {
   const s = store.getState();
   const st = statsOf(s);
 
@@ -148,7 +181,11 @@ for (let t = 0; t < minutes * 60; t += DT) {
     // Bölge
     const unlocked = unlockedZoneCount(g.runLight);
     if (unlocked > zonesSeen) {
-      for (let z = zonesSeen; z < unlocked; z++) log(t, `Bölge ${z + 1} açıldı`);
+      for (let z = zonesSeen; z < unlocked; z++) {
+        const lv = UPGRADE_ORDER.map((id) => `${id[0]}${g.levels[id]}`).join(' ');
+        log(t, `Bölge ${z + 1} açıldı  (~${formatNumber(estimateRate(statsOf(g)))}/sn, ${lv})`);
+        mark(t, `Bölge ${z + 1}`);
+      }
       zonesSeen = unlocked;
     }
     if (g.zoneIndex !== unlocked - 1) {
@@ -186,10 +223,31 @@ for (let t = 0; t < minutes * 60; t += DT) {
       prestigeLogged = true;
       log(t, 'Şafak (prestij) açıldı');
     }
+    // İlk Şafak: kazanılacak Yıldız Tozu BOT.prestigeAtDust'a ulaşınca.
+    if (!milestones.has('İlk Şafak') && stardustForPrestige(store.getState().runLight) >= BOT.prestigeAtDust) {
+      const dust = store.getState().prestige();
+      log(t, `İlk Şafak: +${dust} Yıldız Tozu`);
+      mark(t, 'İlk Şafak');
+      zonesSeen = 1;
+      jarCount = 0;
+    }
   }
 }
 
 const end = store.getState();
+const fmtMin = (t: number | undefined) => (t === undefined ? '—' : fmtTime(t));
+console.log('\nHedefler (±%20 tolerans):');
+console.log('Olay        Hedef         Sonuç      Durum');
+for (const g of BALANCE_TARGETS) {
+  const t = milestones.get(g.label);
+  const m = t === undefined ? undefined : t / 60;
+  const ok = m !== undefined && m >= g.min * 0.8 && m <= g.max * 1.2;
+  const strict = m !== undefined && m >= g.min && m <= g.max;
+  console.log(
+    `${g.label.padEnd(10)}  ${`${g.min}–${g.max} dk`.padEnd(12)}  ${fmtMin(t).padEnd(9)}  ${strict ? 'hedefte' : ok ? '±%20 içinde' : 'DIŞINDA'}`,
+  );
+}
+if (!QUIET) {
 console.log(`\nAteşböceği denge simülasyonu: ${minutes} dk, dt=${DT}s\n`);
 console.log('Zaman      Olay');
 console.log('---------  ------------------------------');
@@ -199,3 +257,4 @@ console.log(`  Işık ${formatNumber(end.light)}, bu koşu ${formatNumber(end.ru
 console.log(
   '  Seviyeler: ' + UPGRADE_ORDER.map((id) => `${id} ${end.levels[id]}`).join(', '),
 );
+}

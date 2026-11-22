@@ -48,7 +48,7 @@ describe('maliyetler', () => {
   it('taban * büyüme^n', () => {
     expect(upgradeCost('ring', 0)).toBe(10);
     expect(upgradeCost('ring', 2)).toBeCloseTo(10 * 1.15 ** 2);
-    expect(upgradeCost('spirit', 0)).toBe(500);
+    expect(upgradeCost('spirit', 0)).toBe(UPGRADES.spirit.baseCost);
   });
   it('toplu maliyet tek tek toplamla aynı', () => {
     const ids: UpgradeId[] = ['ring', 'jar', 'bright', 'crowd', 'spirit', 'magnet'];

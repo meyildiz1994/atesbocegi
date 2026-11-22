@@ -57,7 +57,7 @@ export const START = {
   valuePerFirefly: 1,
   maxFireflies: 30,
   /** Saniyede kaç yeni ateşböceği doğar (eksik varsa). */
-  spawnRate: 2.5,
+  spawnRate: 3,
 } as const;
 
 /** Ateşböceği simülasyonu. */
@@ -194,7 +194,17 @@ export const BOT = {
   magnetWeight: 0.5,
   /** Kalabalık ormanın yakalamayı kolaylaştırma etkisi (kaba). */
   crowdBonusDivisor: 300,
+  /** Bot ilk Şafak'ı bu kadar Yıldız Tozu kazanacakken yapar. */
+  prestigeAtDust: 5,
 } as const;
+
+/** Faz 10 denge hedefleri (dk); simülasyon çıktısında karşılaştırılır, ±%20 tolerans. */
+export const BALANCE_TARGETS = [
+  { label: 'Bölge 2', min: 6, max: 8 },
+  { label: 'Bölge 3', min: 25, max: 35 },
+  { label: 'Bölge 4', min: 120, max: 180 },
+  { label: 'İlk Şafak', min: 180, max: 300 },
+] as const;
 
 export const UI = {
   /** HUD (React) en fazla saniyede kaç kez güncellenir. */
@@ -215,9 +225,9 @@ export const UI = {
 export const UPGRADES = {
   ring: { baseCost: 10, growth: 1.15, maxLevel: 60 },
   jar: { baseCost: 25, growth: 1.2, maxLevel: 200 },
-  bright: { baseCost: 50, growth: 1.35, maxLevel: 300 },
-  crowd: { baseCost: 100, growth: 1.25, maxLevel: 150 },
-  spirit: { baseCost: 500, growth: 1.5, maxLevel: 60 },
+  bright: { baseCost: 50, growth: 2.1, maxLevel: 300 },
+  crowd: { baseCost: 100, growth: 1.8, maxLevel: 150 },
+  spirit: { baseCost: 300, growth: 2.4, maxLevel: 60 },
   autoEmpty: { baseCost: 2_000, growth: 1, maxLevel: 1 },
   magnet: { baseCost: 5_000, growth: 1.4, maxLevel: 40 },
 } as const;
@@ -239,9 +249,9 @@ export const EFFECTS = {
   brightFlatLevels: 10,
   brightFlatStep: 1,
   brightPctAfter: 1.1,
-  /** Kalabalık Orman: seviye başına +10 böcek, doğma hızı ×1.1. */
+  /** Kalabalık Orman: seviye başına +10 böcek, doğma hızı tabanın +%10'u (toplamsal, katlanmaz). */
   crowdFireflies: 10,
-  crowdSpawnMult: 1.1,
+  crowdSpawnPerLevel: 0.1,
   /** Mıknatıs: çekim alanı = halka yarıçapı × (taban + seviye × artış), çekim hızı px/sn. */
   magnetRangeBase: 1.6,
   magnetRangePerLevel: 0.15,
@@ -316,10 +326,10 @@ export const OFFLINE = {
 /** Bölgeler. Açılma eşiği bu koşudaki toplam Işık'a bakar. */
 export const ZONES = [
   { id: 1, unlockAt: 0, multiplier: 1, fireflyColor: '#d8ff6a', targetLog: 6, bgTop: '#0a1020', bgLitTop: '#1d3a4a' },
-  { id: 2, unlockAt: 5_000, multiplier: 4, fireflyColor: '#b8ffd0', targetLog: 8, bgTop: '#0a1418', bgLitTop: '#2a4a48' },
-  { id: 3, unlockAt: 150_000, multiplier: 15, fireflyColor: '#ffd27a', targetLog: 10, bgTop: '#120c18', bgLitTop: '#3a2a4a' },
-  { id: 4, unlockAt: 5_000_000, multiplier: 60, fireflyColor: '#c8a8ff', targetLog: 12, bgTop: '#0c0a1e', bgLitTop: '#2a2a5a' },
-  { id: 5, unlockAt: 200_000_000, multiplier: 250, fireflyColor: '#ffb070', targetLog: 14, bgTop: '#080c1e', bgLitTop: '#3a3060' },
+  { id: 2, unlockAt: 5_000, multiplier: 3, fireflyColor: '#b8ffd0', targetLog: 8, bgTop: '#0a1418', bgLitTop: '#2a4a48' },
+  { id: 3, unlockAt: 150_000, multiplier: 8, fireflyColor: '#ffd27a', targetLog: 10, bgTop: '#120c18', bgLitTop: '#3a2a4a' },
+  { id: 4, unlockAt: 5_000_000, multiplier: 20, fireflyColor: '#c8a8ff', targetLog: 12, bgTop: '#0c0a1e', bgLitTop: '#2a2a5a' },
+  { id: 5, unlockAt: 200_000_000, multiplier: 50, fireflyColor: '#ffb070', targetLog: 14, bgTop: '#080c1e', bgLitTop: '#3a3060' },
 ] as const;
 
 /** Kayıt. */

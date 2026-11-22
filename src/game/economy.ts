@@ -169,7 +169,7 @@ export function computeStats(input: StatInput): Stats {
     jarCapacity: Math.floor(jar),
     valuePerFirefly: value * zone.multiplier * gm * (input.purchaseMultiplier ?? 1),
     maxFireflies: START.maxFireflies + EFFECTS.crowdFireflies * l.crowd,
-    spawnRate: START.spawnRate * Math.pow(EFFECTS.crowdSpawnMult, l.crowd),
+    spawnRate: START.spawnRate * (1 + EFFECTS.crowdSpawnPerLevel * l.crowd),
     spirits,
     spiritSpeed: SPIRIT.speed * (sk.kindredSpirit ? SKILL_EFFECTS.kindredSpiritSpeed : 1),
     autoEmpty: l.autoEmpty > 0,
