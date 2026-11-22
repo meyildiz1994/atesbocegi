@@ -2,7 +2,17 @@ import { useMemo } from 'react';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 
-import { OFFLINE, RATE_WINDOW_SECONDS, SKILLS, ZONES, type SkillId, type UpgradeId } from '../config/balance';
+import {
+  COLLECTION,
+  OFFLINE,
+  QUESTS,
+  RATE_WINDOW_SECONDS,
+  SKILLS,
+  ZONES,
+  type GardenId,
+  type SkillId,
+  type UpgradeId,
+} from '../config/balance';
 import {
   canBuySkill,
   canPrestige,
@@ -18,6 +28,18 @@ import {
   type Stats,
 } from './economy';
 import { boostMultiplier, extendBoost, purchaseMultiplier, type Purchases } from './monetization';
+import {
+  claimableCount,
+  collectionMultiplier,
+  countsAsFilled,
+  ensureDaily,
+  gardenCost,
+  gardenMaxed,
+  questProgress,
+  rollRare,
+  tokensForEmpty,
+  type MetaCounters,
+} from './meta';
 import { emptyLevels, newSave, type SaveData, type Settings } from './save';
 
 export type OfflineReport = { seconds: number; gain: number };
@@ -34,13 +56,15 @@ type Transient = {
   dawnCounter: number;
   /** Test build'lerinde performans denemesi: 0 değilse ekrandaki böcek sayısı bu olur. */
   stressFireflies: number;
+  /** Son bulunan nadir böcek (bildirim için); `n` her bulunuşta artar. */
+  lastRare: { id: string; n: number; duplicate: boolean } | null;
 };
 
 export type GameState = SaveData & Transient;
 
 export type GameActions = {
   /** Kavanozdaki `count` böceği ışığa çevirir, kazanılan Işık'ı döner. */
-  emptyJar: (count: number, now?: number) => number;
+  emptyJar: (count: number, now?: number, r1?: number, r2?: number) => number;
   setLiveStats: (jarCount: number, activeFireflies: number) => void;
   buyUpgrade: (id: UpgradeId) => boolean;
   setBuyMode: (mode: BuyMode) => void;
@@ -61,6 +85,13 @@ export type GameActions = {
   grantLight: (amount: number, now?: number) => void;
   setPurchases: (p: Purchases) => void;
   markInterstitial: (now: number) => void;
+  /** Altın böcek yakalandı (görev sayacı). */
+  noteGolden: () => void;
+  buyGarden: (id: GardenId) => boolean;
+  /** Gün değiştiyse yeni görevleri kurar. */
+  refreshDaily: (now: number) => void;
+  claimQuest: (i: number) => number;
+  claimChest: (now: number) => number;
   /** Kayıttan yükle. */
   hydrate: (data: SaveData) => void;
   resetProgress: (now: number) => void;
@@ -72,6 +103,7 @@ const transient = (): Transient => ({
   jarCount: 0,
   activeFireflies: 0,
   recentGains: [],
+  lastRare: null,
   buyMode: 1,
   dawnCounter: 0,
   stressFireflies: 0,
@@ -79,26 +111,59 @@ const transient = (): Transient => ({
 
 export const initialGameState = (now = Date.now()): GameState => ({ ...newSave(now), ...transient() });
 
-export function statsOf(
-  s: Pick<GameState, 'levels' | 'skills' | 'stardustEarned' | 'zoneIndex' | 'purchases'>,
-): Stats {
+type StatSource = Pick<GameState, 'levels' | 'skills' | 'stardustEarned' | 'zoneIndex' | 'purchases'> &
+  Partial<Pick<GameState, 'garden' | 'collection'>>;
+
+export function statsOf(s: StatSource): Stats {
   return computeStats({
     levels: s.levels,
     skills: s.skills,
     stardustEarned: s.stardustEarned,
     zoneIndex: s.zoneIndex,
     purchaseMultiplier: purchaseMultiplier(s.purchases),
+    garden: s.garden,
+    collectionMultiplier: collectionMultiplier(s.collection, s.zoneIndex),
   });
+}
+
+/** Görev sayaçları. */
+export function countersOf(s: Pick<GameState, 'jarsFilled' | 'goldenCaught' | 'upgradesBought' | 'raresFound' | 'playTimeSec'>): MetaCounters {
+  return {
+    jarsFilled: s.jarsFilled,
+    goldenCaught: s.goldenCaught,
+    upgradesBought: s.upgradesBought,
+    raresFound: s.raresFound,
+    playTimeSec: s.playTimeSec,
+  };
+}
+
+/** Alınmayı bekleyen görev ödülü sayısı. */
+export function selectClaimable(s: GameState): number {
+  return s.daily ? claimableCount(s.daily, countersOf(s)) : 0;
 }
 
 export const useGame = create<GameState & GameActions>()((set, get) => ({
   ...initialGameState(),
 
-  emptyJar: (count, now = Date.now()) => {
+  emptyJar: (count, now = Date.now(), r1 = Math.random(), r2 = Math.random()) => {
     const s = get();
     const st = statsOf(s);
     const gain = jarPayout(count, st.valuePerFirefly, boostMultiplier(now, s.boostUntil));
     if (gain <= 0) return 0;
+    // Kavanoz jetonu, görev sayacı ve nadir böcek.
+    let jarTokens = s.jarTokens + tokensForEmpty(count, st.jarCapacity);
+    const filled = countsAsFilled(count, st.jarCapacity);
+    const rare = rollRare(s.zoneIndex, count, st.jarCapacity, r1, r2);
+    let collection = s.collection;
+    let lastRare = s.lastRare;
+    let raresFound = s.raresFound;
+    if (rare) {
+      const duplicate = (collection[rare] ?? 0) > 0;
+      collection = { ...collection, [rare]: (collection[rare] ?? 0) + 1 };
+      if (duplicate) jarTokens += COLLECTION.duplicateTokens;
+      raresFound += 1;
+      lastRare = { id: rare, n: (lastRare?.n ?? 0) + 1, duplicate };
+    }
     const zoneLight = s.zoneLight.slice();
     zoneLight[s.zoneIndex] = (zoneLight[s.zoneIndex] ?? 0) + gain;
     const cutoff = now - RATE_WINDOW_SECONDS * 1000;
@@ -111,6 +176,11 @@ export const useGame = create<GameState & GameActions>()((set, get) => ({
       zoneLight,
       jarCount: 0,
       recentGains,
+      jarTokens,
+      jarsFilled: s.jarsFilled + (filled ? 1 : 0),
+      collection,
+      raresFound,
+      lastRare,
     });
     return gain;
   },
@@ -129,6 +199,7 @@ export const useGame = create<GameState & GameActions>()((set, get) => ({
     set({
       light: s.light - plan.cost,
       levels: { ...s.levels, [id]: s.levels[id] + plan.count },
+      upgradesBought: s.upgradesBought + plan.count,
     });
     return true;
   },
@@ -234,6 +305,47 @@ export const useGame = create<GameState & GameActions>()((set, get) => ({
 
   markInterstitial: (lastInterstitialAt) => set({ lastInterstitialAt }),
 
+  noteGolden: () => set({ goldenCaught: get().goldenCaught + 1 }),
+
+  buyGarden: (id) => {
+    const s = get();
+    const level = s.garden[id];
+    if (gardenMaxed(id, level)) return false;
+    const cost = gardenCost(id, level);
+    if (s.jarTokens < cost) return false;
+    set({ jarTokens: s.jarTokens - cost, garden: { ...s.garden, [id]: level + 1 } });
+    return true;
+  },
+
+  refreshDaily: (now) => {
+    const s = get();
+    const d = ensureDaily(s.daily, now, countersOf(s));
+    if (d !== s.daily) set({ daily: d });
+  },
+
+  claimQuest: (i) => {
+    const s = get();
+    const d = s.daily;
+    if (!d || d.claimed[i] || !questProgress(d, i, countersOf(s)).done) return 0;
+    const reward = QUESTS.templates[d.quests[i] ?? 0]?.reward ?? 0;
+    const claimed = d.claimed.slice();
+    claimed[i] = true;
+    set({ daily: { ...d, claimed }, jarTokens: s.jarTokens + reward });
+    return reward;
+  },
+
+  claimChest: (now) => {
+    const s = get();
+    const d = s.daily;
+    if (!d || d.chestClaimed || !d.claimed.every(Boolean)) return 0;
+    set({
+      daily: { ...d, chestClaimed: true },
+      jarTokens: s.jarTokens + QUESTS.chestTokens,
+      boostUntil: extendBoost(now, s.boostUntil),
+    });
+    return QUESTS.chestTokens;
+  },
+
   hydrate: (data) => set({ ...data, ...transient() }),
 
   resetProgress: (now) => {
@@ -265,6 +377,14 @@ export const useGame = create<GameState & GameActions>()((set, get) => ({
       boostUntil: s.boostUntil,
       lastInterstitialAt: s.lastInterstitialAt,
       purchases: s.purchases,
+      jarTokens: s.jarTokens,
+      garden: s.garden,
+      collection: s.collection,
+      jarsFilled: s.jarsFilled,
+      goldenCaught: s.goldenCaught,
+      upgradesBought: s.upgradesBought,
+      raresFound: s.raresFound,
+      daily: s.daily,
     };
   },
 }));
@@ -292,6 +412,8 @@ export function useStats(): Stats {
       stardustEarned: s.stardustEarned,
       zoneIndex: s.zoneIndex,
       purchases: s.purchases,
+      garden: s.garden,
+      collection: s.collection,
     })),
   );
   return useMemo(() => statsOf(input), [input]);

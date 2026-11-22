@@ -12,6 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { COLORS, GOLDEN, UI } from '../config/balance';
+import { gardenEffects } from '../game/meta';
 import { adsAllowed, goldenFreeReward, goldenReward, nextGoldenAt } from '../game/monetization';
 import { formatNumber } from '../game/numbers';
 import { lightPerSecond, statsOf, useGame } from '../game/state';
@@ -42,7 +43,7 @@ export function GoldenFirefly() {
 
   useEffect(() => {
     if (!done) return;
-    if (nextAt.current === 0) nextAt.current = nextGoldenAt(Date.now(), Math.random());
+    if (nextAt.current === 0) nextAt.current = nextGoldenAt(Date.now(), Math.random(), gardenEffects(useGame.getState().garden).golden);
     const id = setInterval(() => {
       const s = useGame.getState();
       if (flying || reward || s.offlineReport || Date.now() < nextAt.current) return;
@@ -53,7 +54,7 @@ export function GoldenFirefly() {
 
   const finishFlight = useCallback(() => {
     setFlying(null);
-    nextAt.current = nextGoldenAt(Date.now(), Math.random());
+    nextAt.current = nextGoldenAt(Date.now(), Math.random(), gardenEffects(useGame.getState().garden).golden);
   }, []);
 
   const onCatch = () => {
@@ -133,6 +134,7 @@ function RewardCard({ reward, onDone }: { reward: Reward; onDone: () => void }) 
 
   const take = (amount: number) => {
     grant(amount);
+    useGame.getState().noteGolden();
     hapticSuccess();
     onDone();
   };

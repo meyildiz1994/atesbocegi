@@ -9,7 +9,7 @@ import { showBottomBar } from '../game/tutorial';
 import { t, type I18nKey } from '../i18n';
 import { UI_ICONS } from './icons';
 
-export type PanelId = 'upgrades' | 'dawn' | 'store' | 'settings' | 'events';
+export type PanelId = 'upgrades' | 'dawn' | 'store' | 'settings' | 'events' | 'meta';
 
 /** Alt çubuğun dört yuvası: kavanozun iki yanında ikişer ikon, sırasıyla soldan sağa. */
 export const BAR_SLOTS = ['store', 'dawn', 'upgrades', 'settings'] as const;

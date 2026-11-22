@@ -33,6 +33,7 @@ import { ZoneArt } from './ZoneArt';
 import { Fireflies } from './Fireflies';
 import { CollectRing } from './Glow';
 import { Jar } from './Jar';
+import { JarBurst } from './JarBurst';
 import { Spirits } from './Spirits';
 import { Trails } from './Trails';
 
@@ -83,6 +84,9 @@ export function ForestCanvas({ onLightGained }: Props) {
   const magnetPull = useSharedValue(0);
   const autoEmpty = useSharedValue(false);
   const jarCount = useSharedValue(0);
+  /** Boşaltma patlaması: 0'dan 1'e akar (boştayken 1); gücü boşaltılan doluluk. */
+  const burst = useSharedValue(1);
+  const burstPower = useSharedValue(0);
   useEffect(() => {
     ringRadius.value = withTiming(stats.ringRadius, { duration: 300 });
     jarCapacity.value = stats.jarCapacity;
@@ -183,6 +187,13 @@ export function ForestCanvas({ onLightGained }: Props) {
     }
   };
 
+  const startBurst = (n: number) => {
+    'worklet';
+    burstPower.value = Math.min(1, n / Math.max(1, jarCapacity.value));
+    burst.value = 0;
+    burst.value = withTiming(1, { duration: JAR.burstDuration * 1000 });
+  };
+
   const loop = useFrameCallback((info) => {
     'worklet';
     const dt = (info.timeSincePreviousFrame ?? 16) / 1000;
@@ -224,6 +235,7 @@ export function ForestCanvas({ onLightGained }: Props) {
       if (autoEmpty.value && jarCount.value >= jarCapacity.value) {
         const n = jarCount.value;
         jarCount.set(0);
+        startBurst(n);
         scheduleOnRN(onJarEmptied, n);
       }
     }
@@ -250,6 +262,7 @@ export function ForestCanvas({ onLightGained }: Props) {
       const n = jarCount.value;
       if (n <= 0) return;
       jarCount.set(0);
+      startBurst(n);
       scheduleOnRN(onJarEmptied, n);
     });
   };
@@ -286,7 +299,8 @@ export function ForestCanvas({ onLightGained }: Props) {
             <Fireflies key={`c${drawCount}`} sim={sim} tint={tint} count={drawCount} />
             <Spirits sim={sim} />
             <CollectRing x={fingerX} y={fingerY} radius={ringRadius} visibility={ringVisibility} />
-            <Jar x={jarX} y={jarY} count={jarCountRo} capacity={capacityRo} time={simTime} />
+            <Jar x={jarX} y={jarY} count={jarCountRo} capacity={capacityRo} time={simTime} burst={burst} />
+            <JarBurst x={jarX} y={jarY} progress={burst} power={burstPower} />
           </Canvas>
         </View>
       </GestureDetector>

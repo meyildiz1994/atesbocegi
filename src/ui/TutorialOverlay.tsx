@@ -18,6 +18,12 @@ import { TUTORIAL_STEP } from '../game/tutorial';
 import { t, type I18nKey } from '../i18n';
 import { track } from '../services/analytics';
 import { BAR_BUTTON, BAR_ICONS, BAR_LABELS, BAR_SLOTS, barSlotCenters } from './BottomBar';
+import { metaButtonCenter } from './MetaButton';
+
+const TOUR = [...BAR_SLOTS, 'garden'] as const;
+type TourSlot = (typeof TOUR)[number];
+const TOUR_ICONS: Record<TourSlot, number> = { ...BAR_ICONS, garden: require('../../assets/ui/icon_garden.png') as number };
+const TOUR_LABELS: Record<TourSlot, I18nKey> = { ...BAR_LABELS, garden: 'meta.title' };
 import { UI_ICONS } from './icons';
 
 /** İpucu eli (ChatGPT ile üretildi). */
@@ -88,10 +94,14 @@ function IconTour() {
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const [i, setI] = useState(0);
-  const centers = barSlotCenters(width, height, insets);
-  const slot = BAR_SLOTS[i] ?? 'settings';
+  const centers: Record<TourSlot, { x: number; y: number }> = {
+    ...barSlotCenters(width, height, insets),
+    garden: metaButtonCenter(insets),
+  };
+  const slot: TourSlot = TOUR[i] ?? 'settings';
   const c = centers[slot];
-  const last = i === BAR_SLOTS.length - 1;
+  const last = i === TOUR.length - 1;
+  const cardPos = c.y > height / 2 ? { bottom: height - c.y + (BAR_BUTTON + 16) / 2 + 14 } : { top: c.y + (BAR_BUTTON + 16) / 2 + 14 };
   const next = () => {
     if (!last) {
       setI(i + 1);
@@ -110,13 +120,13 @@ function IconTour() {
         pointerEvents="none"
         style={[styles.ring, { width: ring, height: ring, borderRadius: ring / 2, left: c.x - ring / 2, top: c.y - ring / 2 }]}
       >
-        <Image source={BAR_ICONS[slot]} style={styles.ringIcon} />
+        <Image source={TOUR_ICONS[slot]} style={styles.ringIcon} />
       </Animated.View>
-      <Animated.View key={`card-${slot}`} entering={FadeIn.duration(250)} pointerEvents="box-none" style={[styles.card, { bottom: height - c.y + ring / 2 + 14 }]}>
-        <Text style={styles.cardTitle}>{t(BAR_LABELS[slot])}</Text>
+      <Animated.View key={`card-${slot}`} entering={FadeIn.duration(250)} pointerEvents="box-none" style={[styles.card, cardPos]}>
+        <Text style={styles.cardTitle}>{t(TOUR_LABELS[slot])}</Text>
         <Text style={styles.cardBody}>{t(`tour.${slot}` as I18nKey)}</Text>
         <View style={styles.cardRow}>
-          <Text style={styles.dots}>{BAR_SLOTS.map((_, k) => (k === i ? '●' : '○')).join(' ')}</Text>
+          <Text style={styles.dots}>{TOUR.map((_, k) => (k === i ? '●' : '○')).join(' ')}</Text>
           <Pressable onPress={next} style={styles.cardButton} accessibilityRole="button">
             <Text style={styles.cardButtonText}>{t(last ? 'tour.start' : 'tour.next')}</Text>
           </Pressable>

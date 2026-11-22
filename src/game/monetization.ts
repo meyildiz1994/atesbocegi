@@ -43,10 +43,10 @@ export function starterDiscountActive(firstLaunchAt: number, nowMs: number): boo
   return nowMs - firstLaunchAt < MONETIZATION.starterDiscountHours * 3600 * 1000;
 }
 
-/** Bir sonraki Altın Ateşböceği ne zaman (ms)? `rand` 0..1. */
-export function nextGoldenAt(nowMs: number, rand: number): number {
+/** Bir sonraki Altın Ateşböceği ne zaman (ms)? `rand` 0..1; `factor` Dilek Kuyusu'ndan (küçük = daha sık). */
+export function nextGoldenAt(nowMs: number, rand: number, factor = 1): number {
   const span = GOLDEN.maxIntervalSec - GOLDEN.minIntervalSec;
-  return nowMs + (GOLDEN.minIntervalSec + span * Math.min(1, Math.max(0, rand))) * 1000;
+  return nowMs + (GOLDEN.minIntervalSec + span * Math.min(1, Math.max(0, rand))) * 1000 * factor;
 }
 
 /** Altın Ateşböceği ödülü (reklamla). Son Işık/sn'ye dayanır, en az birkaç dolu kavanoz. */

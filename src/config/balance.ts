@@ -117,6 +117,10 @@ export const JAR = {
   pulseScale: 0.06,
   /** Dolu kavanozun titreme genliği (px). */
   shakeAmplitude: 2.5,
+  /** Boşaltma patlaması: süre (sn), uçan kıvılcım ve ışın sayısı. Etki doluluk oranıyla ölçeklenir. */
+  burstDuration: 1.3,
+  burstSparks: 22,
+  burstRays: 10,
 } as const;
 
 export const RING = {
@@ -408,3 +412,66 @@ export const ZONE_ART = {
   minVisible: 0.16,
   maxVisible: 1,
 } as const;
+
+// ---------------------------------------------------------------------------
+// Kavanozlarla ilerleme: Işık Bahçesi, Koleksiyon, Günlük Görevler
+
+/**
+ * Kavanoz jetonu: her boşaltma, kavanozun doluluk oranı kadar jeton verir (dolu kavanoz = 1).
+ * Jetonlar Şafak'ta sıfırlanmaz; Işık Bahçesi'nde harcanır.
+ */
+export const JAR_TOKENS = {
+  /** Bu orandan az dolu boşaltmalar "kavanoz doldur" görevine sayılmaz. */
+  questMinFill: 0.5,
+} as const;
+
+/** Işık Bahçesi yapıları: maliyet (kavanoz) = taban × büyüme^seviye. Etkiler kalıcıdır. */
+export const GARDEN = {
+  lantern: { baseCost: 5, growth: 1.55, maxLevel: 25, perLevel: 0.1 },
+  mushroomHouse: { baseCost: 12, growth: 1.65, maxLevel: 20, perLevel: 0.15 },
+  bridge: { baseCost: 25, growth: 1.75, maxLevel: 20, perLevel: 0.05 },
+  well: { baseCost: 50, growth: 1.9, maxLevel: 10, perLevel: 0.06 },
+  tree: { baseCost: 120, growth: 2.2, maxLevel: 10, perLevel: 0.15 },
+} as const;
+export type GardenId = keyof typeof GARDEN;
+export const GARDEN_ORDER: GardenId[] = ['lantern', 'mushroomHouse', 'bridge', 'well', 'tree'];
+
+/**
+ * Koleksiyon: her bölgede 3 nadir böcek. Yarıdan fazla dolu her boşaltmada `chancePerJar`
+ * olasılıkla biri bulunur; ağırlık (yaygın → efsanevi) seçimi belirler.
+ */
+export const COLLECTION = {
+  chancePerJar: 0.1,
+  weights: [6, 3, 1],
+  /** Bir bölgenin üçü de bulununca o bölgede Işık ×. */
+  zoneSetMult: 1.25,
+  /** 15'inin hepsi bulununca her yerde Işık ×. */
+  allSetMult: 1.25,
+  /** Zaten bulunmuş bir böcek tekrar gelirse kavanoz jetonu verir. */
+  duplicateTokens: 3,
+  /** Bölge × tür renkleri. */
+  colors: [
+    ['#7dffb0', '#7ad8ff', '#ff8ad8'],
+    ['#b0fff0', '#c8b0ff', '#fff07a'],
+    ['#ffb36b', '#ff6b8a', '#a8ff6b'],
+    ['#d0a8ff', '#6bf0ff', '#ffffff'],
+    ['#ffcf6b', '#ff7a5a', '#8affff'],
+  ],
+} as const;
+
+/** Günlük görevler: her gün 3 görev, tamamlanınca kavanoz jetonu; üçü bitince sandık. */
+export const QUESTS = {
+  perDay: 3,
+  templates: [
+    { kind: 'fillJars', target: 20, reward: 6 },
+    { kind: 'fillJars', target: 50, reward: 12 },
+    { kind: 'catchGolden', target: 1, reward: 6 },
+    { kind: 'buyUpgrades', target: 10, reward: 6 },
+    { kind: 'buyUpgrades', target: 30, reward: 10 },
+    { kind: 'findRare', target: 1, reward: 8 },
+    { kind: 'playMinutes', target: 10, reward: 6 },
+  ],
+  /** Üç görev bitince sandık: jeton + ücretsiz ×2 Işık süresi. */
+  chestTokens: 15,
+} as const;
+export type QuestKind = (typeof QUESTS.templates)[number]['kind'];

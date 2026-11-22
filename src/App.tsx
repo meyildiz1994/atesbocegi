@@ -24,6 +24,10 @@ import { FloatingNumbers, type FloatingNumbersHandle } from './ui/FloatingNumber
 import { FpsOverlay } from './ui/FpsOverlay';
 import { GoldenFirefly } from './ui/GoldenFirefly';
 import { Hud } from './ui/Hud';
+import { IntroVideo } from './ui/IntroVideo';
+import { MetaButton } from './ui/MetaButton';
+import { MetaPanel } from './ui/MetaPanel';
+import { RareToast } from './ui/RareToast';
 import { OfflinePanel } from './ui/OfflinePanel';
 import { SettingsPanel } from './ui/SettingsPanel';
 import { StorePanel } from './ui/StorePanel';
@@ -42,11 +46,20 @@ export default function App() {
   const floaters = useRef<FloatingNumbersHandle>(null);
   const [panel, setPanel] = useState<PanelId | null>(null);
   const close = () => setPanel(null);
+  const [intro, setIntro] = useState(true);
 
   // Satın alımlar açılışta; reklamlar (rıza formu ve ATT istemi) onboarding bittikten sonra.
   const tutorialDone = useGame((s) => s.tutorialStep >= TUTORIAL_STEP.done);
   useEffect(() => {
     if (ready) void initIap();
+  }, [ready]);
+  // Günlük görevler: açılışta ve dakikada bir gün değişimi kontrolü.
+  useEffect(() => {
+    if (!ready) return;
+    const tick = () => useGame.getState().refreshDaily(Date.now());
+    tick();
+    const id = setInterval(tick, 60_000);
+    return () => clearInterval(id);
   }, [ready]);
   useEffect(() => {
     if (ready && tutorialDone) void initAds();
@@ -66,6 +79,8 @@ export default function App() {
               <ComboCounter />
               <GoldenFirefly />
               <BoostButton />
+              <MetaButton onPress={() => setPanel('meta')} />
+              <RareToast />
               {newZone !== null ? <ZoneToast zone={newZone} onDone={clearNewZone} /> : null}
               <TutorialOverlay />
               <BottomBar onOpen={setPanel} />
@@ -73,6 +88,7 @@ export default function App() {
               {panel === 'dawn' ? <DawnPanel onClose={close} /> : null}
               {panel === 'store' ? <StorePanel onClose={close} /> : null}
               {panel === 'settings' ? <SettingsPanel onClose={close} /> : null}
+              {panel === 'meta' ? <MetaPanel onClose={close} /> : null}
               <OfflinePanel />
               <DawnFlash />
               {SHOW_FPS ? <FpsOverlay onLongPress={() => setPanel('events')} /> : null}
@@ -80,6 +96,7 @@ export default function App() {
               </View>
             </>
           ) : null}
+          {ready && intro ? <IntroVideo onDone={() => setIntro(false)} /> : null}
         </View>
         <StatusBar style="light" />
       </SafeAreaProvider>

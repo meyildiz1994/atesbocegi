@@ -57,7 +57,8 @@
         }
       ],
       "expo-localization",
-      "./plugins/withReleaseSigning"
+      "./plugins/withReleaseSigning",
+      "expo-video"
     ],
     "backgroundColor": "#05070d",
     "scheme": "atesbocegi"

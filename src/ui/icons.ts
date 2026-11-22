@@ -11,7 +11,19 @@ export const UPGRADE_ICONS: Record<UpgradeId, number> = {
   magnet: require('../../assets/ui/icon_magnet.png'),
 };
 
+export const GARDEN_ICONS = {
+  lantern: require('../../assets/ui/garden_lantern.png') as number,
+  mushroomHouse: require('../../assets/ui/garden_mushroomHouse.png') as number,
+  bridge: require('../../assets/ui/garden_bridge.png') as number,
+  well: require('../../assets/ui/garden_well.png') as number,
+  tree: require('../../assets/ui/garden_tree.png') as number,
+};
+
 export const UI_ICONS = {
+  garden: require('../../assets/ui/icon_garden.png') as number,
+  quests: require('../../assets/ui/icon_quests.png') as number,
+  collection: require('../../assets/ui/icon_collection.png') as number,
+  chest: require('../../assets/ui/icon_chest.png') as number,
   dawn: require('../../assets/ui/icon_dawn.png') as number,
   store: require('../../assets/ui/icon_store.png') as number,
   upgrades: require('../../assets/ui/icon_jar.png') as number,

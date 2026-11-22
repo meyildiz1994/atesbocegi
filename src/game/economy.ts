@@ -14,6 +14,7 @@ import {
   type SkillId,
   type UpgradeId,
 } from '../config/balance';
+import { gardenEffects, type GardenLevels } from './meta';
 
 export type Levels = Record<UpgradeId, number>;
 export type Skills = Record<SkillId, boolean>;
@@ -129,6 +130,10 @@ export type StatInput = {
   zoneIndex: number;
   /** Satın alımlardan gelen kalıcı Işık çarpanı (Başlangıç Paketi). */
   purchaseMultiplier?: number;
+  /** Işık Bahçesi seviyeleri (kalıcı). */
+  garden?: Partial<GardenLevels>;
+  /** Koleksiyon setlerinden gelen Işık çarpanı. */
+  collectionMultiplier?: number;
 };
 
 function flatThenPct(base: number, level: number, flatLevels: number, step: number, pct: number): number {
@@ -149,8 +154,10 @@ export function computeStats(input: StatInput): Stats {
   if (sk.dawnRing) ring *= SKILL_EFFECTS.dawnRingMult;
   ring = Math.min(ring, EFFECTS.ringMax);
 
+  const ge = gardenEffects(input.garden);
   let jar = flatThenPct(START.jarCapacity, l.jar, EFFECTS.jarFlatLevels, EFFECTS.jarFlatStep, EFFECTS.jarPctAfter);
   if (sk.deepJar) jar *= SKILL_EFFECTS.deepJarMult;
+  jar *= ge.jar;
 
   let value = flatThenPct(
     START.valuePerFirefly,
@@ -167,17 +174,17 @@ export function computeStats(input: StatInput): Stats {
   return {
     ringRadius: ring,
     jarCapacity: Math.floor(jar),
-    valuePerFirefly: value * zone.multiplier * gm * (input.purchaseMultiplier ?? 1),
+    valuePerFirefly: value * zone.multiplier * gm * (input.purchaseMultiplier ?? 1) * ge.value * (input.collectionMultiplier ?? 1),
     maxFireflies: START.maxFireflies + EFFECTS.crowdFireflies * l.crowd,
     spawnRate: START.spawnRate * (1 + EFFECTS.crowdSpawnPerLevel * l.crowd),
     spirits,
-    spiritSpeed: SPIRIT.speed * (sk.kindredSpirit ? SKILL_EFFECTS.kindredSpiritSpeed : 1),
+    spiritSpeed: SPIRIT.speed * (sk.kindredSpirit ? SKILL_EFFECTS.kindredSpiritSpeed : 1) * ge.spirit,
     autoEmpty: l.autoEmpty > 0,
     magnetLevel: l.magnet,
     magnetRange: l.magnet > 0 ? ring * (EFFECTS.magnetRangeBase + EFFECTS.magnetRangePerLevel * l.magnet) : 0,
     magnetPull: EFFECTS.magnetPullSpeed + EFFECTS.magnetPullPerLevel * l.magnet,
     globalMultiplier: gm,
-    offlineRate: sk.dreamers ? OFFLINE.rateDreamers : OFFLINE.rate,
+    offlineRate: (sk.dreamers ? OFFLINE.rateDreamers : OFFLINE.rate) * ge.offline,
     offlineCapSeconds: sk.longNight ? OFFLINE.capSecondsLongNight : OFFLINE.capSeconds,
   };
 }

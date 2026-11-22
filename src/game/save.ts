@@ -4,6 +4,7 @@
  */
 import { SAVE, SKILL_ORDER, UPGRADE_ORDER, ZONES } from '../config/balance';
 import type { Levels, Skills } from './economy';
+import { emptyGarden, type DailyState, type GardenLevels } from './meta';
 import { noPurchases, type Purchases } from './monetization';
 
 export type Settings = {
@@ -43,6 +44,17 @@ export type SaveData = {
   lastInterstitialAt: number;
   /** Satın alımlar (RevenueCat'ten gelen son bilinen durum; çevrimdışı da geçerli). */
   purchases: Purchases;
+  /** Harcanabilir kavanoz jetonu (Işık Bahçesi); Şafak'ta korunur. */
+  jarTokens: number;
+  garden: GardenLevels;
+  /** Bulunan nadir böcekler: kimlik → kaç kez. */
+  collection: Record<string, number>;
+  /** Kalıcı sayaçlar (görevler için). */
+  jarsFilled: number;
+  goldenCaught: number;
+  upgradesBought: number;
+  raresFound: number;
+  daily: DailyState | null;
 };
 
 export interface KeyValueStore {
@@ -86,6 +98,14 @@ export function newSave(now: number): SaveData {
     boostUntil: 0,
     lastInterstitialAt: 0,
     purchases: noPurchases(),
+    jarTokens: 0,
+    garden: emptyGarden(),
+    collection: {},
+    jarsFilled: 0,
+    goldenCaught: 0,
+    upgradesBought: 0,
+    raresFound: 0,
+    daily: null,
   };
 }
 
@@ -157,6 +177,47 @@ export function sanitize(raw: Raw, now: number): SaveData {
       removeAds: bool(purchasesRaw.removeAds),
       starter: bool(purchasesRaw.starter),
     },
+    jarTokens: num(raw.jarTokens),
+    garden: Object.fromEntries(
+      Object.keys(emptyGarden()).map((id) => [id, Math.floor(num(((raw.garden ?? {}) as Raw)[id]))]),
+    ) as GardenLevels,
+    collection: collectionOf(raw.collection),
+    jarsFilled: Math.floor(num(raw.jarsFilled)),
+    goldenCaught: Math.floor(num(raw.goldenCaught)),
+    upgradesBought: Math.floor(num(raw.upgradesBought)),
+    raresFound: Math.floor(num(raw.raresFound)),
+    daily: dailyOf(raw.daily),
+  };
+}
+
+function collectionOf(v: unknown): Record<string, number> {
+  if (!v || typeof v !== 'object') return {};
+  const out: Record<string, number> = {};
+  for (const [k, n] of Object.entries(v as Raw)) {
+    if (/^z\d_\d$/.test(k) && num(n) > 0) out[k] = Math.floor(num(n));
+  }
+  return out;
+}
+
+function dailyOf(v: unknown): DailyState | null {
+  if (!v || typeof v !== 'object') return null;
+  const d = v as Raw;
+  const b = (d.base ?? {}) as Raw;
+  if (typeof d.day !== 'string' || !Array.isArray(d.quests)) return null;
+  const quests = d.quests.filter((q): q is number => typeof q === 'number');
+  const claimed = Array.isArray(d.claimed) ? d.claimed.map((c) => c === true) : [];
+  return {
+    day: d.day,
+    base: {
+      jarsFilled: num(b.jarsFilled),
+      goldenCaught: num(b.goldenCaught),
+      upgradesBought: num(b.upgradesBought),
+      raresFound: num(b.raresFound),
+      playTimeSec: num(b.playTimeSec),
+    },
+    quests,
+    claimed: quests.map((_, i) => claimed[i] ?? false),
+    chestClaimed: bool(d.chestClaimed),
   };
 }
 

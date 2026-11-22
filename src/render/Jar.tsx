@@ -23,6 +23,8 @@ type Props = {
   capacity: SharedValue<number>;
   /** Simülasyon zamanı (sn); dolu kavanozun nefes alması için. */
   time: SharedValue<number>;
+  /** Boşaltma patlamasının ilerlemesi (0..1); kavanoz bir an esneyip zıplar. */
+  burst?: SharedValue<number>;
 };
 
 const W = JAR.width;
@@ -58,7 +60,7 @@ function Spark({ u, v, phase, fill, time }: { u: number; v: number; phase: numbe
  * Kavanoz: ChatGPT ile çizilmiş cam kavanoz görseli; içindeki ışık kodla çizilir.
  * Doldukça içi parlar, doluyken nefes alır ve titrer.
  */
-export function Jar({ x, y, count, capacity, time }: Props) {
+export function Jar({ x, y, count, capacity, time, burst }: Props) {
   const image = useImage(JAR_IMAGE);
   const fill = useDerivedValue(() => Math.min(1, count.value / Math.max(1, capacity.value)));
   const full = useDerivedValue(() => (count.value >= capacity.value ? 1 : 0));
@@ -67,7 +69,10 @@ export function Jar({ x, y, count, capacity, time }: Props) {
     const t = time.value;
     const pulse = 1 + full.value * JAR.pulseScale * Math.sin((t / JAR.pulsePeriod) * Math.PI * 2);
     const shake = full.value * JAR.shakeAmplitude * Math.sin(t * 40);
-    return [{ translateX: x + shake }, { translateY: y }, { scale: pulse }];
+    const b = burst ? burst.value : 1;
+    // Boşaltınca: önce yassılır, sonra yaylanarak uzar ve yerine oturur.
+    const pop = b < 1 ? Math.sin(b * Math.PI * 3) * Math.pow(1 - b, 2) * 0.16 : 0;
+    return [{ translateX: x + shake }, { translateY: y - pop * 40 }, { scaleX: pulse * (1 - pop) }, { scaleY: pulse * (1 + pop) }];
   });
 
   const liquid = useDerivedValue(() => {
