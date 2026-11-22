@@ -30,6 +30,7 @@
     "eslint-config-expo": "^58.0.4",
     "jest": "^30.5.2",
     "jest-expo": "^58.0.15",
+    "tsx": "^4.23.15",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -41,7 +42,8 @@
     "test": "jest",
     "lint": "eslint .",
     "web:setup": "mkdir -p public && cp node_modules/canvaskit-wasm/bin/full/canvaskit.wasm public/",
-    "web:export": "npm run web:setup && expo export --platform web"
+    "web:export": "npm run web:setup && expo export --platform web",
+    "simulate": "tsx scripts/simulate-economy.ts"
   },
   "private": true,
   "jest": {

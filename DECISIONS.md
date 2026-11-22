@@ -40,3 +40,11 @@ Belirsiz kalan konularda en basit makul seçenek uygulandı. Değiştirmek isted
 28. **Kayıt sistemi Faz 3'te kuruldu** (Faz 7'den öne alındı), çünkü ekonomi test edilirken ilerlemenin kaybolmaması gerekiyordu. MMKV'ye 10 saniyede bir ve arka plana geçerken yazılır; sürüm alanı ve migrasyon zinciri var. Ayarlardan sıfırlama Faz 7/11'de.
 29. **Mağaza butonu şimdilik "Yakında" paneli açar** (Faz 8). Şafak butonu eşik (1M Işık) geçildiğinde ya da ilk Şafak'tan sonra görünür.
 30. **"×2 reklam izle" butonu** reklam servisi hazır değilken gizlidir (Faz 8).
+
+## Faz 4
+
+31. **Onboarding 5 adım** (`src/game/tutorial.ts`, saf ve test edilmiş): tek böcek + "Sürükle ve topla" → ilk toplamada 6 böceğe çıkar → kavanoz dolunca "Kavanoza dokun" → ilk Işık'ta alt çubuk belirir → ilk yükseltme alınabilir olunca "Güçlen" ipucu → ilk satın almada biter. Bölge okları ve Işık/sn göstergesi onboarding bitince görünür. Daha önce yükseltme almış ya da Şafak yapmış kayıtlar onboarding görmez.
+32. **İpucu parmağı şimdilik emoji (👆).** Faz 5'te ChatGPT ile üretilen görselle değişecek.
+33. **`START.spawnRate` 1.5 → 2.5.** Erken oyun doğma hızıyla sınırlı; 1.5 ile Bölge 2 ~10. dakikada açılıyordu. 2.5 ile simülasyonda: ilk yükseltme 0:07, Bölge 2 6:15, ilk Işık Ruhu 6:34, Otomatik Boşaltma 7:02.
+34. **Denge simülasyonu (`npm run simulate`) Faz 4'te yazıldı**, çünkü onboarding zaman çizelgesi onunla doğrulanıyor. Gerçek simülasyon kodunu çizimsiz çalıştırır; sanal oyuncu en yakın böceğe sürükler, 0.8 sn gecikmeyle kavanozu boşaltır, Işık/sn artışı / maliyet oranı en iyi yükseltmeyi alır.
+35. **Bilinen denge sorunu (Faz 10'da çözülecek):** Bölge 2'den sonra ekonomi çok hızlanıyor; simülasyonda Bölge 3 ~9. dk, Şafak ~10. dk, Bölge 5 ~14. dk (hedef: Bölge 3 25–35 dk, ilk Şafak 3–5 saat). Ana sebep Kalabalık Orman'ın doğma hızını katlaması ile bölge çarpanlarının birleşmesi.

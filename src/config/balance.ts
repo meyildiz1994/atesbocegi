@@ -53,7 +53,7 @@ export const START = {
   valuePerFirefly: 1,
   maxFireflies: 30,
   /** Saniyede kaç yeni ateşböceği doğar (eksik varsa). */
-  spawnRate: 1.5,
+  spawnRate: 2.5,
 } as const;
 
 /** Ateşböceği simülasyonu. */
@@ -113,6 +113,39 @@ export const FEEDBACK = {
   /** Uçan sayının ömrü (ms) ve yükselme mesafesi (px). */
   floatingNumberMs: 1100,
   floatingNumberRise: 90,
+} as const;
+
+/** İlk dakikalar (onboarding). Adımlar: src/game/tutorial.ts */
+export const TUTORIAL = {
+  /** İlk adımda ekranda tek bir böcek. */
+  firstFireflies: 1,
+  /** İlk toplamadan sonra, kavanoz ilk kez boşalana kadar. */
+  earlyFireflies: 6,
+  /** İpucu parmağının sürükleme animasyonu süresi (ms). */
+  fingerLoopMs: 1600,
+  /** Parmağın sürükleme mesafesi (px). */
+  fingerTravel: 90,
+} as const;
+
+/** Başsız denge simülasyonundaki sanal oyuncu (scripts/simulate-economy.ts). */
+export const BOT = {
+  defaultMinutes: 300,
+  dt: 0.05,
+  /** iPhone 15 boyutu (pt). */
+  screenWidth: 393,
+  screenHeight: 852,
+  jarFromBottom: 104,
+  /** Parmağın en yakın böceğe doğru sürüklenme hızı (pt/sn). */
+  fingerSpeed: 700,
+  /** Kavanoz dolduktan sonra dokunma gecikmesi (sn). */
+  tapDelay: 0.8,
+  decisionInterval: 1,
+  maxBuysPerDecision: 20,
+  /** Botun verim tahmini: bu yarıçapta (pt) doğan her böcek yakalanır sayılır. */
+  ringForFullCatch: 90,
+  magnetWeight: 0.5,
+  /** Kalabalık ormanın yakalamayı kolaylaştırma etkisi (kaba). */
+  crowdBonusDivisor: 300,
 } as const;
 
 export const UI = {

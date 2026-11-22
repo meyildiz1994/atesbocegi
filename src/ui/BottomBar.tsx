@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS, UI, UPGRADE_ORDER } from '../config/balance';
 import { canPrestige, levelsLeft, upgradeCost } from '../game/economy';
 import { useGame } from '../game/state';
+import { showBottomBar } from '../game/tutorial';
 import { t } from '../i18n';
 
 export type PanelId = 'upgrades' | 'dawn' | 'store';
@@ -21,6 +22,8 @@ export function BottomBar({ onOpen }: { onOpen: (p: PanelId) => void }) {
   const affordable = useAnyAffordable();
   const dawnReady = useGame((s) => canPrestige(s.runLight));
   const hasDust = useGame((s) => s.prestigeCount > 0 || s.stardust > 0);
+  const visible = useGame((s) => showBottomBar(s.tutorialStep));
+  if (!visible) return null;
 
   return (
     <View pointerEvents="box-none" style={[styles.bar, { paddingBottom: insets.bottom + 8 }]}>

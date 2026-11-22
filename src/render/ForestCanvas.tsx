@@ -22,6 +22,7 @@ import {
   type SimState,
 } from '../game/simulation';
 import { selectBrightness, useGame, useStats } from '../game/state';
+import { tutorialFireflyCap } from '../game/tutorial';
 import { t } from '../i18n';
 import { collectSoundId, playSfx } from '../services/audio';
 import { hapticCollect, hapticJarEmpty } from '../services/haptics';
@@ -63,9 +64,11 @@ export function ForestCanvas({ onLightGained }: Props) {
 
   // Oyun parametreleri: yükseltme/yetenek/bölgeden hesaplanan statlar.
   const stats = useStats();
+  const tutorialStep = useGame((s) => s.tutorialStep);
   const ringRadius = useSharedValue<number>(START.ringRadius);
   const jarCapacity = useSharedValue<number>(START.jarCapacity);
-  const maxFireflies = useSharedValue<number>(START.maxFireflies);
+  // İlk değer de onboarding sınırına uyar: ilk karede tohumlanan böcek sayısı buna göre.
+  const maxFireflies = useSharedValue<number>(Math.min(tutorialFireflyCap(tutorialStep, stats.maxFireflies), SIM.capacity));
   const spawnRate = useSharedValue<number>(START.spawnRate);
   const spirits = useSharedValue(0);
   const spiritSpeed = useSharedValue<number>(SPIRIT.speed);
@@ -76,14 +79,14 @@ export function ForestCanvas({ onLightGained }: Props) {
   useEffect(() => {
     ringRadius.value = withTiming(stats.ringRadius, { duration: 300 });
     jarCapacity.value = stats.jarCapacity;
-    maxFireflies.value = Math.min(stats.maxFireflies, SIM.capacity);
+    maxFireflies.value = Math.min(tutorialFireflyCap(tutorialStep, stats.maxFireflies), SIM.capacity);
     spawnRate.value = stats.spawnRate;
     spirits.value = stats.spirits;
     spiritSpeed.value = stats.spiritSpeed;
     magnetRange.value = stats.magnetRange;
     magnetPull.value = stats.magnetPull;
     autoEmpty.value = stats.autoEmpty;
-  }, [stats, ringRadius, jarCapacity, maxFireflies, spawnRate, spirits, spiritSpeed, magnetRange, magnetPull, autoEmpty]);
+  }, [stats, tutorialStep, ringRadius, jarCapacity, maxFireflies, spawnRate, spirits, spiritSpeed, magnetRange, magnetPull, autoEmpty]);
 
   // Bölge değişince kavanozdakiler o bölgenin değeriyle sayılmasın diye kavanoz boşalır (store da sıfırlar).
   const zoneForJar = useGame((s) => s.zoneIndex);
@@ -168,7 +171,7 @@ export function ForestCanvas({ onLightGained }: Props) {
     sim.modify((s) => {
       'worklet';
       if (!seeded.value) {
-        seedFireflies(s, Math.round(maxFireflies.value / 3), d.width, d.height);
+        seedFireflies(s, Math.max(1, Math.round(maxFireflies.value / 3)), d.width, d.height);
         seeded.value = true;
       }
       stepSimulation(s, dt, {
