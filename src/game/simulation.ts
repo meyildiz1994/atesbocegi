@@ -2,7 +2,7 @@
  * Ateşböceği simülasyonu. Saf fonksiyonlar; Reanimated worklet'i olarak UI thread'de
  * her karede çalışır, Jest'te de doğrudan test edilir. React state'e dokunmaz.
  */
-import { SIM, SPIRIT } from '../config/balance';
+import { FX, SIM, SPIRIT } from '../config/balance';
 
 export const STATUS_DEAD = 0;
 export const STATUS_FREE = 1;
@@ -15,6 +15,12 @@ export type SimState = {
   /** Deterministik rastgelelik için LCG tohumu. */
   seed: number;
   spawnAcc: number;
+  /** Uçuştaki böceklerin indeksleri (iz çizimi için, en fazla FX.trailSlots). */
+  flyIdx: number[];
+  flyCount: number;
+  /** Son adımdaki kavanoz konumu (iz çizimi için). */
+  jarX: number;
+  jarY: number;
   /** Son adımın sonucu (worklet'ler arası kolay okuma için). */
   lastArrived: number;
   lastCaught: number;
@@ -81,6 +87,10 @@ export function createSimState(capacity: number = SIM.capacity, seed = 12345): S
     time: 0,
     seed,
     spawnAcc: 0,
+    flyIdx: new Array<number>(FX.trailSlots).fill(0),
+    flyCount: 0,
+    jarX: 0,
+    jarY: 0,
     lastArrived: 0,
     lastCaught: 0,
     status: arr(),
@@ -323,6 +333,9 @@ export function stepSimulation(s: SimState, dtRaw: number, p: SimParams): StepRe
 
   let arrived = 0;
   let caught = 0;
+  s.flyCount = 0;
+  s.jarX = p.jarX;
+  s.jarY = p.jarY;
   // Kavanozda yer var mı? Uçuştakiler de yer ayırmış sayılır.
   let room = p.jarCapacity - p.jarCount - flying;
 
@@ -373,6 +386,7 @@ export function stepSimulation(s: SimState, dtRaw: number, p: SimParams): StepRe
         flying--;
       } else {
         s.t[i] = t;
+        if (s.flyCount < FX.trailSlots) s.flyIdx[s.flyCount++] = i;
         const pt = flightPoint(s.sx[i]!, s.sy[i]!, p.jarX, p.jarY, easeInOut(t));
         s.x[i] = pt.x;
         s.y[i] = pt.y;

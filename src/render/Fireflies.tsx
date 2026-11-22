@@ -12,13 +12,15 @@ import {
 import { useMemo } from 'react';
 import type { SharedValue } from 'react-native-reanimated';
 
-import { SIM } from '../config/balance';
+import { FX, SIM } from '../config/balance';
 import { fireflyBrightness, STATUS_DEAD, type SimState } from '../game/simulation';
 
 type Props = {
   sim: SharedValue<SimState>;
   /** Bölge rengi, 0..1 RGB. */
   tint: SharedValue<[number, number, number]>;
+  /** core: parlak çekirdek; halo: büyük, soluk ikinci katman. */
+  layer?: 'core' | 'halo';
 };
 
 const T = SIM.textureSize;
@@ -27,6 +29,20 @@ const T = SIM.textureSize;
 const TEXTURE_SIZE = { width: T, height: T };
 const HALF = T / 2;
 const SCALE = SIM.spriteSize / T;
+
+/** Hale dokusu: yumuşak, düz düşen ışık. */
+function HaloSprite() {
+  return (
+    <Circle cx={HALF} cy={HALF} r={HALF}>
+      <RadialGradient
+        c={vec(HALF, HALF)}
+        r={HALF}
+        colors={['#ffffffff', '#ffffff55', '#ffffff14', '#ffffff00']}
+        positions={[0, 0.25, 0.6, 1]}
+      />
+    </Circle>
+  );
+}
 
 /** Glow dokusu: parlak çekirdek + geniş, soluk hale. Tek sefer çizilir. */
 function GlowSprite() {
@@ -48,9 +64,12 @@ function GlowSprite() {
  * Tüm ateşböcekleri tek bir Atlas çağrısıyla (tek draw call) çizilir.
  * Konum ve parlaklık UI thread'de, simülasyon state'inden okunur.
  */
-export function Fireflies({ sim, tint }: Props) {
+export function Fireflies({ sim, tint, layer = 'core' }: Props) {
+  const halo = layer === 'halo';
+  const scaleMul = halo ? SCALE * FX.haloScale : SCALE;
+  const alphaMul = halo ? FX.haloAlpha : 1;
   const capacity = SIM.capacity;
-  const texture = useTexture(<GlowSprite />, TEXTURE_SIZE);
+  const texture = useTexture(halo ? <HaloSprite /> : <GlowSprite />, TEXTURE_SIZE);
   const sprites = useMemo(
     () => new Array(capacity).fill(0).map(() => Skia.XYWHRect(0, 0, T, T)),
     [capacity],
@@ -64,7 +83,7 @@ export function Fireflies({ sim, tint }: Props) {
       return;
     }
     const b = fireflyBrightness(s, i);
-    const scale = SCALE * (0.75 + 0.35 * b);
+    const scale = scaleMul * (0.75 + 0.35 * b);
     val.set(scale, 0, s.x[i]! - scale * HALF, s.y[i]! - scale * HALF);
   });
 
@@ -76,7 +95,7 @@ export function Fireflies({ sim, tint }: Props) {
     val[0] = c[0];
     val[1] = c[1];
     val[2] = c[2];
-    val[3] = a;
+    val[3] = a * alphaMul;
   });
 
   return (

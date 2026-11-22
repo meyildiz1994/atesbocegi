@@ -48,3 +48,13 @@ Belirsiz kalan konularda en basit makul seçenek uygulandı. Değiştirmek isted
 33. **`START.spawnRate` 1.5 → 2.5.** Erken oyun doğma hızıyla sınırlı; 1.5 ile Bölge 2 ~10. dakikada açılıyordu. 2.5 ile simülasyonda: ilk yükseltme 0:07, Bölge 2 6:15, ilk Işık Ruhu 6:34, Otomatik Boşaltma 7:02.
 34. **Denge simülasyonu (`npm run simulate`) Faz 4'te yazıldı**, çünkü onboarding zaman çizelgesi onunla doğrulanıyor. Gerçek simülasyon kodunu çizimsiz çalıştırır; sanal oyuncu en yakın böceğe sürükler, 0.8 sn gecikmeyle kavanozu boşaltır, Işık/sn artışı / maliyet oranı en iyi yükseltmeyi alır.
 35. **Bilinen denge sorunu (Faz 10'da çözülecek):** Bölge 2'den sonra ekonomi çok hızlanıyor; simülasyonda Bölge 3 ~9. dk, Şafak ~10. dk, Bölge 5 ~14. dk (hedef: Bölge 3 25–35 dk, ilk Şafak 3–5 saat). Ana sebep Kalabalık Orman'ın doğma hızını katlaması ile bölge çarpanlarının birleşmesi.
+
+## Faz 5
+
+36. **Görseller ChatGPT ile üretildi** (Emre'nin isteği): app ikonu (cam kavanoz + ateşböcekleri), 9 arayüz ikonu (7 yükseltme, Şafak, Mağaza) ve onboarding eli. `assets/ui/` altında; ikon `assets/icon.png`, Android adaptif ikon ve favicon ondan türetildi. Ateşböcekleri, hale, iz ve sahne performans için kodla çizilmeye devam ediyor.
+37. **Splash:** siyah zemin + tek parlayan ateşböceği (kodla üretilmiş PNG, `expo-splash-screen`).
+38. **Sesler ElevenLabs ile üretildi** (toplama çanı, gece ambiyansı); `scripts/import-audio.sh` ile normalize edilip 6 perdeye (pentatonik) bölündü, ambiyans çapraz geçişle döngüye çevrildi. Kavanoz "vuuş" sesi şimdilik kodla üretildi (`scripts/synth-sfx.py`); ElevenLabs sürümü sonra eklenecek. Müzik yok: bağlı ElevenLabs bağlantısı müzik üretemiyor. Tüm bölgeler aynı ambiyansı kullanıyor.
+39. **Combo yalnızca his içindir**, kazancı artırmaz: 0.7 sn içinde art arda toplamalar sayılır, 3'ten itibaren "×N" görünür, toplama sesi her adımda yarım ton yükselir (en fazla 12).
+40. **Böcek iki katman:** çekirdek + 2.6 kat büyük, %20 saydam hale (ikinci Atlas). Uçuş izi en fazla 96 böcek × 4 nokta (üçüncü Atlas).
+41. **Bölge açılınca** başarı titreşimi ve "Yeni bölge açıldı" bildirimi çıkar; dokununca o bölgeye geçilir ve orman bir anda böcekle dolar.
+42. **Ambiyans ayarlardaki "müzik" anahtarına bağlı**, efektler "ses" anahtarına. iOS sessiz modda ses çalmaz.

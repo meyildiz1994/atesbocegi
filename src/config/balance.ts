@@ -115,6 +115,38 @@ export const FEEDBACK = {
   floatingNumberRise: 90,
 } as const;
 
+/** Görsel efektler. */
+export const FX = {
+  /** Böceğin ikinci (hale) katmanı: çekirdeğe göre büyüklük ve saydamlık. */
+  haloScale: 2.6,
+  haloAlpha: 0.2,
+  /** Kavanoza uçan böceklerin izi. */
+  trailSlots: 96,
+  trailSegments: 4,
+  /** İz noktaları arası uçuş ilerlemesi (0..1). */
+  trailSpacing: 0.05,
+  trailAlpha: 0.55,
+} as const;
+
+export const AUDIO = {
+  sfxVolume: 0.7,
+  ambienceVolume: 0.35,
+  /** Aynı toplama sesinin üst üste çalabilmesi için oynatıcı sayısı. */
+  collectPoolSize: 3,
+  /** Bir karede en fazla kaç toplama sesi. */
+  maxCollectSoundsPerCatch: 2,
+} as const;
+
+/** Hızlı arka arkaya toplama (yalnızca görsel/işitsel his). */
+export const COMBO = {
+  /** İki toplama arası en fazla bu kadar ms ise combo sürer. */
+  windowMs: 700,
+  /** Göstergede ×N görünmesi için en az. */
+  minShow: 3,
+  semitonesPerStep: 1,
+  maxPitchSteps: 12,
+} as const;
+
 /** İlk dakikalar (onboarding). Adımlar: src/game/tutorial.ts */
 export const TUTORIAL = {
   /** İlk adımda ekranda tek bir böcek. */
@@ -156,6 +188,8 @@ export const UI = {
   sheetMaxHeightRatio: 0.72,
   /** Şafak beyaz parlama süresi (ms). */
   dawnFlashMs: 2200,
+  /** "Yeni bölge" bildiriminin ekranda kalma süresi (ms). */
+  zoneToastMs: 4500,
 } as const;
 
 /**

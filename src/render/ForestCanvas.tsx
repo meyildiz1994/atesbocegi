@@ -11,7 +11,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
-import { JAR, RING, SIM, SPIRIT, START, UI, ZONES } from '../config/balance';
+import { AUDIO, JAR, RING, SIM, SPIRIT, START, UI, ZONES } from '../config/balance';
 import {
   countByStatus,
   createSimState,
@@ -21,6 +21,8 @@ import {
   STATUS_FREE,
   type SimState,
 } from '../game/simulation';
+import { comboPitch } from '../game/combo';
+import { registerCatch } from '../game/comboFeed';
 import { selectBrightness, useGame, useStats } from '../game/state';
 import { tutorialFireflyCap } from '../game/tutorial';
 import { t } from '../i18n';
@@ -31,6 +33,7 @@ import { Fireflies } from './Fireflies';
 import { CollectRing } from './Glow';
 import { Jar } from './Jar';
 import { Spirits } from './Spirits';
+import { Trails } from './Trails';
 
 type Props = {
   /** Kavanoz boşaltılınca kazanılan Işık ile çağrılır (uçan sayı için). */
@@ -89,10 +92,22 @@ export function ForestCanvas({ onLightGained }: Props) {
   }, [stats, tutorialStep, ringRadius, jarCapacity, maxFireflies, spawnRate, spirits, spiritSpeed, magnetRange, magnetPull, autoEmpty]);
 
   // Bölge değişince kavanozdakiler o bölgenin değeriyle sayılmasın diye kavanoz boşalır (store da sıfırlar).
+  // Yeni bölgeye geçince orman bir anda böcekle dolar ("vay be" anı).
   const zoneForJar = useGame((s) => s.zoneIndex);
+  const [firstZone] = useState(zoneForJar);
   useEffect(() => {
     jarCount.set(0);
-  }, [zoneForJar, jarCount]);
+    if (zoneForJar === firstZone) return;
+    scheduleOnUI(() => {
+      'worklet';
+      const d = dims.value;
+      sim.modify((st) => {
+        'worklet';
+        seedFireflies(st, maxFireflies.value - countByStatus(st, STATUS_FREE), d.width, d.height);
+        return st;
+      }, true);
+    });
+  }, [zoneForJar, firstZone, jarCount, dims, sim, maxFireflies]);
 
   // Şafak'ta sahne sıfırlanır.
   const dawnCounter = useGame((s) => s.dawnCounter);
@@ -252,6 +267,8 @@ export function ForestCanvas({ onLightGained }: Props) {
               skyTop={(ZONES[zoneIndex] ?? ZONES[0]).bgTop}
               skyLitTop={(ZONES[zoneIndex] ?? ZONES[0]).bgLitTop}
             />
+            <Fireflies sim={sim} tint={tint} layer="halo" />
+            <Trails sim={sim} tint={tint} />
             <Fireflies sim={sim} tint={tint} />
             <Spirits sim={sim} />
             <CollectRing x={fingerX} y={fingerY} radius={ringRadius} visibility={ringVisibility} />
@@ -277,6 +294,8 @@ export function ForestCanvas({ onLightGained }: Props) {
 }
 
 function onCaught(n: number) {
-  for (let i = 0; i < Math.min(n, 3); i++) playSfx(collectSoundId());
+  const combo = registerCatch(n);
+  const pitch = comboPitch(combo);
+  for (let i = 0; i < Math.min(n, AUDIO.maxCollectSoundsPerCatch); i++) playSfx(collectSoundId(), { pitch });
   hapticCollect();
 }

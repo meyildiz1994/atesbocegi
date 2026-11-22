@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { COLORS, UI, UPGRADE_ORDER, UPGRADES, type UpgradeId } from '../config/balance';
 import { levelsLeft, purchasePlan, type BuyMode } from '../game/economy';
@@ -6,6 +6,7 @@ import { formatNumber } from '../game/numbers';
 import { useGame } from '../game/state';
 import { t, type I18nKey } from '../i18n';
 import { hapticJarEmpty } from '../services/haptics';
+import { UPGRADE_ICONS } from './icons';
 import { Sheet } from './Sheet';
 
 const MODES: BuyMode[] = [1, 10, 'max'];
@@ -61,6 +62,7 @@ function UpgradeRow({ id }: { id: UpgradeId }) {
 
   return (
     <View style={[styles.card, plan.affordable && !maxed && styles.cardAffordable]}>
+      <Image source={UPGRADE_ICONS[id]} style={styles.icon} accessibilityIgnoresInvertColors />
       <View style={styles.info}>
         <Text style={styles.name}>{t(`upgrade.${id}.name` as I18nKey)}</Text>
         <Text style={styles.desc}>{t(`upgrade.${id}.desc` as I18nKey)}</Text>
@@ -121,6 +123,7 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 0 },
   },
+  icon: { width: 52, height: 52, marginRight: 10 },
   info: { flex: 1, paddingRight: 10 },
   name: { color: COLORS.hudText, fontSize: 16, fontWeight: '700' },
   desc: { color: COLORS.hudSubText, fontSize: 13, marginTop: 2 },

@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { COLORS, UI, UPGRADE_ORDER } from '../config/balance';
@@ -6,6 +6,7 @@ import { canPrestige, levelsLeft, upgradeCost } from '../game/economy';
 import { useGame } from '../game/state';
 import { showBottomBar } from '../game/tutorial';
 import { t } from '../i18n';
+import { UI_ICONS } from './icons';
 
 export type PanelId = 'upgrades' | 'dawn' | 'store';
 
@@ -27,12 +28,12 @@ export function BottomBar({ onOpen }: { onOpen: (p: PanelId) => void }) {
 
   return (
     <View pointerEvents="box-none" style={[styles.bar, { paddingBottom: insets.bottom + 8 }]}>
-      <BarButton label={t('ui.store')} onPress={() => onOpen('store')} />
+      <BarButton label={t('ui.store')} icon={UI_ICONS.store} onPress={() => onOpen('store')} />
       <View style={styles.right}>
         {dawnReady || hasDust ? (
-          <BarButton label={t('dawn.short')} onPress={() => onOpen('dawn')} glow={dawnReady} color={COLORS.dawn} />
+          <BarButton label={t('dawn.short')} icon={UI_ICONS.dawn} onPress={() => onOpen('dawn')} glow={dawnReady} color={COLORS.dawn} />
         ) : null}
-        <BarButton label={t('ui.upgrades')} onPress={() => onOpen('upgrades')} glow={affordable} />
+        <BarButton label={t('ui.upgrades')} icon={UI_ICONS.upgrades} onPress={() => onOpen('upgrades')} glow={affordable} />
       </View>
     </View>
   );
@@ -40,11 +41,13 @@ export function BottomBar({ onOpen }: { onOpen: (p: PanelId) => void }) {
 
 function BarButton({
   label,
+  icon,
   onPress,
   glow,
   color = COLORS.accent,
 }: {
   label: string;
+  icon: number;
   onPress: () => void;
   glow?: boolean;
   color?: string;
@@ -55,6 +58,7 @@ function BarButton({
       accessibilityRole="button"
       style={[styles.button, glow && { borderColor: color, shadowColor: color, shadowOpacity: 0.8, backgroundColor: COLORS.cardBgAffordable }]}
     >
+      <Image source={icon} style={styles.icon} accessibilityIgnoresInvertColors />
       <Text style={[styles.text, glow && { color }]}>{label}</Text>
     </Pressable>
   );
@@ -73,7 +77,9 @@ const styles = StyleSheet.create({
   right: { gap: 8, alignItems: 'stretch' },
   button: {
     minHeight: UI.minTouch + 4,
-    paddingHorizontal: 18,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    gap: 6,
     borderRadius: 14,
     backgroundColor: COLORS.panelBg,
     borderWidth: 1,
@@ -84,5 +90,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0,
   },
+  icon: { width: 30, height: 30 },
   text: { color: COLORS.hudText, fontWeight: '700', fontSize: 15 },
 });

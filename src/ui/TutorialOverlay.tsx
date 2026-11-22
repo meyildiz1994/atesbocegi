@@ -16,8 +16,9 @@ import { COLORS, JAR, TUTORIAL, UI } from '../config/balance';
 import { useGame } from '../game/state';
 import { TUTORIAL_STEP } from '../game/tutorial';
 import { t } from '../i18n';
+import { UI_ICONS } from './icons';
 
-/** İpucu parmağı. Faz 5'te üretilmiş görselle değiştirilecek. */
+/** İpucu eli (ChatGPT ile üretildi). */
 function Finger({ mode }: { mode: 'drag' | 'tap' }) {
   const p = useSharedValue(0);
   useEffect(() => {
@@ -34,7 +35,7 @@ function Finger({ mode }: { mode: 'drag' | 'tap' }) {
       ? { transform: [{ translateX: (p.value - 0.5) * TUTORIAL.fingerTravel }] }
       : { transform: [{ translateY: p.value * 10 }, { scale: 1 - p.value * 0.12 }] },
   );
-  return <Animated.Text style={[styles.finger, style]}>👆</Animated.Text>;
+  return <Animated.Image source={UI_ICONS.finger} style={[styles.finger, style]} />;
 }
 
 function Hint({ text, mode, style }: { text: string; mode: 'drag' | 'tap'; style: object }) {
@@ -89,5 +90,5 @@ const styles = StyleSheet.create({
     textShadowColor: COLORS.firefly,
     textShadowRadius: 10,
   },
-  finger: { fontSize: 34 },
+  finger: { width: 40, height: 57 },
 });

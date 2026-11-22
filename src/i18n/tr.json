@@ -63,5 +63,6 @@
   "dawn.short": "Şafak",
   "a11y.prevZone": "Önceki bölge",
   "a11y.nextZone": "Sonraki bölge",
-  "hint.upgrade": "Güçlen"
+  "hint.upgrade": "Güçlen",
+  "zone.unlocked": "Yeni bölge açıldı"
 }

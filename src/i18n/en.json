@@ -63,5 +63,6 @@
   "dawn.short": "Dawn",
   "a11y.prevZone": "Previous zone",
   "a11y.nextZone": "Next zone",
-  "hint.upgrade": "Grow stronger"
+  "hint.upgrade": "Grow stronger",
+  "zone.unlocked": "New zone unlocked"
 }
