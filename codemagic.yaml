@@ -2,7 +2,7 @@
 # Gerekenler (bir kez, Codemagic arayüzünden):
 #   1. Personal settings > Integrations > Developer Portal: App Store Connect API anahtarı
 #      (mevcut "Nilemy" anahtarı kullanılıyor; aynı Apple ekibinin anahtarı yeterli).
-#   2. App Store Connect'te bundle id'si com.atesbocegi.game olan uygulama kaydını oluştur.
+#   2. App Store Connect uygulama kaydı: "Ateşböceği", bundle id com.atesbocegi.game (oluşturuldu).
 # Codemagic imzalama sertifikasını ve provisioning profile'ı API anahtarıyla kendisi alır/oluşturur.
 workflows:
   ios-testflight:
