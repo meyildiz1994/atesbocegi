@@ -64,6 +64,8 @@ export const START = {
 export const SIM = {
   /** Aynı anda tutulabilecek en fazla ateşböceği (buffer boyutu). */
   capacity: 1600,
+  /** Açılışta orman bu oranda dolu başlar (geri dönen oyuncu dolu bir orman görsün). */
+  initialSeedShare: 1,
   /** Süzülme hızı aralığı (px/sn). */
   speedMin: 14,
   speedMax: 32,
@@ -390,4 +392,10 @@ export const ANALYTICS = {
   maxQueued: 500,
   /** Test görünümünde tutulan son olay sayısı. */
   debugKeep: 60,
+} as const;
+
+/** Bölge arka plan görselleri (ChatGPT). Aydınlık 0'da görselin bu kadarı görünür, 1'de tamamı. */
+export const ZONE_ART = {
+  minVisible: 0.16,
+  maxVisible: 1,
 } as const;

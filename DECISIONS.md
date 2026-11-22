@@ -115,3 +115,13 @@ Belirsiz kalan konularda en basit makul seçenek uygulandı. Değiştirmek isted
 79. **Panel çerçeveleri ve düğmeler kodla çiziliyor** (yuvarlak köşe, ince kenar, parıltı). Görsel çerçeve dokuları Android'de esnetilemediği için (9-slice yok) şimdilik eklemedim; ikonlar ve renkler tutarlı tema sağlıyor.
 80. **Erişilebilirlik:** tüm dokunma hedefleri en az 44×44 pt, düğmelerde `accessibilityRole` ve etiketler var. Ateşböceği rengi (#d8ff6a) arka plana (#05070d) karşı yaklaşık 17:1 kontrastta.
 81. **Çeviri testleri:** EN ve TR aynı anahtarlara, boş olmayan metinlere ve aynı `{{değişken}}`lere sahip olmak zorunda.
+
+## Faz 12
+
+82. **Bölge arka planları** (ChatGPT, `assets/bg/zone1-5.jpg`, 1024×1536, JPEG ~160 KB): ekranı kaplayacak şekilde çizilir, üstünde siyah bir perde var. Perde bölge aydınlandıkça incelir (`ZONE_ART.minVisible` 0.16 → `maxVisible` 1). Görsel yüklenemezse eski kodla çizilen arka plan kullanılır.
+83. **Orman dolu başlar** (`SIM.initialSeedShare: 1`): açılışta ekran boş görünmesin diye tüm ateşböcekleri hemen yerleşir.
+84. **iPad desteği kapalı** (`supportsTablet: false`): arayüz telefona göre ölçülü, iPad'de çok küçük kalıyor. Uygulama iPad'de iPhone uyumluluk modunda çalışır ve App Store iPad ekran görüntüsü istemez. Tablet düzeni sonraki sürüme kalır.
+85. **Mağaza görselleri** web derlemesinden Playwright ile alınır (`scripts/store/capture.js`): 5 sahne × iPhone 6.7" (1290×2796) ve Android (1080×1920) × EN/TR, başlıklı çerçevede. Kayıtlar hazır save ile yüklenir, yani görüntüler gerçek oyun ekranıdır.
+86. **Tanıtım videosu** gerçek oynanış kaydıdır (`scripts/store/video.js`, 28 sn, 886×1920, 30 fps, sessiz ses izi): koru → bataklık → yükseltme → mantar vadisi. App Store önizlemeleri gerçek uygulama görüntüsü istediği için Gemini kullanmadım; Gemini sosyal medya tanıtımı için ayrıca kullanılabilir. Web kaydı 443×960'tan büyütüldüğü için biraz yumuşak; telefondan ekran kaydı daha keskin olur.
+87. **Android:** Codemagic'te elle başlatılan `android-play-internal` akışı AAB üretip Play iç test kanalına taslak olarak yükler. İmzalama `plugins/withReleaseSigning.js` ile Codemagic'teki keystore'dan yapılır; keystore repoya girmez.
+88. **Gizlilik politikası** `store/privacy.html` (EN/TR). Yayınlanacak bir adres ve iletişim e-postası gerekiyor; adres `EXPO_PUBLIC_PRIVACY_URL` ile uygulamaya verilir.

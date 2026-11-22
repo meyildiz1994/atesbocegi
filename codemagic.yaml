@@ -59,3 +59,46 @@ workflows:
       app_store_connect:
         auth: integration
         submit_to_testflight: true
+
+  # Android: Google Play dahili test kanalı. Push ile değil, elle başlatılır.
+  # Gerekenler (bir kez, Emre):
+  #   1. Google Play Console'da "Ateşböceği" uygulaması, paket adı com.atesbocegi.game.
+  #   2. Codemagic > Code signing identities > Android keystores: yükleme anahtarı,
+  #      referans adı "atesbocegi_upload" (Codemagic arayüzünde oluşturulabilir).
+  #   3. Codemagic > Integrations > Google Play: hizmet hesabı JSON'u, adı "atesbocegi_play".
+  #   İlk AAB Play Console'a bir kez elle yüklenmeli (Google kuralı); sonrakiler otomatik.
+  android-play-internal:
+    name: Android Play dahili test
+    max_build_duration: 60
+    instance_type: linux_x2
+    environment:
+      android_signing:
+        - atesbocegi_upload
+      groups:
+        - atesbocegi_play
+      vars:
+        EXPO_PUBLIC_SHOW_FPS: "1"
+      node: 22
+      java: 17
+    scripts:
+      - name: Bağımlılıklar
+        script: npm ci
+      - name: Kontroller (typecheck, test, lint)
+        script: |
+          npm run typecheck
+          npm test -- --ci
+          npm run lint
+      - name: Expo prebuild (Android)
+        script: npx expo prebuild --platform android --non-interactive
+      - name: Sürüm kodu
+        script: |
+          sed -i "s/versionCode [0-9]*/versionCode $BUILD_NUMBER/" android/app/build.gradle
+      - name: AAB oluştur
+        script: cd android && ./gradlew bundleRelease
+    artifacts:
+      - android/app/build/outputs/**/*.aab
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+        submit_as_draft: true

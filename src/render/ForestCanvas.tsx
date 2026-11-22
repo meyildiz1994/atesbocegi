@@ -29,6 +29,7 @@ import { t } from '../i18n';
 import { collectSoundId, playSfx } from '../services/audio';
 import { hapticCollect, hapticJarEmpty } from '../services/haptics';
 import { Backdrop } from './Backdrop';
+import { ZoneArt } from './ZoneArt';
 import { Fireflies } from './Fireflies';
 import { CollectRing } from './Glow';
 import { Jar } from './Jar';
@@ -189,7 +190,7 @@ export function ForestCanvas({ onLightGained }: Props) {
     sim.modify((s) => {
       'worklet';
       if (!seeded.value) {
-        seedFireflies(s, Math.max(1, Math.round(maxFireflies.value / 3)), d.width, d.height);
+        seedFireflies(s, Math.max(1, Math.round(maxFireflies.value * SIM.initialSeedShare)), d.width, d.height);
         seeded.value = true;
       }
       stepSimulation(s, dt, {
@@ -263,12 +264,20 @@ export function ForestCanvas({ onLightGained }: Props) {
       <GestureDetector gesture={pan}>
         <View style={StyleSheet.absoluteFill}>
           <Canvas style={StyleSheet.absoluteFill}>
-            <Backdrop
+            <ZoneArt
+              zoneIndex={zoneIndex}
               width={width}
               height={height}
               brightness={brightness}
-              skyTop={(ZONES[zoneIndex] ?? ZONES[0]).bgTop}
-              skyLitTop={(ZONES[zoneIndex] ?? ZONES[0]).bgLitTop}
+              fallback={
+                <Backdrop
+                  width={width}
+                  height={height}
+                  brightness={brightness}
+                  skyTop={(ZONES[zoneIndex] ?? ZONES[0]).bgTop}
+                  skyLitTop={(ZONES[zoneIndex] ?? ZONES[0]).bgLitTop}
+                />
+              }
             />
             {effectiveMax <= FX.haloMaxFireflies ? (
               <Fireflies key={`h${drawCount}`} sim={sim} tint={tint} layer="halo" count={drawCount} />
