@@ -99,8 +99,13 @@ export const SIM = {
 
 /** Kavanoz ve dokunma. */
 export const JAR = {
-  width: 76,
-  height: 96,
+  /** Görselin oranı (assets/ui/jar.png, 266×360). */
+  width: 82,
+  height: 111,
+  /** Camın iç bölgesi, görsel boyutuna oranla (ışık dolgusu bunun içine çizilir). */
+  glass: { left: 0.07, right: 0.93, top: 0.24, bottom: 0.94, radius: 0.16 },
+  /** Kavanozun içinde parlayan küçük ateşböceği sayısı. */
+  sparks: 14,
   /** Kavanoz merkezinin ekran altından uzaklığı (px, güvenli alan hariç). */
   bottomOffset: 70,
   /** Dolu kavanozun nefes alma döngüsü (sn) ve genliği. */

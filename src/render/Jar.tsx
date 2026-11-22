@@ -2,9 +2,13 @@ import {
   BlurMask,
   Circle,
   Group,
+  Image,
+  RadialGradient,
+  vec,
   RoundedRect,
   rect,
   rrect,
+  useImage,
 } from '@shopify/react-native-skia';
 import { useDerivedValue, type SharedValue } from 'react-native-reanimated';
 
@@ -21,9 +25,39 @@ type Props = {
 
 const W = JAR.width;
 const H = JAR.height;
+const G = JAR.glass;
+const gx = -W / 2 + W * G.left;
+const gw = W * (G.right - G.left);
+const gTop = -H / 2 + H * G.top;
+const gBottom = -H / 2 + H * G.bottom;
+const gr = W * G.radius;
 
-/** Kavanoz: doldukça içi parlar, doluyken nefes alır ve titrer. */
+const JAR_IMAGE = require('../../assets/ui/jar.png');
+
+/** Kavanozun içinde uçuşan küçük ateşböcekleri: sabit konumlar (u, v ∈ 0..1, v=0 dip), dolum seviyesine kadar görünür. */
+const SPARKS = Array.from({ length: JAR.sparks }, (_, i) => {
+  const r1 = Math.sin(i * 12.9898) * 43758.5453;
+  const r2 = Math.sin(i * 78.233) * 12543.123;
+  return { u: 0.12 + 0.76 * (r1 - Math.floor(r1)), v: 0.05 + 0.9 * (i / JAR.sparks), phase: (r2 - Math.floor(r2)) * 6.28 };
+});
+
+function Spark({ u, v, phase, fill, time }: { u: number; v: number; phase: number; fill: SharedValue<number>; time: SharedValue<number> }) {
+  const cx = useDerivedValue(() => gx + gw * u + 2.5 * Math.sin(time.value * 1.3 + phase));
+  const cy = useDerivedValue(() => gBottom - (gBottom - gTop) * v + 2 * Math.cos(time.value * 1.1 + phase));
+  const opacity = useDerivedValue(() => (v < fill.value ? 0.55 + 0.45 * Math.sin(time.value * 3 + phase) : 0));
+  return (
+    <Circle cx={cx} cy={cy} r={2.2} color={COLORS.jarGlow} opacity={opacity}>
+      <BlurMask blur={2} style="solid" />
+    </Circle>
+  );
+}
+
+/**
+ * Kavanoz: ChatGPT ile çizilmiş cam kavanoz görseli; içindeki ışık kodla çizilir.
+ * Doldukça içi parlar, doluyken nefes alır ve titrer.
+ */
 export function Jar({ x, y, count, capacity, time }: Props) {
+  const image = useImage(JAR_IMAGE);
   const fill = useDerivedValue(() => Math.min(1, count.value / Math.max(1, capacity.value)));
   const full = useDerivedValue(() => (count.value >= capacity.value ? 1 : 0));
 
@@ -34,49 +68,41 @@ export function Jar({ x, y, count, capacity, time }: Props) {
     return [{ translateX: x + shake }, { translateY: y }, { scale: pulse }];
   });
 
-  const innerH = H - 22;
   const liquid = useDerivedValue(() => {
-    const h = innerH * fill.value;
-    return rrect(rect(-W / 2 + 7, H / 2 - 6 - h, W - 14, h), 10, 10);
+    const h = (gBottom - gTop) * fill.value;
+    return rrect(rect(gx, gBottom - h, gw, h), gr, gr);
   });
-  const glowOpacity = useDerivedValue(() => 0.15 + 0.85 * fill.value);
-  const haloR = useDerivedValue(() => W * (0.6 + 0.5 * fill.value + 0.15 * full.value));
+  const glowOpacity = useDerivedValue(() => 0.12 + 0.88 * fill.value);
+  const haloR = useDerivedValue(() => W * (0.55 + 0.5 * fill.value + 0.15 * full.value));
 
   return (
     <Group transform={transform}>
       {/* Dış hale */}
       <Group opacity={glowOpacity} blendMode="plus">
-        <Circle cx={0} cy={8} r={haloR} color={`${COLORS.jarGlow}55`}>
-          <BlurMask blur={24} style="normal" />
+        <Circle cx={0} cy={(gTop + gBottom) / 2} r={haloR} color={`${COLORS.jarGlow}44`}>
+          <BlurMask blur={26} style="normal" />
         </Circle>
       </Group>
-      {/* Işık dolgusu */}
+      {/* Cam kavanoz görseli (yüklenene kadar sade bir cam) */}
+      {image ? (
+        <Image image={image} x={-W / 2} y={-H / 2} width={W} height={H} fit="contain" />
+      ) : (
+        <RoundedRect x={gx} y={gTop} width={gw} height={gBottom - gTop} r={gr} color={`${COLORS.jarGlass}33`} />
+      )}
+      {/* Camın içindeki ışık: görselin üstüne eklenerek çizilir, cam içten aydınlanmış görünür */}
       <Group opacity={glowOpacity} blendMode="plus">
-        <RoundedRect rect={liquid} color={`${COLORS.jarGlow}cc`}>
-          <BlurMask blur={6} style="solid" />
+        <RoundedRect rect={liquid}>
+          <RadialGradient
+            c={vec(0, (gTop + gBottom) / 2 + 8)}
+            r={gw * 0.75}
+            colors={[`${COLORS.jarGlow}b0`, `${COLORS.jarGlow}40`]}
+          />
+          <BlurMask blur={7} style="normal" />
         </RoundedRect>
+        {SPARKS.map((sp, i) => (
+          <Spark key={i} {...sp} fill={fill} time={time} />
+        ))}
       </Group>
-      {/* Cam */}
-      <RoundedRect
-        x={-W / 2}
-        y={-H / 2 + 10}
-        width={W}
-        height={H - 10}
-        r={16}
-        color={`${COLORS.jarGlass}22`}
-      />
-      <RoundedRect
-        x={-W / 2}
-        y={-H / 2 + 10}
-        width={W}
-        height={H - 10}
-        r={16}
-        color={`${COLORS.jarGlass}aa`}
-        style="stroke"
-        strokeWidth={2}
-      />
-      {/* Kapak */}
-      <RoundedRect x={-W / 2 + 8} y={-H / 2} width={W - 16} height={12} r={4} color="#5a4a3a" />
     </Group>
   );
 }

@@ -125,3 +125,7 @@ Belirsiz kalan konularda en basit makul seçenek uygulandı. Değiştirmek isted
 86. **Tanıtım videosu** gerçek oynanış kaydıdır (`scripts/store/video.js`, 28 sn, 886×1920, 30 fps, sessiz ses izi): koru → bataklık → yükseltme → mantar vadisi. App Store önizlemeleri gerçek uygulama görüntüsü istediği için Gemini kullanmadım; Gemini sosyal medya tanıtımı için ayrıca kullanılabilir. Web kaydı 443×960'tan büyütüldüğü için biraz yumuşak; telefondan ekran kaydı daha keskin olur.
 87. **Android:** Codemagic'te elle başlatılan `android-play-internal` akışı AAB üretip Play iç test kanalına taslak olarak yükler. İmzalama `plugins/withReleaseSigning.js` ile Codemagic'teki keystore'dan yapılır; keystore repoya girmez.
 88. **Gizlilik politikası** `store/privacy.html` (EN/TR). Yayınlanacak bir adres ve iletişim e-postası gerekiyor; adres `EXPO_PUBLIC_PRIVACY_URL` ile uygulamaya verilir.
+
+## Sonrası
+
+89. **Yeni kavanoz** (ChatGPT, `assets/ui/jar.png`): bronz kapaklı, ip fiyonklu, yapraklı cam kavanoz; arayüz ikonlarıyla aynı stil. Işık kodla çizilir: camın içi doldukça yumuşak bir parıltıyla aydınlanır ve içinde `JAR.sparks` (14) küçük ateşböceği uçuşur. Kavanoz biraz büyüdü (76×96 → 82×111).
