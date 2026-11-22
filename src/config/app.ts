@@ -24,7 +24,8 @@ export const APP_CONFIG = {
   },
   /** RevenueCat genel (public) SDK anahtarları. */
   revenueCat: {
-    ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY ?? '',
+    /** Herkese açık SDK anahtarı (RevenueCat, uygulamaya gömülmek için). */
+    ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY ?? 'appl_QdidBJaOsQSdmqaGzfRFPCNQDgU',
     android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY ?? '',
   },
   /** RevenueCat'te tanımlanacak yetki (entitlement) ve ürün kimlikleri. */
