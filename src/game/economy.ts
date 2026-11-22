@@ -127,6 +127,8 @@ export type StatInput = {
   skills: Skills;
   stardustEarned: number;
   zoneIndex: number;
+  /** Satın alımlardan gelen kalıcı Işık çarpanı (Başlangıç Paketi). */
+  purchaseMultiplier?: number;
 };
 
 function flatThenPct(base: number, level: number, flatLevels: number, step: number, pct: number): number {
@@ -165,7 +167,7 @@ export function computeStats(input: StatInput): Stats {
   return {
     ringRadius: ring,
     jarCapacity: Math.floor(jar),
-    valuePerFirefly: value * zone.multiplier * gm,
+    valuePerFirefly: value * zone.multiplier * gm * (input.purchaseMultiplier ?? 1),
     maxFireflies: START.maxFireflies + EFFECTS.crowdFireflies * l.crowd,
     spawnRate: START.spawnRate * Math.pow(EFFECTS.crowdSpawnMult, l.crowd),
     spirits,

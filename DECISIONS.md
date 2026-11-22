@@ -76,3 +76,16 @@ Belirsiz kalan konularda en basit makul seçenek uygulandı. Değiştirmek isted
 52. **Saat oynatma:** geri alınırsa offline süre 0 sayılır ve `lastSeen` şimdiye çekilir; ileri alınırsa normal üst sınır (2 saat, Uzun Gece ile 8 saat) uygulanır. Saati tekrar tekrar ileri alarak üst sınır kadar kazanç toplanabilir; tek oyunculu oyunda bunu kabul ettim (sunucu saati gerekmez).
 53. **"İlerlemeyi sıfırla" iki adımlı onay** ile ayarlar panelinde (oyun içi onay, sistem uyarısı değil). Ayarlar (ses, ortam sesi, titreşim) korunur; kayıt ve yedek silinir.
 54. **Ayarlar paneli şimdilik:** ses efektleri, ortam sesi (müzik henüz yok), titreşim, sıfırlama. Dil (Faz 11), satın alımları geri yükle ve gizlilik (Faz 8) sonra eklenecek. Dişli simgesi şimdilik yazı karakteri; Faz 11'de ChatGPT ile üretilen arayüz görselleriyle değişecek.
+
+## Faz 8
+
+55. **Reklam akışı:** onboarding bitince Google UMP rıza formu (yalnızca gereken bölgelerde, ör. AB) → iOS ATT istemi → AdMob başlar. Hiçbir reklam teklifi ilk 10 dakikada (oyun süresi) görünmez.
+56. **Ödüllü yerleşimler:** sağ üstte "▶ ×2 Işık" (2 dakika, üst üste eklenir, kayıtta kalır), "Sen yokken" panelinde ×2, ve Altın Ateşböceği.
+57. **Altın Ateşböceği** simülasyonun değil arayüzün parçası: 2,5–5 dakikada bir ekranı 9 saniyede dalgalanarak geçer, dokununca kart açılır. Ödül = son Işık/sn × 180 sn (en az 10 dolu kavanoz). Reklamsız da alınabilir (%20), reklamla tamamı. Fırsat kaçırılsa da ceza yok.
+58. **Geçiş reklamı** yalnızca oyuncu bölge değiştirdiğinde, 15. dakikadan sonra ve en fazla 5 dakikada bir. Şafak sırasındaki bölge sıfırlaması sayılmaz.
+59. **"Reklamları Kaldır" sahipleri** geçiş reklamı görmez; ödüllü teklifleri (×2 Işık, offline ×2, Altın Ateşböceği tam ödülü) reklam izlemeden alır. Bu, satın almayı daha değerli kılıyor; ×2 Işık sonsuza dek elle yenilenebilir hale geliyor, bunu kabul ettim.
+60. **Başlangıç Paketi:** kalıcı ×2 Işık (böcek değerine çarpan). İlk 48 saatte ayrı, indirimli bir ürün (`starter_pack_launch`) gösterilir; ikisi de aynı `starter` yetkisini açar. **Kozmetik kavanoz** ve diğer kozmetikler görseller ChatGPT ile üretildikten sonra (Faz 11) eklenecek.
+61. **Satın alımlar kayda yazılır** ve RevenueCat'ten her açılışta tazelenir; çevrimdışıyken son bilinen durum geçerli. "İlerlemeyi sıfırla" ve Şafak satın alımları silmez.
+62. **Kimlikler build ortamından gelir** (`src/config/app.ts`, `EXPO_PUBLIC_*`). AdMob kimliği yoksa Google'ın resmi test reklamları gösterilir; RevenueCat anahtarı yoksa mağaza "şu an kullanılamıyor" der. `app.json`'daki AdMob uygulama kimlikleri şimdilik Google'ın test kimlikleri; gerçekleri gelince değiştirilecek.
+63. **Web ve testlerde** reklam ve satın alma modülleri yüklenmez (`ads.ts`/`iap.ts` boş sürümler, gerçekleri `*.native.ts`).
+64. **Gizlilik politikası** bağlantısı `EXPO_PUBLIC_PRIVACY_URL` ile gelir; sayfa Faz 12'de Hostinger sunucusunda yayınlanacak. Ayarlarda boşsa satır gizli.

@@ -17,6 +17,7 @@ import {
   type BuyMode,
   type Stats,
 } from './economy';
+import { boostMultiplier, extendBoost, purchaseMultiplier, type Purchases } from './monetization';
 import { emptyLevels, newSave, type SaveData, type Settings } from './save';
 
 export type OfflineReport = { seconds: number; gain: number };
@@ -54,6 +55,12 @@ export type GameActions = {
   setSettings: (patch: Partial<Settings>) => void;
   setTutorialStep: (step: number) => void;
   setStressFireflies: (n: number) => void;
+  /** Ödüllü ×2 Işık'ı başlatır/uzatır. */
+  startBoost: (now: number) => void;
+  /** Doğrudan Işık ekler (Altın Ateşböceği ödülü). */
+  grantLight: (amount: number, now?: number) => void;
+  setPurchases: (p: Purchases) => void;
+  markInterstitial: (now: number) => void;
   /** Kayıttan yükle. */
   hydrate: (data: SaveData) => void;
   resetProgress: (now: number) => void;
@@ -72,12 +79,15 @@ const transient = (): Transient => ({
 
 export const initialGameState = (now = Date.now()): GameState => ({ ...newSave(now), ...transient() });
 
-export function statsOf(s: Pick<GameState, 'levels' | 'skills' | 'stardustEarned' | 'zoneIndex'>): Stats {
+export function statsOf(
+  s: Pick<GameState, 'levels' | 'skills' | 'stardustEarned' | 'zoneIndex' | 'purchases'>,
+): Stats {
   return computeStats({
     levels: s.levels,
     skills: s.skills,
     stardustEarned: s.stardustEarned,
     zoneIndex: s.zoneIndex,
+    purchaseMultiplier: purchaseMultiplier(s.purchases),
   });
 }
 
@@ -87,7 +97,7 @@ export const useGame = create<GameState & GameActions>()((set, get) => ({
   emptyJar: (count, now = Date.now()) => {
     const s = get();
     const st = statsOf(s);
-    const gain = jarPayout(count, st.valuePerFirefly, 1);
+    const gain = jarPayout(count, st.valuePerFirefly, boostMultiplier(now, s.boostUntil));
     if (gain <= 0) return 0;
     const zoneLight = s.zoneLight.slice();
     zoneLight[s.zoneIndex] = (zoneLight[s.zoneIndex] ?? 0) + gain;
@@ -199,11 +209,37 @@ export const useGame = create<GameState & GameActions>()((set, get) => ({
 
   setStressFireflies: (stressFireflies) => set({ stressFireflies }),
 
+  startBoost: (now) => set({ boostUntil: extendBoost(now, get().boostUntil) }),
+
+  grantLight: (amount, now = Date.now()) => {
+    const s = get();
+    if (!(amount > 0)) return;
+    const zoneLight = s.zoneLight.slice();
+    zoneLight[s.zoneIndex] = (zoneLight[s.zoneIndex] ?? 0) + amount;
+    const cutoff = now - RATE_WINDOW_SECONDS * 1000;
+    set({
+      light: s.light + amount,
+      runLight: s.runLight + amount,
+      lifetimeLight: s.lifetimeLight + amount,
+      zoneLight,
+      // Işık/sn göstergesini şişirmesin diye recentGains'e eklenmez.
+      recentGains: s.recentGains.filter(([t]) => t >= cutoff),
+    });
+  },
+
+  setPurchases: (purchases) => {
+    const cur = get().purchases;
+    if (cur.removeAds !== purchases.removeAds || cur.starter !== purchases.starter) set({ purchases });
+  },
+
+  markInterstitial: (lastInterstitialAt) => set({ lastInterstitialAt }),
+
   hydrate: (data) => set({ ...data, ...transient() }),
 
   resetProgress: (now) => {
-    const settings = get().settings;
-    set({ ...initialGameState(now), settings });
+    // Ayarlar ve satın alımlar (parası ödenmiş) sıfırlanmaz.
+    const { settings, purchases } = get();
+    set({ ...initialGameState(now), settings, purchases });
   },
 
   snapshot: (now) => {
@@ -226,6 +262,9 @@ export const useGame = create<GameState & GameActions>()((set, get) => ({
       firstLaunchAt: s.firstLaunchAt,
       tutorialStep: s.tutorialStep,
       offlineReport: s.offlineReport,
+      boostUntil: s.boostUntil,
+      lastInterstitialAt: s.lastInterstitialAt,
+      purchases: s.purchases,
     };
   },
 }));
@@ -252,6 +291,7 @@ export function useStats(): Stats {
       skills: s.skills,
       stardustEarned: s.stardustEarned,
       zoneIndex: s.zoneIndex,
+      purchases: s.purchases,
     })),
   );
   return useMemo(() => statsOf(input), [input]);

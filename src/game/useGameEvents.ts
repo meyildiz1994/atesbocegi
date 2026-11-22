@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 
+import { maybeShowInterstitial } from '../services/ads';
 import { track } from '../services/analytics';
 import { setAmbience } from '../services/audio';
 import { hapticSuccess } from '../services/haptics';
@@ -18,7 +19,9 @@ export function useGameEvents(): [number | null, () => void] {
   useEffect(() => {
     let known = unlockedZoneCount(useGame.getState().runLight);
     let lastDawn = useGame.getState().dawnCounter;
-    return useGame.subscribe((s) => {
+    return useGame.subscribe((s, prev) => {
+      // Oyuncunun bölge değiştirmesi: kurallar uygunsa seyrek geçiş reklamı.
+      if (s.zoneIndex !== prev.zoneIndex && s.dawnCounter === prev.dawnCounter) void maybeShowInterstitial();
       if (s.dawnCounter !== lastDawn) {
         // Şafak'ta bölgeler yeniden kilitlenir; bunu açılma sanma.
         lastDawn = s.dawnCounter;

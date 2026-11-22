@@ -4,6 +4,7 @@
  */
 import { SAVE, SKILL_ORDER, UPGRADE_ORDER, ZONES } from '../config/balance';
 import type { Levels, Skills } from './economy';
+import { noPurchases, type Purchases } from './monetization';
 
 export type Settings = {
   sound: boolean;
@@ -36,6 +37,12 @@ export type SaveData = {
   tutorialStep: number;
   /** Henüz alınmamış offline kazanç; panel açıkken uygulama kapanırsa kaybolmasın. */
   offlineReport: { seconds: number; gain: number } | null;
+  /** Ödüllü ×2 Işık bitiş zamanı (ms). */
+  boostUntil: number;
+  /** Son geçiş reklamı zamanı (ms). */
+  lastInterstitialAt: number;
+  /** Satın alımlar (RevenueCat'ten gelen son bilinen durum; çevrimdışı da geçerli). */
+  purchases: Purchases;
 };
 
 export interface KeyValueStore {
@@ -76,6 +83,9 @@ export function newSave(now: number): SaveData {
     firstLaunchAt: now,
     tutorialStep: 0,
     offlineReport: null,
+    boostUntil: 0,
+    lastInterstitialAt: 0,
+    purchases: noPurchases(),
   };
 }
 
@@ -92,6 +102,7 @@ type Raw = Record<string, unknown>;
 const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
   0: (raw) => ({ ...raw, saveVersion: 1 }),
   1: (raw) => ({ ...raw, offlineReport: null, saveVersion: 2 }),
+  2: (raw) => ({ ...raw, boostUntil: 0, lastInterstitialAt: 0, purchases: noPurchases(), saveVersion: 3 }),
 };
 
 export function migrate(raw: Raw): Raw {
@@ -112,6 +123,7 @@ export function sanitize(raw: Raw, now: number): SaveData {
   const levelsRaw = (raw.levels ?? {}) as Raw;
   const skillsRaw = (raw.skills ?? {}) as Raw;
   const settingsRaw = (raw.settings ?? {}) as Raw;
+  const purchasesRaw = (raw.purchases ?? {}) as Raw;
   const zl = Array.isArray(raw.zoneLight) ? raw.zoneLight : [];
   const lang = settingsRaw.language;
   return {
@@ -139,6 +151,12 @@ export function sanitize(raw: Raw, now: number): SaveData {
     firstLaunchAt: num(raw.firstLaunchAt, base.firstLaunchAt),
     tutorialStep: Math.floor(num(raw.tutorialStep)),
     offlineReport: offlineReportOf(raw.offlineReport),
+    boostUntil: num(raw.boostUntil),
+    lastInterstitialAt: num(raw.lastInterstitialAt),
+    purchases: {
+      removeAds: bool(purchasesRaw.removeAds),
+      starter: bool(purchasesRaw.starter),
+    },
   };
 }
 

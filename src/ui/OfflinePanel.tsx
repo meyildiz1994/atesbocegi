@@ -5,13 +5,20 @@ import { COLORS, UI } from '../config/balance';
 import { formatNumber } from '../game/numbers';
 import { useGame } from '../game/state';
 import { t } from '../i18n';
-import { isRewardedAvailable, showRewarded } from '../services/ads';
+import { adsAllowed } from '../game/monetization';
+import { showRewarded, useRewardedReady } from '../services/ads';
+import { useAdOffer } from './useAdOffer';
 import { hapticJarEmpty } from '../services/haptics';
 
 /** Açılışta "Sen yokken 12.4K Işık toplandı" paneli. */
 export function OfflinePanel() {
   const report = useGame((s) => s.offlineReport);
   const claim = useGame((s) => s.claimOffline);
+  const ready = useRewardedReady();
+  const allowed = useGame((s) => adsAllowed(s.playTimeSec));
+  const removeAds = useGame((s) => s.purchases.removeAds);
+  const offer = !!report && ready && allowed && !removeAds;
+  useAdOffer('offline_double', offer);
   if (!report) return null;
 
   const collect = (mult: number) => {
@@ -31,10 +38,11 @@ export function OfflinePanel() {
         <Text style={styles.amount}>{formatNumber(report.gain)}</Text>
         <Text style={styles.body}>{t('offline.body', { amount: formatNumber(report.gain) })}</Text>
         <View style={styles.buttons}>
-          <Pressable style={styles.button} onPress={() => collect(1)} accessibilityRole="button">
-            <Text style={styles.buttonText}>{t('offline.collect')}</Text>
+          {/* "Reklamları Kaldır" sahipleri ×2'yi reklamsız alır. */}
+          <Pressable style={styles.button} onPress={() => collect(removeAds ? 2 : 1)} accessibilityRole="button">
+            <Text style={styles.buttonText}>{removeAds ? t('offline.collectDouble') : t('offline.collect')}</Text>
           </Pressable>
-          {isRewardedAvailable() ? (
+          {offer ? (
             <Pressable style={[styles.button, styles.adButton]} onPress={watchAd} accessibilityRole="button">
               <Text style={styles.buttonText}>{t('offline.double')}</Text>
             </Pressable>

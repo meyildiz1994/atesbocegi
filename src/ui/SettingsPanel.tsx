@@ -1,22 +1,33 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+
+import { APP_CONFIG } from '../config/app';
 
 import { COLORS, UI } from '../config/balance';
 import { resetAll } from '../game/persistence';
 import type { Settings } from '../game/save';
 import { useGame } from '../game/state';
 import { t, type I18nKey } from '../i18n';
+import { privacyOptionsRequired, showPrivacyOptions } from '../services/ads';
 import { hapticSuccess } from '../services/haptics';
+import { iapAvailable, restore } from '../services/iap';
 import { Sheet } from './Sheet';
 
 type Toggle = Exclude<keyof Settings, 'language'>;
 const TOGGLES: Toggle[] = ['sound', 'music', 'haptics'];
 
-/** Ayarlar. Dil, satın alımları geri yükle ve gizlilik Faz 8 ve 11'de eklenecek. */
+/** Ayarlar. Dil seçimi Faz 11'de eklenecek. */
 export function SettingsPanel({ onClose }: { onClose: () => void }) {
   const settings = useGame((s) => s.settings);
   const setSettings = useGame((s) => s.setSettings);
   const [confirming, setConfirming] = useState(false);
+  const [restoreNote, setRestoreNote] = useState<string | null>(null);
+
+  const onRestore = async () => {
+    setRestoreNote(null);
+    const ok = await restore();
+    setRestoreNote(ok ? t('store.restored') : t('store.nothingToRestore'));
+  };
 
   const onReset = () => {
     resetAll();
@@ -39,6 +50,14 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
             />
           </View>
         ))}
+
+        {iapAvailable() ? (
+          <LinkRow label={t('store.restore')} onPress={onRestore} note={restoreNote} />
+        ) : null}
+        {privacyOptionsRequired() ? <LinkRow label={t('settings.adPrivacy')} onPress={showPrivacyOptions} /> : null}
+        {APP_CONFIG.privacyPolicyUrl ? (
+          <LinkRow label={t('settings.privacyPolicy')} onPress={() => Linking.openURL(APP_CONFIG.privacyPolicyUrl)} />
+        ) : null}
 
         <View style={styles.danger}>
           {confirming ? (
@@ -72,6 +91,15 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
   );
 }
 
+function LinkRow({ label, onPress, note }: { label: string; onPress: () => void; note?: string | null }) {
+  return (
+    <Pressable onPress={onPress} style={styles.row} accessibilityRole="button">
+      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.chevron}>{note ?? '›'}</Text>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   body: { paddingHorizontal: 18, paddingBottom: 8, gap: 6 },
   row: {
@@ -83,6 +111,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.panelBorder,
   },
   label: { color: COLORS.hudText, fontSize: 16 },
+  chevron: { color: COLORS.hudSubText, fontSize: 14, flexShrink: 1, textAlign: 'right', marginLeft: 12 },
   danger: { marginTop: 18, gap: 10 },
   button: {
     minHeight: UI.minTouch,

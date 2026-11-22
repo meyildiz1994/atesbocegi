@@ -324,7 +324,7 @@ export const ZONES = [
 
 /** Kayıt. */
 export const SAVE = {
-  version: 2,
+  version: 3,
   autosaveSeconds: 10,
   key: 'atesbocegi.save',
   backupKey: 'atesbocegi.save.bak',
@@ -332,3 +332,40 @@ export const SAVE = {
 
 /** Işık/sn göstergesi için kayan pencere (sn). */
 export const RATE_WINDOW_SECONDS = 10;
+
+/** Reklam ve satın alma kuralları (Faz 8). */
+export const MONETIZATION = {
+  /** Bu oyun süresinden (sn) önce hiçbir reklam teklifi/gösterimi yok. */
+  noAdsBeforeSec: 10 * 60,
+  /** Geçiş reklamı: ilk bu kadar oyun süresinde (sn) yok… */
+  interstitialAfterSec: 15 * 60,
+  /** …ve en fazla bu sıklıkta (sn), sadece bölge geçişinde. */
+  interstitialMinGapSec: 5 * 60,
+  /** Ödüllü "×2 Işık" süresi (sn) ve çarpanı. */
+  boostSeconds: 120,
+  boostMultiplier: 2,
+  /** Başlangıç Paketi: kalıcı Işık çarpanı; indirimli fiyat ilk bu kadar saatte. */
+  starterMultiplier: 2,
+  starterDiscountHours: 48,
+} as const;
+
+/** Altın Ateşböceği: ara sıra ekranda süzülen nadir böcek. */
+export const GOLDEN = {
+  /** İki altın böcek arası (sn), bu aralıkta rastgele. */
+  minIntervalSec: 150,
+  maxIntervalSec: 300,
+  /** Ekranda kalma süresi (sn). */
+  visibleSec: 9,
+  /** Ödül: son Işık/sn × bu kadar saniye… */
+  rewardSeconds: 180,
+  /** …ama en az bu kadar dolu kavanoz değeri. */
+  minRewardJars: 10,
+  /** Reklamsız alınırsa ödülün oranı. */
+  freeShare: 0.2,
+  /** Görünüm (px). */
+  size: 26,
+  color: '#ffd24a',
+} as const;
+
+/** Reklam yüklenemezse yeniden deneme aralığı (ms). */
+export const ADS_RETRY_MS = 30_000;

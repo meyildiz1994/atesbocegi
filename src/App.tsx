@@ -1,20 +1,26 @@
 import { StatusBar } from 'expo-status-bar';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { COLORS } from './config/balance';
 import { usePersistence } from './game/persistence';
+import { useGame } from './game/state';
+import { TUTORIAL_STEP } from './game/tutorial';
 import { useGameEvents } from './game/useGameEvents';
 import { useTutorialDriver } from './game/useTutorial';
 import { ForestCanvas } from './render/ForestCanvas';
+import { initAds } from './services/ads';
+import { initIap } from './services/iap';
+import { BoostButton } from './ui/BoostButton';
 import { ComboCounter } from './ui/ComboCounter';
 import { BottomBar, type PanelId } from './ui/BottomBar';
 import { DawnFlash } from './ui/DawnFlash';
 import { DawnPanel } from './ui/DawnPanel';
 import { FloatingNumbers, type FloatingNumbersHandle } from './ui/FloatingNumbers';
 import { FpsOverlay } from './ui/FpsOverlay';
+import { GoldenFirefly } from './ui/GoldenFirefly';
 import { Hud } from './ui/Hud';
 import { OfflinePanel } from './ui/OfflinePanel';
 import { SettingsPanel } from './ui/SettingsPanel';
@@ -34,6 +40,15 @@ export default function App() {
   const [panel, setPanel] = useState<PanelId | null>(null);
   const close = () => setPanel(null);
 
+  // Satın alımlar açılışta; reklamlar (rıza formu ve ATT istemi) onboarding bittikten sonra.
+  const tutorialDone = useGame((s) => s.tutorialStep >= TUTORIAL_STEP.done);
+  useEffect(() => {
+    if (ready) void initIap();
+  }, [ready]);
+  useEffect(() => {
+    if (ready && tutorialDone) void initAds();
+  }, [ready, tutorialDone]);
+
   return (
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
@@ -44,6 +59,8 @@ export default function App() {
               <Hud onOpenSettings={() => setPanel('settings')} />
               <FloatingNumbers ref={floaters} />
               <ComboCounter />
+              <GoldenFirefly />
+              <BoostButton />
               {newZone !== null ? <ZoneToast zone={newZone} onDone={clearNewZone} /> : null}
               <TutorialOverlay />
               <BottomBar onOpen={setPanel} />
