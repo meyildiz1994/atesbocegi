@@ -17,6 +17,7 @@ import { FloatingNumbers, type FloatingNumbersHandle } from './ui/FloatingNumber
 import { FpsOverlay } from './ui/FpsOverlay';
 import { Hud } from './ui/Hud';
 import { OfflinePanel } from './ui/OfflinePanel';
+import { SettingsPanel } from './ui/SettingsPanel';
 import { StorePanel } from './ui/StorePanel';
 import { TutorialOverlay } from './ui/TutorialOverlay';
 import { UpgradePanel } from './ui/UpgradePanel';
@@ -40,7 +41,7 @@ export default function App() {
           {ready ? (
             <>
               <ForestCanvas onLightGained={(a, x, y) => floaters.current?.spawn(a, x, y)} />
-              <Hud />
+              <Hud onOpenSettings={() => setPanel('settings')} />
               <FloatingNumbers ref={floaters} />
               <ComboCounter />
               {newZone !== null ? <ZoneToast zone={newZone} onDone={clearNewZone} /> : null}
@@ -49,6 +50,7 @@ export default function App() {
               {panel === 'upgrades' ? <UpgradePanel onClose={close} /> : null}
               {panel === 'dawn' ? <DawnPanel onClose={close} /> : null}
               {panel === 'store' ? <StorePanel onClose={close} /> : null}
+              {panel === 'settings' ? <SettingsPanel onClose={close} /> : null}
               <OfflinePanel />
               <DawnFlash />
               {SHOW_FPS ? <FpsOverlay /> : null}

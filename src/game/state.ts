@@ -28,8 +28,6 @@ type Transient = {
   activeFireflies: number;
   /** Son kazançlar [zaman ms, miktar], Işık/sn için. */
   recentGains: [number, number][];
-  /** Açılışta gösterilecek offline kazanç (alınana kadar). */
-  offlineReport: OfflineReport | null;
   buyMode: BuyMode;
   /** Şafak animasyonu tetikleyicisi (artan sayaç). */
   dawnCounter: number;
@@ -67,7 +65,6 @@ const transient = (): Transient => ({
   jarCount: 0,
   activeFireflies: 0,
   recentGains: [],
-  offlineReport: null,
   buyMode: 1,
   dawnCounter: 0,
   stressFireflies: 0,
@@ -228,6 +225,7 @@ export const useGame = create<GameState & GameActions>()((set, get) => ({
       playTimeSec: s.playTimeSec,
       firstLaunchAt: s.firstLaunchAt,
       tutorialStep: s.tutorialStep,
+      offlineReport: s.offlineReport,
     };
   },
 }));

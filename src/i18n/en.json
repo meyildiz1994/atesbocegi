@@ -64,5 +64,14 @@
   "a11y.prevZone": "Previous zone",
   "a11y.nextZone": "Next zone",
   "hint.upgrade": "Grow stronger",
-  "zone.unlocked": "New zone unlocked"
+  "zone.unlocked": "New zone unlocked",
+  "ui.settings": "Settings",
+  "ui.cancel": "Cancel",
+  "settings.sound": "Sound effects",
+  "settings.music": "Ambience",
+  "settings.haptics": "Vibration",
+  "settings.reset": "Reset progress",
+  "settings.resetConfirm": "All light, upgrades and stardust will be lost. Are you sure?",
+  "settings.resetYes": "Reset",
+  "a11y.settings": "Settings"
 }

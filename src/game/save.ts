@@ -34,6 +34,8 @@ export type SaveData = {
   firstLaunchAt: number;
   /** Onboarding adımı (Faz 4). */
   tutorialStep: number;
+  /** Henüz alınmamış offline kazanç; panel açıkken uygulama kapanırsa kaybolmasın. */
+  offlineReport: { seconds: number; gain: number } | null;
 };
 
 export interface KeyValueStore {
@@ -73,6 +75,7 @@ export function newSave(now: number): SaveData {
     playTimeSec: 0,
     firstLaunchAt: now,
     tutorialStep: 0,
+    offlineReport: null,
   };
 }
 
@@ -88,6 +91,7 @@ type Raw = Record<string, unknown>;
  */
 const MIGRATIONS: Record<number, (raw: Raw) => Raw> = {
   0: (raw) => ({ ...raw, saveVersion: 1 }),
+  1: (raw) => ({ ...raw, offlineReport: null, saveVersion: 2 }),
 };
 
 export function migrate(raw: Raw): Raw {
@@ -134,7 +138,15 @@ export function sanitize(raw: Raw, now: number): SaveData {
     playTimeSec: num(raw.playTimeSec),
     firstLaunchAt: num(raw.firstLaunchAt, base.firstLaunchAt),
     tutorialStep: Math.floor(num(raw.tutorialStep)),
+    offlineReport: offlineReportOf(raw.offlineReport),
   };
+}
+
+function offlineReportOf(v: unknown): SaveData['offlineReport'] {
+  if (!v || typeof v !== 'object') return null;
+  const r = v as Raw;
+  const gain = num(r.gain);
+  return gain > 0 ? { seconds: num(r.seconds), gain } : null;
 }
 
 export function serialize(data: SaveData): string {
@@ -152,16 +164,24 @@ export function deserialize(text: string | undefined, now: number): SaveData | n
   }
 }
 
+/**
+ * Ana kayda yazar. Bir önceki kayıt okunabiliyorsa yedeğe taşınır; böylece yazma sırasında
+ * bozulan bir kayıt en fazla bir otomatik kayıt aralığı (10 sn) ilerleme kaybettirir.
+ */
 export function writeSave(store: KeyValueStore, data: SaveData): void {
+  const prev = store.getString(SAVE.key);
+  if (prev && deserialize(prev, data.lastSeen)) store.set(SAVE.backupKey, prev);
   store.set(SAVE.key, serialize(data));
 }
 
+/** Ana kaydı okur; bozuksa yedeğe düşer. İkisi de yoksa `null` (yeni oyuncu). */
 export function readSave(store: KeyValueStore, now: number): SaveData | null {
-  return deserialize(store.getString(SAVE.key), now);
+  return deserialize(store.getString(SAVE.key), now) ?? deserialize(store.getString(SAVE.backupKey), now);
 }
 
 export function clearSave(store: KeyValueStore): void {
   store.remove(SAVE.key);
+  store.remove(SAVE.backupKey);
 }
 
 /** Testler ve web için bellek içi depo. */

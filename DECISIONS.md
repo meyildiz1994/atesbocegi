@@ -67,3 +67,12 @@ Belirsiz kalan konularda en basit makul seçenek uygulandı. Değiştirmek isted
 46. **Atlas boyutu kademeli** (128 / 512 / 1.600): yalnızca gereken kadar sprite çizilir.
 47. **Stres testi:** FPS göstergesine (test build'lerinde) dokunmak ekrandaki böcek sayısını 500 → 1.000 → 1.500 → normal arasında değiştirir. Kayda ve ekonomiye etkisi yoktur.
 48. **Gerçek FPS ölçümü cihazda yapılmalı.** Web önizlemesinde (yazılımsal WebGL) 1.500 böcekte 29 FPS görüldü; bu telefonu temsil etmez. Android cihaz testi henüz yok.
+
+## Faz 7
+
+49. **Kayıt zamanları:** her 10 sn, uygulama arka plana geçerken ve geri dönünce, ayrıca Şafak, yetenek alımı ve offline kazancı alma anında hemen.
+50. **Yedek kayıt:** her yazmada bir önceki okunabilir kayıt `atesbocegi.save.bak` anahtarına taşınır. Ana kayıt bozulursa yedekten yüklenir (en fazla ~10 sn kayıp).
+51. **Kayıt sürümü 2:** alınmamış offline kazanç artık kayda giriyor. Panel açıkken uygulama kapanırsa kazanç kaybolmaz; sonraki açılışta yeni yokluk süresi üstüne eklenir. Sürüm 1 kayıtlar migrasyonla yükselir.
+52. **Saat oynatma:** geri alınırsa offline süre 0 sayılır ve `lastSeen` şimdiye çekilir; ileri alınırsa normal üst sınır (2 saat, Uzun Gece ile 8 saat) uygulanır. Saati tekrar tekrar ileri alarak üst sınır kadar kazanç toplanabilir; tek oyunculu oyunda bunu kabul ettim (sunucu saati gerekmez).
+53. **"İlerlemeyi sıfırla" iki adımlı onay** ile ayarlar panelinde (oyun içi onay, sistem uyarısı değil). Ayarlar (ses, ortam sesi, titreşim) korunur; kayıt ve yedek silinir.
+54. **Ayarlar paneli şimdilik:** ses efektleri, ortam sesi (müzik henüz yok), titreşim, sıfırlama. Dil (Faz 11), satın alımları geri yükle ve gizlilik (Faz 8) sonra eklenecek. Dişli simgesi şimdilik yazı karakteri; Faz 11'de ChatGPT ile üretilen arayüz görselleriyle değişecek.

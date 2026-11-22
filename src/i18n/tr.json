@@ -64,5 +64,14 @@
   "a11y.prevZone": "Önceki bölge",
   "a11y.nextZone": "Sonraki bölge",
   "hint.upgrade": "Güçlen",
-  "zone.unlocked": "Yeni bölge açıldı"
+  "zone.unlocked": "Yeni bölge açıldı",
+  "ui.settings": "Ayarlar",
+  "ui.cancel": "Vazgeç",
+  "settings.sound": "Ses efektleri",
+  "settings.music": "Ortam sesi",
+  "settings.haptics": "Titreşim",
+  "settings.reset": "İlerlemeyi sıfırla",
+  "settings.resetConfirm": "Tüm Işık, yükseltmeler ve Yıldız Tozu silinecek. Emin misin?",
+  "settings.resetYes": "Sıfırla",
+  "a11y.settings": "Ayarlar"
 }

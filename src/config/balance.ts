@@ -31,6 +31,7 @@ export const COLORS = {
   disabled: '#4a5866',
   stardust: '#c8b8ff',
   dawn: '#fff6e0',
+  danger: '#ff7a6a',
 } as const;
 
 export const DEV = {
@@ -323,9 +324,10 @@ export const ZONES = [
 
 /** Kayıt. */
 export const SAVE = {
-  version: 1,
+  version: 2,
   autosaveSeconds: 10,
   key: 'atesbocegi.save',
+  backupKey: 'atesbocegi.save.bak',
 } as const;
 
 /** Işık/sn göstergesi için kayan pencere (sn). */

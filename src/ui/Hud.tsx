@@ -23,7 +23,7 @@ function useLightPerSecond(): number {
 }
 
 /** Üst bilgi: bölge adı ve okları, büyük Işık sayacı, Işık/sn, kavanoz doluluğu. */
-export function Hud() {
+export function Hud({ onOpenSettings }: { onOpenSettings: () => void }) {
   const insets = useSafeAreaInsets();
   const light = useGame((s) => s.light);
   const jarCount = useGame((s) => s.jarCount);
@@ -45,6 +45,14 @@ export function Hud() {
       pointerEvents="box-none"
       style={[styles.top, { paddingTop: insets.top + 6 }]}
     >
+      <Pressable
+        onPress={onOpenSettings}
+        style={[styles.gear, { top: insets.top + 2 }]}
+        accessibilityRole="button"
+        accessibilityLabel={t("a11y.settings")}
+      >
+        <Text style={styles.gearText}>⚙︎</Text>
+      </Pressable>
       {full ? (
         <View style={styles.zoneRow}>
           <Pressable
@@ -107,6 +115,15 @@ const styles = StyleSheet.create({
   },
   arrowText: { color: COLORS.hudText, fontSize: 24 },
   hidden: { opacity: 0 },
+  gear: {
+    position: "absolute",
+    right: 8,
+    width: UI.minTouch,
+    height: UI.minTouch,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  gearText: { color: COLORS.hudSubText, fontSize: 22 },
   lockedArrow: { opacity: 0.6 },
   lockHint: { color: COLORS.hudSubText, fontSize: 11, marginTop: -8 },
   center: { alignItems: "center" },
