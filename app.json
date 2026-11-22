@@ -42,8 +42,8 @@
       [
         "react-native-google-mobile-ads",
         {
-          "iosAppId": "ca-app-pub-3940256099942544~1458002511",
-          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
+          "iosAppId": "ca-app-pub-4059277331959292~3928515911",
+          "androidAppId": "ca-app-pub-4059277331959292~5558000192",
           "userTrackingUsageDescription": "This identifier will be used to deliver more relevant ads. You can still play without it.",
           "skAdNetworkItems": [
             "cstr6suwn9.skadnetwork"

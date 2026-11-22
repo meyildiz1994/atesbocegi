@@ -129,3 +129,5 @@ Belirsiz kalan konularda en basit makul seçenek uygulandı. Değiştirmek isted
 ## Sonrası
 
 89. **Yeni kavanoz** (ChatGPT, `assets/ui/jar.png`): bronz kapaklı, ip fiyonklu, yapraklı cam kavanoz; arayüz ikonlarıyla aynı stil. Işık kodla çizilir: camın içi doldukça yumuşak bir parıltıyla aydınlanır ve içinde `JAR.sparks` (14) küçük ateşböceği uçuşur. Kavanoz biraz büyüdü (76×96 → 82×111).
+90. **AdMob gerçek kimlikleri** (iOS ve Android uygulaması; her birinde ödüllü ve geçiş birimi) `app.json` ve `src/config/app.ts` içinde. Kimlikler gizli değildir, uygulamanın içinde zaten bulunur. Codemagic test akışlarında `EXPO_PUBLIC_ADMOB_TEST=1` olduğu için TestFlight ve Play iç testte Google test reklamları gösterilir. Kendi reklamına tıklamak AdMob hesabını riske atar. Mağaza sürümünde bu değişken kaldırılacak.
+91. **Gizlilik politikası** Google Doküman olarak yayında (ServisForm'daki gibi), adresi `privacyPolicyUrl` varsayılanı.

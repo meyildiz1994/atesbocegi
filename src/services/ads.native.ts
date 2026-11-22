@@ -36,6 +36,10 @@ let interstitial: InterstitialAd | null = null;
 let interstitialLoaded = false;
 
 function unitIds() {
+  // Test build'lerinde (TestFlight / iç test) gerçek reklam birimine tıklamak hesabı riske atar: Google test reklamları.
+  if (__DEV__ || APP_CONFIG.admob.forceTestAds) {
+    return { rewarded: ads!.TestIds.REWARDED, interstitial: ads!.TestIds.INTERSTITIAL };
+  }
   const ids = Platform.OS === 'ios' ? APP_CONFIG.admob.ios : APP_CONFIG.admob.android;
   return {
     rewarded: ids.rewarded || ads!.TestIds.REWARDED,

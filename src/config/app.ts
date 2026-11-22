@@ -11,13 +11,15 @@ export const APP_CONFIG = {
     host: process.env.EXPO_PUBLIC_POSTHOG_HOST ?? 'https://eu.i.posthog.com',
   },
   admob: {
+    /** Test build'lerinde 1: gerçek birimler yerine Google test reklamları. */
+    forceTestAds: process.env.EXPO_PUBLIC_ADMOB_TEST === '1',
     ios: {
-      rewarded: process.env.EXPO_PUBLIC_ADMOB_IOS_REWARDED ?? '',
-      interstitial: process.env.EXPO_PUBLIC_ADMOB_IOS_INTERSTITIAL ?? '',
+      rewarded: process.env.EXPO_PUBLIC_ADMOB_IOS_REWARDED ?? 'ca-app-pub-4059277331959292/9305673512',
+      interstitial: process.env.EXPO_PUBLIC_ADMOB_IOS_INTERSTITIAL ?? 'ca-app-pub-4059277331959292/1030889838',
     },
     android: {
-      rewarded: process.env.EXPO_PUBLIC_ADMOB_ANDROID_REWARDED ?? '',
-      interstitial: process.env.EXPO_PUBLIC_ADMOB_ANDROID_INTERSTITIAL ?? '',
+      rewarded: process.env.EXPO_PUBLIC_ADMOB_ANDROID_REWARDED ?? 'ca-app-pub-4059277331959292/2152399812',
+      interstitial: process.env.EXPO_PUBLIC_ADMOB_ANDROID_INTERSTITIAL ?? 'ca-app-pub-4059277331959292/6926922181',
     },
   },
   /** RevenueCat genel (public) SDK anahtarları. */
