@@ -1,16 +1,16 @@
 # Codemagic: iOS TestFlight build'i.
 # Gerekenler (bir kez, Codemagic arayüzünden):
 #   1. Personal settings > Integrations > Developer Portal: App Store Connect API anahtarı
-#      (mevcut "Nilemy" anahtarı kullanılıyor; aynı Apple ekibinin anahtarı yeterli).
+#      ("ScaryMob" anahtarı: Emre'nin Apple ekibi G73Q59X7Y6; "Nilemy" başka ekibe ait).
 #   2. App Store Connect uygulama kaydı: "Ateşböceği", bundle id com.atesbocegi.game (oluşturuldu).
-# Codemagic imzalama sertifikasını ve provisioning profile'ı API anahtarıyla kendisi alır/oluşturur.
+#   3. Code signing identities: dağıtım sertifikası "scarymob_dist" ve profil "atesbocegi_appstore" Codemagic'e yüklü.
 workflows:
   ios-testflight:
     name: iOS TestFlight
     max_build_duration: 60
     instance_type: mac_mini_m2
     integrations:
-      app_store_connect: Nilemy
+      app_store_connect: ScaryMob
     environment:
       ios_signing:
         distribution_type: app_store
