@@ -13,6 +13,10 @@ npm start         # yalnızca Metro; önceden kurulmuş dev build ile bağlanır
 
 Expo Go **desteklenmez** (MMKV ve ileride reklam/satın alma native modülleri yüzünden). Mac yoksa: `npx eas build --profile development --platform ios` (simülatör build'i) ya da `--platform android`.
 
+## TestFlight (Codemagic)
+
+`main` dalına her push'ta `codemagic.yaml` içindeki `ios-testflight` iş akışı çalışır ve build'i TestFlight'a yükler. İlk kurulum adımları dosyanın başında.
+
 ## Komutlar
 
 | Komut | Ne yapar |

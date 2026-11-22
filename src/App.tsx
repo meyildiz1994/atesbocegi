@@ -7,13 +7,16 @@ import { COLORS } from './config/balance';
 import { ForestCanvas } from './render/ForestCanvas';
 import { FpsOverlay } from './ui/FpsOverlay';
 
+/** Geliştirme modunda ya da EXPO_PUBLIC_SHOW_FPS=1 ile alınan test build'lerinde FPS sayacı görünür. */
+const SHOW_FPS = __DEV__ || process.env.EXPO_PUBLIC_SHOW_FPS === '1';
+
 export default function App() {
   return (
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
         <View style={styles.root}>
           <ForestCanvas />
-          {__DEV__ ? <FpsOverlay /> : null}
+          {SHOW_FPS ? <FpsOverlay /> : null}
         </View>
         <StatusBar style="light" />
       </SafeAreaProvider>

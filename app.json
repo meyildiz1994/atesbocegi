@@ -8,7 +8,11 @@
     "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.atesbocegi.game"
+      "bundleIdentifier": "com.atesbocegi.game",
+      "buildNumber": "1",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -18,7 +22,8 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.atesbocegi.game"
+      "package": "com.atesbocegi.game",
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png"
