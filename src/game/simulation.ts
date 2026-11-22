@@ -2,7 +2,7 @@
  * Ateşböceği simülasyonu. Saf fonksiyonlar; Reanimated worklet'i olarak UI thread'de
  * her karede çalışır, Jest'te de doğrudan test edilir. React state'e dokunmaz.
  */
-import { SIM } from '../config/balance';
+import { SIM, SPIRIT } from '../config/balance';
 
 export const STATUS_DEAD = 0;
 export const STATUS_FREE = 1;
@@ -34,6 +34,14 @@ export type SimState = {
   sx: number[];
   sy: number[];
   t: number[];
+  /** Işık Ruhları (sabit boyutlu, SPIRIT.maxOnScreen). */
+  spiritCount: number;
+  spX: number[];
+  spY: number[];
+  spH: number[];
+  /** Ruhun peşinden gittiği böcek (-1: yok) ve hedef yenileme sayacı. */
+  spTarget: number[];
+  spRetarget: number[];
 };
 
 export type SimParams = {
@@ -51,6 +59,12 @@ export type SimParams = {
   fingerActive: boolean;
   fingerX: number;
   fingerY: number;
+  /** Işık Ruhu sayısı (çizilen en fazla SPIRIT.maxOnScreen; fazlası yarıçapa yansır). */
+  spirits: number;
+  spiritSpeed: number;
+  /** Mıknatıs: halkanın etrafındaki böcekleri çekme alanı (0 = kapalı) ve hızı. */
+  magnetRange: number;
+  magnetPull: number;
 };
 
 export type StepResult = {
@@ -82,6 +96,12 @@ export function createSimState(capacity: number = SIM.capacity, seed = 12345): S
     sx: arr(),
     sy: arr(),
     t: arr(),
+    spiritCount: 0,
+    spX: new Array<number>(SPIRIT.maxOnScreen).fill(0),
+    spY: new Array<number>(SPIRIT.maxOnScreen).fill(0),
+    spH: new Array<number>(SPIRIT.maxOnScreen).fill(0),
+    spTarget: new Array<number>(SPIRIT.maxOnScreen).fill(-1),
+    spRetarget: new Array<number>(SPIRIT.maxOnScreen).fill(0),
   };
 }
 
@@ -195,6 +215,97 @@ export function easeInOut(t: number): number {
   return t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
 }
 
+/** Yakalanan böceği kavanoza uçuşa geçirir. */
+function startFlight(s: SimState, i: number): void {
+  'worklet';
+  s.status[i] = STATUS_FLYING;
+  s.sx[i] = s.x[i]!;
+  s.sy[i] = s.y[i]!;
+  s.t[i] = 0;
+}
+
+/** Ruhları ekler/çıkarır ve hareket ettirir; yakaladıkları böcek sayısını döner. */
+function stepSpirits(s: SimState, dt: number, p: SimParams, bottom: number, roomIn: number): number {
+  'worklet';
+  const onScreen = Math.min(p.spirits, SPIRIT.maxOnScreen);
+  // Yeni ruhlar ekranın ortasından doğar.
+  while (s.spiritCount < onScreen) {
+    const k = s.spiritCount;
+    s.spX[k] = p.width / 2 + randRange(s, -40, 40);
+    s.spY[k] = bottom / 2 + randRange(s, -40, 40);
+    s.spH[k] = randRange(s, 0, Math.PI * 2);
+    s.spTarget[k] = -1;
+    s.spRetarget[k] = 0;
+    s.spiritCount++;
+  }
+  if (s.spiritCount > onScreen) s.spiritCount = onScreen;
+  if (onScreen === 0) return 0;
+
+  // Fazla ruhlar yakalama yarıçapını büyütür.
+  const extra = p.spirits / onScreen;
+  const radius = SPIRIT.radius * Math.sqrt(extra);
+  const r2 = radius * radius;
+  let room = roomIn;
+  let caught = 0;
+
+  for (let k = 0; k < s.spiritCount; k++) {
+    s.spRetarget[k] = s.spRetarget[k]! - dt;
+    let tgt = s.spTarget[k]!;
+    if (tgt >= 0 && s.status[tgt] !== STATUS_FREE) tgt = -1;
+    if (tgt < 0 || s.spRetarget[k]! <= 0) {
+      // Rastgele birkaç böcek dene, en yakını seç.
+      let best = -1;
+      let bestD = 1e18;
+      for (let tries = 0; tries < 6; tries++) {
+        const i = Math.floor(rand(s) * s.capacity);
+        if (s.status[i] !== STATUS_FREE) continue;
+        const dx = s.x[i]! - s.spX[k]!;
+        const dy = s.y[i]! - s.spY[k]!;
+        const d = dx * dx + dy * dy;
+        if (d < bestD) {
+          bestD = d;
+          best = i;
+        }
+      }
+      if (best >= 0) tgt = best;
+      s.spRetarget[k] = 0.8;
+    }
+    s.spTarget[k] = tgt;
+
+    let h = s.spH[k]!;
+    if (tgt >= 0) {
+      const want = Math.atan2(s.y[tgt]! - s.spY[k]!, s.x[tgt]! - s.spX[k]!);
+      let diff = want - h;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      h += Math.max(-1, Math.min(1, diff)) * SPIRIT.turnRate * dt * 2;
+    } else {
+      h += Math.sin(s.time * 1.3 + k) * SPIRIT.turnRate * dt;
+    }
+    s.spH[k] = h;
+    let x = s.spX[k]! + Math.cos(h) * p.spiritSpeed * dt;
+    let y = s.spY[k]! + Math.sin(h) * p.spiritSpeed * dt;
+    x = Math.max(10, Math.min(p.width - 10, x));
+    y = Math.max(10, Math.min(bottom - 10, y));
+    s.spX[k] = x;
+    s.spY[k] = y;
+
+    if (room <= 0) continue;
+    // Yakındaki hedef ve rastgele komşular: tam tarama yerine hedefe bak.
+    if (tgt >= 0 && s.status[tgt] === STATUS_FREE) {
+      const dx = s.x[tgt]! - x;
+      const dy = s.y[tgt]! - y;
+      if (dx * dx + dy * dy <= r2) {
+        startFlight(s, tgt);
+        s.spTarget[k] = -1;
+        room--;
+        caught++;
+      }
+    }
+  }
+  return caught;
+}
+
 /** Simülasyonu dt saniye ilerletir. State'i yerinde değiştirir. */
 export function stepSimulation(s: SimState, dtRaw: number, p: SimParams): StepResult {
   'worklet';
@@ -239,15 +350,18 @@ export function stepSimulation(s: SimState, dtRaw: number, p: SimParams): StepRe
       if (p.fingerActive && room > 0) {
         const dx = s.x[i]! - p.fingerX;
         const dy = s.y[i]! - p.fingerY;
-        if (dx * dx + dy * dy <= r2) {
-          s.status[i] = STATUS_FLYING;
-          s.sx[i] = s.x[i]!;
-          s.sy[i] = s.y[i]!;
-          s.t[i] = 0;
+        const d2 = dx * dx + dy * dy;
+        if (d2 <= r2) {
+          startFlight(s, i);
           room--;
           caught++;
           free--;
           flying++;
+        } else if (p.magnetRange > 0 && d2 <= p.magnetRange * p.magnetRange) {
+          // Mıknatıs: halkaya doğru çek.
+          const d = Math.sqrt(d2);
+          s.x[i] = s.x[i]! - (dx / d) * p.magnetPull * dt;
+          s.y[i] = s.y[i]! - (dy / d) * p.magnetPull * dt;
         }
       }
     } else if (st === STATUS_FLYING) {
@@ -265,6 +379,10 @@ export function stepSimulation(s: SimState, dtRaw: number, p: SimParams): StepRe
       }
     }
   }
+
+  const spiritCaught = stepSpirits(s, dt, p, bottom, room);
+  caught += spiritCaught;
+  free -= spiritCaught;
 
   // Eksik böcekleri spawnRate hızında tamamla.
   if (free < p.maxFireflies) {

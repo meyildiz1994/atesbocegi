@@ -9,6 +9,9 @@ type Props = {
   height: number;
   /** Bölgenin aydınlığı, 0..1. */
   brightness: SharedValue<number>;
+  /** Bölgenin gökyüzü rengi (karanlık / aydınlık). */
+  skyTop?: string;
+  skyLitTop?: string;
 };
 
 const RIM_OFFSET = [{ translateY: -1.5 }];
@@ -78,7 +81,13 @@ function grassRow(width: number, groundY: number, height: number, seed: number):
  * Arka plan: gece gradyanı ve 3 katman ağaç silueti (uzak / orta / yakın) + çimen.
  * Aydınlık arttıkça gradyan açılır, ağaç kenarları ışık alır.
  */
-export function Backdrop({ width, height, brightness }: Props) {
+export function Backdrop({
+  width,
+  height,
+  brightness,
+  skyTop = COLORS.backgroundTop,
+  skyLitTop = COLORS.backgroundLitTop,
+}: Props) {
   const layers = useMemo(
     () => ({
       far: pineRow(width, height * 0.62, 9, height * 0.18, height * 0.3, 11),
@@ -90,7 +99,7 @@ export function Backdrop({ width, height, brightness }: Props) {
   );
 
   const bgColors = useDerivedValue(() => [
-    interpolateColor(brightness.value, [0, 1], [COLORS.backgroundTop, COLORS.backgroundLitTop]),
+    interpolateColor(brightness.value, [0, 1], [skyTop, skyLitTop]),
     interpolateColor(brightness.value, [0, 1], [COLORS.background, COLORS.backgroundLit]),
   ]);
   const rimOpacity = useDerivedValue(() => 0.12 + 0.7 * brightness.value);

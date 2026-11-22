@@ -22,6 +22,15 @@ export const COLORS = {
   /** Ağaç kenarlarına vuran ışık. */
   treeRim: '#3d5a3a',
   grass: '#03060a',
+  panelBg: '#0b131cf5',
+  panelBorder: '#23344a',
+  cardBg: '#132030',
+  cardBgAffordable: '#1a2e22',
+  accent: '#d8ff6a',
+  accentText: '#0a1008',
+  disabled: '#4a5866',
+  stardust: '#c8b8ff',
+  dawn: '#fff6e0',
 } as const;
 
 export const DEV = {
@@ -109,13 +118,129 @@ export const FEEDBACK = {
 export const UI = {
   /** HUD (React) en fazla saniyede kaç kez güncellenir. */
   hudUpdatesPerSecond: 10,
+  /** Dokunma hedefi en küçük boyut (pt). */
+  minTouch: 44,
+  sheetMaxHeightRatio: 0.72,
+  /** Şafak beyaz parlama süresi (ms). */
+  dawnFlashMs: 2200,
 } as const;
 
-/** Bölgeler. Faz 3'te tamamı açılacak; şimdilik yalnız ilk bölge oynanır. */
+/**
+ * Yükseltmeler. Maliyet: taban * büyüme^seviye.
+ * Etkiler `economy.ts` içindeki `computeStats` ile hesaplanır.
+ */
+export const UPGRADES = {
+  ring: { baseCost: 10, growth: 1.15, maxLevel: 60 },
+  jar: { baseCost: 25, growth: 1.2, maxLevel: 200 },
+  bright: { baseCost: 50, growth: 1.35, maxLevel: 300 },
+  crowd: { baseCost: 100, growth: 1.25, maxLevel: 150 },
+  spirit: { baseCost: 500, growth: 1.5, maxLevel: 60 },
+  autoEmpty: { baseCost: 2_000, growth: 1, maxLevel: 1 },
+  magnet: { baseCost: 5_000, growth: 1.4, maxLevel: 40 },
+} as const;
+
+export type UpgradeId = keyof typeof UPGRADES;
+export const UPGRADE_ORDER: UpgradeId[] = ['ring', 'jar', 'bright', 'crowd', 'spirit', 'autoEmpty', 'magnet'];
+
+/** Yükseltme etkilerinin sayıları. */
+export const EFFECTS = {
+  /** Işık Halkası: seviye başına yarıçap çarpanı. */
+  ringPerLevel: 1.08,
+  /** Yarıçap üst sınırı (px); ekranı tamamen kaplamasın. */
+  ringMax: 220,
+  /** Büyük Kavanoz: ilk N seviye +5, sonrası ×1.1. */
+  jarFlatLevels: 10,
+  jarFlatStep: 5,
+  jarPctAfter: 1.1,
+  /** Parlak Böcekler: ilk N seviye +1, sonrası ×1.1. */
+  brightFlatLevels: 10,
+  brightFlatStep: 1,
+  brightPctAfter: 1.1,
+  /** Kalabalık Orman: seviye başına +10 böcek, doğma hızı ×1.1. */
+  crowdFireflies: 10,
+  crowdSpawnMult: 1.1,
+  /** Mıknatıs: çekim alanı = halka yarıçapı × (taban + seviye × artış), çekim hızı px/sn. */
+  magnetRangeBase: 1.6,
+  magnetRangePerLevel: 0.15,
+  magnetPullSpeed: 90,
+  magnetPullPerLevel: 6,
+} as const;
+
+/** Işık Ruhu (otomatik toplayıcı). */
+export const SPIRIT = {
+  radius: 28,
+  speed: 70,
+  turnRate: 2.2,
+  /** Ekranda en fazla çizilecek ruh (fazlası üretime sayılır, çizilmez). */
+  maxOnScreen: 40,
+  /** Offline hesap için bir ruhun saniyede ortalama yakaladığı böcek. */
+  catchesPerSecond: 0.6,
+  color: '#9fe8ff',
+  spriteSize: 54,
+} as const;
+
+/** Prestij: Şafak. */
+export const PRESTIGE = {
+  /** Bu koşudaki toplam Işık bu değeri geçince açılır. */
+  unlockAt: 1_000_000,
+  /** Yıldız Tozu = floor(sqrt(koşuIşığı / divisor)). */
+  divisor: 1_000_000,
+  /** Kazanılmış her Yıldız Tozu kalıcı global çarpana eklenir. */
+  multPerStardust: 0.1,
+} as const;
+
+/** Yıldız Tozu yetenek ağacı. `requires` önce açılması gereken düğüm. */
+export const SKILLS = {
+  dawnRing: { cost: 1, requires: null },
+  deepJar: { cost: 2, requires: 'dawnRing' },
+  keepAuto: { cost: 3, requires: 'deepJar' },
+  longNight: { cost: 3, requires: 'dawnRing' },
+  kindredSpirit: { cost: 5, requires: 'longNight' },
+  starlight: { cost: 8, requires: 'keepAuto' },
+  dreamers: { cost: 12, requires: 'kindredSpirit' },
+} as const;
+
+export type SkillId = keyof typeof SKILLS;
+export const SKILL_ORDER: SkillId[] = ['dawnRing', 'deepJar', 'keepAuto', 'longNight', 'kindredSpirit', 'starlight', 'dreamers'];
+
+export const SKILL_EFFECTS = {
+  /** dawnRing: halka ×1.2 */
+  dawnRingMult: 1.2,
+  /** deepJar: kavanoz ×1.5 */
+  deepJarMult: 1.5,
+  /** kindredSpirit: her koşuya 1 ruhla başla, ruhlar ×1.5 hızlı */
+  kindredSpiritSpeed: 1.5,
+  /** starlight: böcek değeri ×2 */
+  starlightMult: 2,
+} as const;
+
+/** Offline kazanç. */
+export const OFFLINE = {
+  /** Ruh üretiminin offline'da biriken oranı; dreamers ile yükselir. */
+  rate: 0.5,
+  rateDreamers: 1,
+  /** Üst sınır (sn); longNight ile 8 saate çıkar. */
+  capSeconds: 2 * 3600,
+  capSecondsLongNight: 8 * 3600,
+  /** Bu süreden kısa yokluklarda panel gösterilmez (sn). */
+  minSecondsForPanel: 60,
+} as const;
+
+/** Bölgeler. Açılma eşiği bu koşudaki toplam Işık'a bakar. */
 export const ZONES = [
-  { id: 1, unlockAt: 0, multiplier: 1, fireflyColor: '#d8ff6a', targetLog: 6 },
-  { id: 2, unlockAt: 5_000, multiplier: 4, fireflyColor: '#b8ffd0', targetLog: 8 },
-  { id: 3, unlockAt: 150_000, multiplier: 15, fireflyColor: '#ffd27a', targetLog: 10 },
-  { id: 4, unlockAt: 5_000_000, multiplier: 60, fireflyColor: '#c8a8ff', targetLog: 12 },
-  { id: 5, unlockAt: 200_000_000, multiplier: 250, fireflyColor: '#ffb070', targetLog: 14 },
+  { id: 1, unlockAt: 0, multiplier: 1, fireflyColor: '#d8ff6a', targetLog: 6, bgTop: '#0a1020', bgLitTop: '#1d3a4a' },
+  { id: 2, unlockAt: 5_000, multiplier: 4, fireflyColor: '#b8ffd0', targetLog: 8, bgTop: '#0a1418', bgLitTop: '#2a4a48' },
+  { id: 3, unlockAt: 150_000, multiplier: 15, fireflyColor: '#ffd27a', targetLog: 10, bgTop: '#120c18', bgLitTop: '#3a2a4a' },
+  { id: 4, unlockAt: 5_000_000, multiplier: 60, fireflyColor: '#c8a8ff', targetLog: 12, bgTop: '#0c0a1e', bgLitTop: '#2a2a5a' },
+  { id: 5, unlockAt: 200_000_000, multiplier: 250, fireflyColor: '#ffb070', targetLog: 14, bgTop: '#080c1e', bgLitTop: '#3a3060' },
 ] as const;
+
+/** Kayıt. */
+export const SAVE = {
+  version: 1,
+  autosaveSeconds: 10,
+  key: 'atesbocegi.save',
+} as const;
+
+/** Işık/sn göstergesi için kayan pencere (sn). */
+export const RATE_WINDOW_SECONDS = 10;

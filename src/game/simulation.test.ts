@@ -27,6 +27,10 @@ const params = (over: Partial<SimParams> = {}): SimParams => ({
   fingerActive: false,
   fingerX: 0,
   fingerY: 0,
+  spirits: 0,
+  spiritSpeed: 70,
+  magnetRange: 0,
+  magnetPull: 90,
   ...over,
 });
 
@@ -112,5 +116,25 @@ describe('simulation', () => {
     run(a, 5, params());
     run(b, 5, params());
     expect(a.x).toEqual(b.x);
+  });
+
+  it('Işık Ruhları kendi kendine böcek toplar', () => {
+    const s = createSimState(200, 3);
+    seedFireflies(s, 30, W, H);
+    const arrived = run(s, 30, params({ spirits: 3, jarCapacity: 1e9 }));
+    expect(arrived).toBeGreaterThan(5);
+    expect(s.spiritCount).toBe(3);
+  });
+
+  it('mıknatıs böcekleri halkaya çeker', () => {
+    const s = createSimState(10);
+    seedFireflies(s, 1, W, H);
+    const i = s.status.indexOf(STATUS_FREE);
+    s.x[i] = 200;
+    s.y[i] = 200;
+    s.speed[i] = 0;
+    const p = params({ fingerActive: true, fingerX: 200, fingerY: 260, ringRadius: 40, magnetRange: 100, maxFireflies: 0 });
+    stepSimulation(s, 1 / 60, p);
+    expect(s.y[i]).toBeGreaterThan(200);
   });
 });

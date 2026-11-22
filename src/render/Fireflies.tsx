@@ -22,6 +22,9 @@ type Props = {
 };
 
 const T = SIM.textureSize;
+/** Modül düzeyinde sabit: useTexture boyut nesnesi değişince dokuyu yeniden oluşturur
+ * (her render'da yeni nesne = her render'da yeni offscreen yüzey; web'de WebGL bağlamı tükeniyordu). */
+const TEXTURE_SIZE = { width: T, height: T };
 const HALF = T / 2;
 const SCALE = SIM.spriteSize / T;
 
@@ -47,7 +50,7 @@ function GlowSprite() {
  */
 export function Fireflies({ sim, tint }: Props) {
   const capacity = SIM.capacity;
-  const texture = useTexture(<GlowSprite />, { width: T, height: T });
+  const texture = useTexture(<GlowSprite />, TEXTURE_SIZE);
   const sprites = useMemo(
     () => new Array(capacity).fill(0).map(() => Skia.XYWHRect(0, 0, T, T)),
     [capacity],

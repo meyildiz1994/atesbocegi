@@ -29,3 +29,14 @@ Belirsiz kalan konularda en basit makul seçenek uygulandı. Değiştirmek isted
 20. **Ağaç siluetleri prosedürel** (sabit tohumlu çam sıraları, 3 katman + çimen). Aydınlık arttıkça gradyan açılır ve siluetin bir kopyası 1.5 px yukarıda, arkada çizilerek üst kenarlar ışık alır.
 21. **Web önizlemesi** (`index.web.ts`, CanvasKit) yalnızca geliştirme ve otomatik ekran görüntüsü testi içindir; mağaza hedefi değil. `package.json` `main` alanı platform uzantısı çözülebilsin diye `index` yapıldı.
 22. **i18n** için küçük bir `t()` fonksiyonu yazıldı (bağımlılık yok). Varsayılan dil İngilizce; cihaz dili ve ayar Faz 11'de.
+
+## Faz 3
+
+23. **Prestij bonusu kazanılmış toplam Yıldız Tozu'na göre** (`stardustEarned`) hesaplanır, harcanana göre değil. Yetenek almak bonusu düşürmez; oyuncu "harcarsam zayıflarım" ikilemine girmez.
+24. **Bölge değişince kavanoz boşaltılır (içindekiler kaybolur).** Aksi halde ucuz bölgede doldurup pahalı bölgede boşaltma açığı olurdu. Kavanoz küçük olduğu için kayıp önemsiz.
+25. **Bölgeler bu koşudaki Işık'la açılır** (`runLight`), Şafak'ta tekrar kilitlenir. Sonraki koşular çarpan sayesinde hızlı geçer.
+26. **Offline kazanç kavanozu hesaba katmaz**: (Işık Ruhu kazancı + otomatik boşaltma varsa pasif toplama tahmini) × %50 (Dreamers yeteneğiyle %100), üst sınır 2 saat (Long Night ile 8 saat). 60 saniyeden kısa yokluklarda panel çıkmaz. Cihaz saati geri alınırsa kazanç 0.
+27. **Işık Ruhları basitleştirilmiş hedefleme** yapar: rastgele 6 böcekten en yakınına yönelir, yarıçap içine girince yakalar. Ekranda en fazla 40 ruh çizilir; fazlası yakalama yarıçapını büyütür.
+28. **Kayıt sistemi Faz 3'te kuruldu** (Faz 7'den öne alındı), çünkü ekonomi test edilirken ilerlemenin kaybolmaması gerekiyordu. MMKV'ye 10 saniyede bir ve arka plana geçerken yazılır; sürüm alanı ve migrasyon zinciri var. Ayarlardan sıfırlama Faz 7/11'de.
+29. **Mağaza butonu şimdilik "Yakında" paneli açar** (Faz 8). Şafak butonu eşik (1M Işık) geçildiğinde ya da ilk Şafak'tan sonra görünür.
+30. **"×2 reklam izle" butonu** reklam servisi hazır değilken gizlidir (Faz 8).
