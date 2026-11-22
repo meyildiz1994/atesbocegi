@@ -21,6 +21,8 @@ type Props = {
   tint: SharedValue<[number, number, number]>;
   /** core: parlak çekirdek; halo: büyük, soluk ikinci katman. */
   layer?: 'core' | 'halo';
+  /** Kaç indeksin çizileceği (FX.drawBuckets'tan). */
+  count?: number;
 };
 
 const T = SIM.textureSize;
@@ -64,11 +66,11 @@ function GlowSprite() {
  * Tüm ateşböcekleri tek bir Atlas çağrısıyla (tek draw call) çizilir.
  * Konum ve parlaklık UI thread'de, simülasyon state'inden okunur.
  */
-export function Fireflies({ sim, tint, layer = 'core' }: Props) {
+export function Fireflies({ sim, tint, layer = 'core', count = SIM.capacity }: Props) {
   const halo = layer === 'halo';
   const scaleMul = halo ? SCALE * FX.haloScale : SCALE;
   const alphaMul = halo ? FX.haloAlpha : 1;
-  const capacity = SIM.capacity;
+  const capacity = Math.min(count, SIM.capacity);
   const texture = useTexture(halo ? <HaloSprite /> : <GlowSprite />, TEXTURE_SIZE);
   const sprites = useMemo(
     () => new Array(capacity).fill(0).map(() => Skia.XYWHRect(0, 0, T, T)),

@@ -33,6 +33,8 @@ type Transient = {
   buyMode: BuyMode;
   /** Şafak animasyonu tetikleyicisi (artan sayaç). */
   dawnCounter: number;
+  /** Test build'lerinde performans denemesi: 0 değilse ekrandaki böcek sayısı bu olur. */
+  stressFireflies: number;
 };
 
 export type GameState = SaveData & Transient;
@@ -53,6 +55,7 @@ export type GameActions = {
   addPlayTime: (seconds: number) => void;
   setSettings: (patch: Partial<Settings>) => void;
   setTutorialStep: (step: number) => void;
+  setStressFireflies: (n: number) => void;
   /** Kayıttan yükle. */
   hydrate: (data: SaveData) => void;
   resetProgress: (now: number) => void;
@@ -67,6 +70,7 @@ const transient = (): Transient => ({
   offlineReport: null,
   buyMode: 1,
   dawnCounter: 0,
+  stressFireflies: 0,
 });
 
 export const initialGameState = (now = Date.now()): GameState => ({ ...newSave(now), ...transient() });
@@ -195,6 +199,8 @@ export const useGame = create<GameState & GameActions>()((set, get) => ({
   setSettings: (patch) => set({ settings: { ...get().settings, ...patch } }),
 
   setTutorialStep: (tutorialStep) => set({ tutorialStep }),
+
+  setStressFireflies: (stressFireflies) => set({ stressFireflies }),
 
   hydrate: (data) => set({ ...data, ...transient() }),
 

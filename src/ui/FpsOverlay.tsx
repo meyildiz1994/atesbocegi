@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
 import { useFrameCallback, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
@@ -8,13 +8,21 @@ import { COLORS, DEV } from '../config/balance';
 import { useGame } from '../game/state';
 
 /**
- * Yalnızca geliştirme modunda gösterilen FPS sayacı.
+ * Geliştirme ve test build'lerinde gösterilen FPS sayacı. Dokununca stres testi:
+ * ekrandaki böcek sayısı sırayla 500 / 1000 / 1500 / normal olur.
  * Kareler UI thread'de sayılır; React state saniyede en fazla birkaç kez güncellenir.
  */
 export function FpsOverlay() {
   const insets = useSafeAreaInsets();
   const [fps, setFps] = useState(0);
   const active = useGame((s) => s.activeFireflies);
+  const stress = useGame((s) => s.stressFireflies);
+  const setStress = useGame((s) => s.setStressFireflies);
+  const nextStress = () => {
+    const levels: readonly number[] = DEV.stressLevels;
+    const i = levels.indexOf(stress);
+    setStress(levels[(i + 1) % levels.length] ?? 0);
+  };
   const frames = useSharedValue(0);
   const windowStart = useSharedValue(0);
 
@@ -31,11 +39,11 @@ export function FpsOverlay() {
   });
 
   return (
-    <View pointerEvents="none" style={[styles.box, { top: insets.top + 4 }]}>
+    <Pressable onPress={nextStress} hitSlop={12} style={[styles.box, { top: insets.top + 4 }]} accessibilityRole="button">
       <Text style={styles.text}>
-        {fps} FPS · {active} 🪲
+        {fps} FPS · {active} 🪲{stress > 0 ? ` · test ${stress}` : ''}
       </Text>
-    </View>
+    </Pressable>
   );
 }
 

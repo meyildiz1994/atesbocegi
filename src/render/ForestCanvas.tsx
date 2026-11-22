@@ -11,7 +11,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
-import { AUDIO, JAR, RING, SIM, SPIRIT, START, UI, ZONES } from '../config/balance';
+import { AUDIO, DEV, FX, JAR, RING, SIM, SPIRIT, START, UI, ZONES } from '../config/balance';
 import {
   countByStatus,
   createSimState,
@@ -68,10 +68,13 @@ export function ForestCanvas({ onLightGained }: Props) {
   // Oyun parametreleri: yükseltme/yetenek/bölgeden hesaplanan statlar.
   const stats = useStats();
   const tutorialStep = useGame((s) => s.tutorialStep);
+  const stress = useGame((s) => s.stressFireflies);
+  const effectiveMax = Math.min(stress > 0 ? stress : tutorialFireflyCap(tutorialStep, stats.maxFireflies), SIM.capacity);
   const ringRadius = useSharedValue<number>(START.ringRadius);
   const jarCapacity = useSharedValue<number>(START.jarCapacity);
   // İlk değer de onboarding sınırına uyar: ilk karede tohumlanan böcek sayısı buna göre.
-  const maxFireflies = useSharedValue<number>(Math.min(tutorialFireflyCap(tutorialStep, stats.maxFireflies), SIM.capacity));
+  const maxFireflies = useSharedValue<number>(effectiveMax);
+  const drawCount = FX.drawBuckets.find((b) => b >= effectiveMax * FX.drawHeadroom) ?? SIM.capacity;
   const spawnRate = useSharedValue<number>(START.spawnRate);
   const spirits = useSharedValue(0);
   const spiritSpeed = useSharedValue<number>(SPIRIT.speed);
@@ -82,14 +85,14 @@ export function ForestCanvas({ onLightGained }: Props) {
   useEffect(() => {
     ringRadius.value = withTiming(stats.ringRadius, { duration: 300 });
     jarCapacity.value = stats.jarCapacity;
-    maxFireflies.value = Math.min(tutorialFireflyCap(tutorialStep, stats.maxFireflies), SIM.capacity);
-    spawnRate.value = stats.spawnRate;
+    maxFireflies.value = effectiveMax;
+    spawnRate.value = stress > 0 ? DEV.stressSpawnRate : stats.spawnRate;
     spirits.value = stats.spirits;
     spiritSpeed.value = stats.spiritSpeed;
     magnetRange.value = stats.magnetRange;
     magnetPull.value = stats.magnetPull;
     autoEmpty.value = stats.autoEmpty;
-  }, [stats, tutorialStep, ringRadius, jarCapacity, maxFireflies, spawnRate, spirits, spiritSpeed, magnetRange, magnetPull, autoEmpty]);
+  }, [stats, effectiveMax, stress, ringRadius, jarCapacity, maxFireflies, spawnRate, spirits, spiritSpeed, magnetRange, magnetPull, autoEmpty]);
 
   // Bölge değişince kavanozdakiler o bölgenin değeriyle sayılmasın diye kavanoz boşalır (store da sıfırlar).
   // Yeni bölgeye geçince orman bir anda böcekle dolar ("vay be" anı).
@@ -267,9 +270,11 @@ export function ForestCanvas({ onLightGained }: Props) {
               skyTop={(ZONES[zoneIndex] ?? ZONES[0]).bgTop}
               skyLitTop={(ZONES[zoneIndex] ?? ZONES[0]).bgLitTop}
             />
-            <Fireflies sim={sim} tint={tint} layer="halo" />
+            {effectiveMax <= FX.haloMaxFireflies ? (
+              <Fireflies key={`h${drawCount}`} sim={sim} tint={tint} layer="halo" count={drawCount} />
+            ) : null}
             <Trails sim={sim} tint={tint} />
-            <Fireflies sim={sim} tint={tint} />
+            <Fireflies key={`c${drawCount}`} sim={sim} tint={tint} count={drawCount} />
             <Spirits sim={sim} />
             <CollectRing x={fingerX} y={fingerY} radius={ringRadius} visibility={ringVisibility} />
             <Jar x={jarX} y={jarY} count={jarCountRo} capacity={capacityRo} time={simTime} />

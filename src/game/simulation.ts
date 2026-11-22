@@ -18,6 +18,11 @@ export type SimState = {
   /** Uçuştaki böceklerin indeksleri (iz çizimi için, en fazla FX.trailSlots). */
   flyIdx: number[];
   flyCount: number;
+  /** Uzaysal ızgara: hücre başına ilk böcek (-1 boş) ve böcek başına sonraki (bağlı liste). */
+  gridHead: number[];
+  gridNext: number[];
+  gridCols: number;
+  gridRows: number;
   /** Son adımdaki kavanoz konumu (iz çizimi için). */
   jarX: number;
   jarY: number;
@@ -89,6 +94,10 @@ export function createSimState(capacity: number = SIM.capacity, seed = 12345): S
     spawnAcc: 0,
     flyIdx: new Array<number>(FX.trailSlots).fill(0),
     flyCount: 0,
+    gridHead: new Array<number>(SIM.gridMaxCells).fill(-1),
+    gridNext: arr(),
+    gridCols: 0,
+    gridRows: 0,
     jarX: 0,
     jarY: 0,
     lastArrived: 0,
@@ -234,6 +243,65 @@ function startFlight(s: SimState, i: number): void {
   s.t[i] = 0;
 }
 
+/** Serbest böcekleri ızgaraya yerleştirir (her adımda yeniden). */
+function buildGrid(s: SimState, width: number, height: number): void {
+  'worklet';
+  const cell = SIM.gridCell;
+  let cols = Math.ceil(width / cell);
+  let rows = Math.ceil(height / cell);
+  if (cols * rows > SIM.gridMaxCells) rows = Math.floor(SIM.gridMaxCells / cols);
+  s.gridCols = cols;
+  s.gridRows = rows;
+  const n = cols * rows;
+  for (let c = 0; c < n; c++) s.gridHead[c] = -1;
+  for (let i = 0; i < s.capacity; i++) {
+    if (s.status[i] !== STATUS_FREE) continue;
+    const cx = Math.min(cols - 1, Math.max(0, Math.floor(s.x[i]! / cell)));
+    const cy = Math.min(rows - 1, Math.max(0, Math.floor(s.y[i]! / cell)));
+    const c = cy * cols + cx;
+    s.gridNext[i] = s.gridHead[c]!;
+    s.gridHead[c] = i;
+  }
+}
+
+/** (x, y) çevresindeki `radius` kutusuna düşen hücrelerin aralığı. */
+function cellRange(s: SimState, x: number, y: number, radius: number): [number, number, number, number] {
+  'worklet';
+  const cell = SIM.gridCell;
+  return [
+    Math.max(0, Math.floor((x - radius) / cell)),
+    Math.min(s.gridCols - 1, Math.floor((x + radius) / cell)),
+    Math.max(0, Math.floor((y - radius) / cell)),
+    Math.min(s.gridRows - 1, Math.floor((y + radius) / cell)),
+  ];
+}
+
+/** En yakın serbest böcek (`radius` içinde), yoksa -1. */
+function nearestFree(s: SimState, x: number, y: number, radius: number): number {
+  'worklet';
+  const [x0, x1, y0, y1] = cellRange(s, x, y, radius);
+  let best = -1;
+  let bestD = radius * radius;
+  for (let cy = y0; cy <= y1; cy++) {
+    for (let cx = x0; cx <= x1; cx++) {
+      let i = s.gridHead[cy * s.gridCols + cx]!;
+      while (i >= 0) {
+        if (s.status[i] === STATUS_FREE) {
+          const dx = s.x[i]! - x;
+          const dy = s.y[i]! - y;
+          const d = dx * dx + dy * dy;
+          if (d < bestD) {
+            bestD = d;
+            best = i;
+          }
+        }
+        i = s.gridNext[i]!;
+      }
+    }
+  }
+  return best;
+}
+
 /** Ruhları ekler/çıkarır ve hareket ettirir; yakaladıkları böcek sayısını döner. */
 function stepSpirits(s: SimState, dt: number, p: SimParams, bottom: number, roomIn: number): number {
   'worklet';
@@ -262,11 +330,12 @@ function stepSpirits(s: SimState, dt: number, p: SimParams, bottom: number, room
     s.spRetarget[k] = s.spRetarget[k]! - dt;
     let tgt = s.spTarget[k]!;
     if (tgt >= 0 && s.status[tgt] !== STATUS_FREE) tgt = -1;
-    if (tgt < 0 || s.spRetarget[k]! <= 0) {
-      // Rastgele birkaç böcek dene, en yakını seç.
-      let best = -1;
-      let bestD = 1e18;
-      for (let tries = 0; tries < 6; tries++) {
+    // Yeni hedef yalnızca zamanlayıcı dolunca (yakaladıktan sonra kısa bir dinlenme olur).
+    if (s.spRetarget[k]! <= 0) {
+      // Önce ızgarada yakındaki en yakın böcek; yoksa rastgele birkaç böcek dene.
+      let best = nearestFree(s, s.spX[k]!, s.spY[k]!, SPIRIT.searchRadius);
+      let bestD = best >= 0 ? 0 : 1e18;
+      for (let tries = 0; best < 0 && tries < 6; tries++) {
         const i = Math.floor(rand(s) * s.capacity);
         if (s.status[i] !== STATUS_FREE) continue;
         const dx = s.x[i]! - s.spX[k]!;
@@ -308,6 +377,7 @@ function stepSpirits(s: SimState, dt: number, p: SimParams, bottom: number, room
       if (dx * dx + dy * dy <= r2) {
         startFlight(s, tgt);
         s.spTarget[k] = -1;
+        s.spRetarget[k] = SPIRIT.catchCooldown;
         room--;
         caught++;
       }
@@ -360,23 +430,6 @@ export function stepSimulation(s: SimState, dtRaw: number, p: SimParams): StepRe
       s.x[i] = x + Math.cos(h) * s.speed[i]! * dt;
       s.y[i] = y + Math.sin(h) * s.speed[i]! * dt;
 
-      if (p.fingerActive && room > 0) {
-        const dx = s.x[i]! - p.fingerX;
-        const dy = s.y[i]! - p.fingerY;
-        const d2 = dx * dx + dy * dy;
-        if (d2 <= r2) {
-          startFlight(s, i);
-          room--;
-          caught++;
-          free--;
-          flying++;
-        } else if (p.magnetRange > 0 && d2 <= p.magnetRange * p.magnetRange) {
-          // Mıknatıs: halkaya doğru çek.
-          const d = Math.sqrt(d2);
-          s.x[i] = s.x[i]! - (dx / d) * p.magnetPull * dt;
-          s.y[i] = s.y[i]! - (dy / d) * p.magnetPull * dt;
-        }
-      }
     } else if (st === STATUS_FLYING) {
       const t = s.t[i]! + dt / SIM.flightTime;
       if (t >= 1) {
@@ -390,6 +443,43 @@ export function stepSimulation(s: SimState, dtRaw: number, p: SimParams): StepRe
         const pt = flightPoint(s.sx[i]!, s.sy[i]!, p.jarX, p.jarY, easeInOut(t));
         s.x[i] = pt.x;
         s.y[i] = pt.y;
+      }
+    }
+  }
+
+  buildGrid(s, p.width, bottom);
+
+  // Parmak: yalnızca halkanın (ve mıknatısın) kapsadığı ızgara hücrelerine bakılır.
+  if (p.fingerActive) {
+    const reach = Math.max(p.ringRadius, p.magnetRange);
+    const [x0, x1, y0, y1] = cellRange(s, p.fingerX, p.fingerY, reach);
+    const m2 = p.magnetRange * p.magnetRange;
+    for (let cy = y0; cy <= y1; cy++) {
+      for (let cx = x0; cx <= x1; cx++) {
+        let i = s.gridHead[cy * s.gridCols + cx]!;
+        while (i >= 0) {
+          const nextI = s.gridNext[i]!;
+          if (s.status[i] === STATUS_FREE) {
+            const dx = s.x[i]! - p.fingerX;
+            const dy = s.y[i]! - p.fingerY;
+            const d2 = dx * dx + dy * dy;
+            if (d2 <= r2) {
+              if (room > 0) {
+                startFlight(s, i);
+                room--;
+                caught++;
+                free--;
+                flying++;
+              }
+            } else if (p.magnetRange > 0 && d2 <= m2 && room > 0) {
+              // Mıknatıs: halkaya doğru çek.
+              const d = Math.sqrt(d2);
+              s.x[i] = s.x[i]! - (dx / d) * p.magnetPull * dt;
+              s.y[i] = s.y[i]! - (dy / d) * p.magnetPull * dt;
+            }
+          }
+          i = nextI;
+        }
       }
     }
   }

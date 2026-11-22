@@ -34,6 +34,9 @@ export const COLORS = {
 } as const;
 
 export const DEV = {
+  /** FPS sayacına dokununca sırayla denenen böcek sayıları (stres testi). */
+  stressLevels: [0, 500, 1000, 1500],
+  stressSpawnRate: 400,
   /** FPS sayacının ekrandaki değeri kaç ms'de bir güncellensin. */
   fpsOverlayUpdateMs: 500,
 } as const;
@@ -85,6 +88,9 @@ export const SIM = {
   /** Glow dokusunun çözünürlüğü (px). */
   textureSize: 64,
   /** Simülasyon adımında en fazla dt (sn); takılmalarda zıplamayı önler. */
+  /** Uzaysal ızgara hücre boyu (pt) ve en fazla hücre sayısı. */
+  gridCell: 48,
+  gridMaxCells: 512,
   maxDt: 0.05,
 } as const;
 
@@ -126,6 +132,15 @@ export const FX = {
   /** İz noktaları arası uçuş ilerlemesi (0..1). */
   trailSpacing: 0.05,
   trailAlpha: 0.55,
+  /** Bundan kalabalık ormanda hale katmanı çizilmez (zaten ışık denizi; performans için). */
+  haloMaxFireflies: 400,
+  /**
+   * Çizim tamponu boyları: az böcek varken tüm kapasiteyi (1.600) her karede dolaşmamak için
+   * en küçük yeterli boy seçilir. Böcekler en düşük boş indekse doğduğundan indeksler küçük kalır.
+   */
+  drawBuckets: [128, 512, 1600],
+  /** Uçuştaki böcekler için pay (boş indeksler dolarken). */
+  drawHeadroom: 1.6,
 } as const;
 
 export const AUDIO = {
@@ -235,6 +250,10 @@ export const EFFECTS = {
 
 /** Işık Ruhu (otomatik toplayıcı). */
 export const SPIRIT = {
+  /** Ruhun ızgarada hedef arama yarıçapı (pt). */
+  searchRadius: 160,
+  /** Yakaladıktan sonra yeni hedef aramadan önce dolaşma süresi (sn). */
+  catchCooldown: 1.2,
   radius: 28,
   speed: 70,
   turnRate: 2.2,

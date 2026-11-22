@@ -58,3 +58,12 @@ Belirsiz kalan konularda en basit makul seçenek uygulandı. Değiştirmek isted
 40. **Böcek iki katman:** çekirdek + 2.6 kat büyük, %20 saydam hale (ikinci Atlas). Uçuş izi en fazla 96 böcek × 4 nokta (üçüncü Atlas).
 41. **Bölge açılınca** başarı titreşimi ve "Yeni bölge açıldı" bildirimi çıkar; dokununca o bölgeye geçilir ve orman bir anda böcekle dolar.
 42. **Ambiyans ayarlardaki "müzik" anahtarına bağlı**, efektler "ses" anahtarına. iOS sessiz modda ses çalmaz.
+
+## Faz 6
+
+43. **Uzaysal ızgara** (`SIM.gridCell` 48 px): parmak yakalama/mıknatıs ve Işık Ruhu hedef arama her adımda yeniden kurulan ızgara üzerinden yapılır. 1.500 böcekte simülasyon adımı ~0.22 ms (`npm run bench`).
+44. **Işık Ruhu her yakalamadan sonra 1.2 sn bekler** (`SPIRIT.catchCooldown`). Izgarayla en yakın böceği anında bulmak ruhu saniyede ~2.6 yakalamaya çıkarıyordu; bekleme ile ~0.6–0.75'e, yani ekonomi hesabındaki 0.6'ya döndü.
+45. **400 böceğin üstünde hale katmanı kapanır** (`FX.haloMaxFireflies`); çizim yükü yarıya iner, kalabalıkta fark edilmiyor.
+46. **Atlas boyutu kademeli** (128 / 512 / 1.600): yalnızca gereken kadar sprite çizilir.
+47. **Stres testi:** FPS göstergesine (test build'lerinde) dokunmak ekrandaki böcek sayısını 500 → 1.000 → 1.500 → normal arasında değiştirir. Kayda ve ekonomiye etkisi yoktur.
+48. **Gerçek FPS ölçümü cihazda yapılmalı.** Web önizlemesinde (yazılımsal WebGL) 1.500 böcekte 29 FPS görüldü; bu telefonu temsil etmez. Android cihaz testi henüz yok.

@@ -44,7 +44,8 @@
     "lint": "eslint .",
     "web:setup": "mkdir -p public && cp node_modules/canvaskit-wasm/bin/full/canvaskit.wasm public/",
     "web:export": "npm run web:setup && expo export --platform web",
-    "simulate": "tsx scripts/simulate-economy.ts"
+    "simulate": "tsx scripts/simulate-economy.ts",
+    "bench": "tsx scripts/bench-sim.ts"
   },
   "private": true,
   "jest": {
