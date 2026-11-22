@@ -107,3 +107,11 @@ Belirsiz kalan konularda en basit makul seçenek uygulandı. Değiştirmek isted
 74. **"İlk Şafak" tanımı:** Şafak 1M'de açılır (spec), ama sanal oyuncu 5 Yıldız Tozu kazanacakken (koşuda 25M Işık) yapar. 1M'de yapmak yalnızca 1 Toz verdiği için gerçek oyuncu için de mantıklı an budur. Şafak düğmesi 47. dakikada belirir.
 75. **Sınırlar:** sanal oyuncu hiç durmadan, kusursuz oynuyor. Gerçek oyuncu daha yavaş ilerler ama offline kazanç, ×2 Işık ve Altın Ateşböceği bunu kısmen dengeler. Soft launch'ta gerçek verilerle (analitik) yeniden ayarlanmalı. Bot Mıknatıs'ı hiç almıyor (tahmin fonksiyonu değerini düşük görüyor); oyuncular için faydalı, değiştirmedim.
 76. **Ayar denemesi:** `BALANCE_OVERRIDES='{"UPGRADES":{"bright":{"growth":2}}}' SIM_QUIET=1 npm run simulate` ile balance.ts'e dokunmadan değerler denenebilir.
+
+## Faz 11
+
+77. **Dil:** varsayılan cihaz dili (`expo-localization`); Türkçe cihazlarda Türkçe, diğer tüm dillerde İngilizce. Ayarlardan Cihaz / English / Türkçe seçilebilir. Dil değişince arayüz yeniden kurulur, oyun sahnesi etkilenmez.
+78. **Yeni ChatGPT ikonları** (aynı stil, `assets/ui/`): dişli, reklam rozeti, altın ateşböceği, kilit, sol/sağ ok, kapat, şimşek (×2 Işık), geri yükle. Arayüzdeki tüm yazı karakteri simgeleri (⚙︎ ‹ › 🔒 ✕ ▶) bunlarla değişti. Kesme betiği: `scripts/slice-icons.py`.
+79. **Panel çerçeveleri ve düğmeler kodla çiziliyor** (yuvarlak köşe, ince kenar, parıltı). Görsel çerçeve dokuları Android'de esnetilemediği için (9-slice yok) şimdilik eklemedim; ikonlar ve renkler tutarlı tema sağlıyor.
+80. **Erişilebilirlik:** tüm dokunma hedefleri en az 44×44 pt, düğmelerde `accessibilityRole` ve etiketler var. Ateşböceği rengi (#d8ff6a) arka plana (#05070d) karşı yaklaşık 17:1 kontrastta.
+81. **Çeviri testleri:** EN ve TR aynı anahtarlara, boş olmayan metinlere ve aynı `{{değişken}}`lere sahip olmak zorunda.

@@ -55,7 +55,8 @@
         {
           "userTrackingPermission": "This identifier will be used to deliver more relevant ads. You can still play without it."
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "backgroundColor": "#05070d",
     "scheme": "atesbocegi"

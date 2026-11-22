@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, ZoomIn } from 'react-native-reanimated';
 
 import { COLORS, UI } from '../config/balance';
@@ -7,6 +7,7 @@ import { useGame } from '../game/state';
 import { t } from '../i18n';
 import { adsAllowed } from '../game/monetization';
 import { showRewarded, useRewardedReady } from '../services/ads';
+import { UI_ICONS } from './icons';
 import { useAdOffer } from './useAdOffer';
 import { hapticJarEmpty } from '../services/haptics';
 
@@ -44,6 +45,7 @@ export function OfflinePanel() {
           </Pressable>
           {offer ? (
             <Pressable style={[styles.button, styles.adButton]} onPress={watchAd} accessibilityRole="button">
+              <Image source={UI_ICONS.ad} style={styles.adIcon} />
               <Text style={styles.buttonText}>{t('offline.double')}</Text>
             </Pressable>
           ) : null}
@@ -83,6 +85,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  adButton: { backgroundColor: COLORS.stardust },
+  adButton: { backgroundColor: COLORS.stardust, flexDirection: 'row', gap: 6 },
+  adIcon: { width: 22, height: 22 },
   buttonText: { color: COLORS.accentText, fontWeight: '800', fontSize: 15 },
 });

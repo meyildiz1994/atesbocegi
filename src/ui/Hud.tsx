@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { COLORS, UI, ZONES } from "../config/balance";
@@ -8,6 +8,7 @@ import { formatNumber } from "../game/numbers";
 import { lightPerSecond, useGame, useStats } from "../game/state";
 import { TUTORIAL_STEP } from "../game/tutorial";
 import { t, type I18nKey } from "../i18n";
+import { UI_ICONS } from "./icons";
 
 /** Işık/sn göstergesi: saniyede bir yeniden hesaplanır. */
 function useLightPerSecond(): number {
@@ -51,7 +52,7 @@ export function Hud({ onOpenSettings }: { onOpenSettings: () => void }) {
         accessibilityRole="button"
         accessibilityLabel={t("a11y.settings")}
       >
-        <Text style={styles.gearText}>⚙︎</Text>
+        <Image source={UI_ICONS.gear} style={styles.gearIcon} accessibilityIgnoresInvertColors />
       </Pressable>
       {full ? (
         <View style={styles.zoneRow}>
@@ -62,7 +63,7 @@ export function Hud({ onOpenSettings }: { onOpenSettings: () => void }) {
             accessibilityRole="button"
             accessibilityLabel={t("a11y.prevZone")}
           >
-            <Text style={styles.arrowText}>‹</Text>
+            <Image source={UI_ICONS.left} style={styles.arrowIcon} />
           </Pressable>
           <Text style={styles.zone}>
             {t(`zone.${zoneIndex + 1}` as I18nKey)}
@@ -78,9 +79,10 @@ export function Hud({ onOpenSettings }: { onOpenSettings: () => void }) {
             accessibilityRole="button"
             accessibilityLabel={t("a11y.nextZone")}
           >
-            <Text style={styles.arrowText}>
-              {next && !nextOpen ? "🔒" : "›"}
-            </Text>
+            <Image
+              source={next && !nextOpen ? UI_ICONS.lock : UI_ICONS.right}
+              style={styles.arrowIcon}
+            />
           </Pressable>
         </View>
       ) : null}
@@ -113,7 +115,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  arrowText: { color: COLORS.hudText, fontSize: 24 },
+  arrowIcon: { width: 24, height: 24 },
   hidden: { opacity: 0 },
   gear: {
     position: "absolute",
@@ -123,7 +125,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  gearText: { color: COLORS.hudSubText, fontSize: 22 },
+  gearIcon: { width: 30, height: 30 },
   lockedArrow: { opacity: 0.6 },
   lockHint: { color: COLORS.hudSubText, fontSize: 11, marginTop: -8 },
   center: { alignItems: "center" },

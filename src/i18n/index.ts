@@ -6,8 +6,13 @@ export type I18nKey = keyof typeof en;
 
 const dicts: Record<Lang, Record<string, string>> = { en, tr };
 
-/** Faz 11'de cihaz dili ve ayarlardaki seçim bağlanacak. Şimdilik İngilizce varsayılan. */
 let current: Lang = 'en';
+
+/** Ayardaki seçim ('system' ise cihaz dili; Türkçe dışındaki her dil İngilizce). */
+export function resolveLanguage(setting: Lang | 'system', deviceLanguageCode: string | null | undefined): Lang {
+  if (setting !== 'system') return setting;
+  return deviceLanguageCode?.toLowerCase().startsWith('tr') ? 'tr' : 'en';
+}
 
 export function setLanguage(lang: Lang): void {
   current = lang;

@@ -10,6 +10,7 @@ import { useGame } from './game/state';
 import { TUTORIAL_STEP } from './game/tutorial';
 import { useGameEvents } from './game/useGameEvents';
 import { useTutorialDriver } from './game/useTutorial';
+import { useLanguage } from './i18n/useLanguage';
 import { ForestCanvas } from './render/ForestCanvas';
 import { initAds } from './services/ads';
 import { initIap } from './services/iap';
@@ -35,6 +36,7 @@ const SHOW_FPS = __DEV__ || process.env.EXPO_PUBLIC_SHOW_FPS === '1';
 
 export default function App() {
   const ready = usePersistence();
+  const lang = useLanguage();
   useTutorialDriver();
   const [newZone, clearNewZone] = useGameEvents();
   const floaters = useRef<FloatingNumbersHandle>(null);
@@ -57,6 +59,8 @@ export default function App() {
           {ready ? (
             <>
               <ForestCanvas onLightGained={(a, x, y) => floaters.current?.spawn(a, x, y)} />
+              {/* Dil değişince arayüz yeniden kurulur (sahne etkilenmez). */}
+              <View key={lang} style={StyleSheet.absoluteFill} pointerEvents="box-none">
               <Hud onOpenSettings={() => setPanel('settings')} />
               <FloatingNumbers ref={floaters} />
               <ComboCounter />
@@ -73,6 +77,7 @@ export default function App() {
               <DawnFlash />
               {SHOW_FPS ? <FpsOverlay onLongPress={() => setPanel('events')} /> : null}
               {SHOW_FPS && panel === 'events' ? <EventsPanel onClose={close} /> : null}
+              </View>
             </>
           ) : null}
         </View>

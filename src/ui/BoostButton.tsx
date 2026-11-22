@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Image, Pressable, StyleSheet, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { COLORS, MONETIZATION, UI } from '../config/balance';
@@ -9,6 +9,7 @@ import { TUTORIAL_STEP } from '../game/tutorial';
 import { t } from '../i18n';
 import { showRewarded, useRewardedReady } from '../services/ads';
 import { hapticSuccess } from '../services/haptics';
+import { UI_ICONS } from './icons';
 import { useAdOffer } from './useAdOffer';
 
 function useNow(active: boolean): number {
@@ -62,9 +63,13 @@ export function BoostButton() {
       accessibilityRole="button"
       accessibilityLabel={t('boost.a11y', { mult: MONETIZATION.boostMultiplier })}
     >
+      <Image source={UI_ICONS.boost} style={styles.icon} />
       <Text style={[styles.text, active && styles.activeText]}>
-        {active ? t('boost.active', { mult: MONETIZATION.boostMultiplier, time: mmss(boostUntil - now) }) : t(removeAds ? 'boost.free' : 'boost.offer', { mult: MONETIZATION.boostMultiplier })}
+        {active
+          ? t('boost.active', { mult: MONETIZATION.boostMultiplier, time: mmss(boostUntil - now) })
+          : t('boost.offer', { mult: MONETIZATION.boostMultiplier })}
       </Text>
+      {!active && !removeAds ? <Image source={UI_ICONS.ad} style={styles.icon} /> : null}
     </Pressable>
   );
 }
@@ -74,8 +79,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 10,
     minHeight: UI.minTouch,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     borderRadius: UI.minTouch / 2,
+    flexDirection: 'row',
+    gap: 4,
     backgroundColor: COLORS.cardBg,
     borderWidth: 1,
     borderColor: COLORS.accent,
@@ -83,6 +90,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   active: { backgroundColor: COLORS.accent },
+  icon: { width: 24, height: 24 },
   text: { color: COLORS.accent, fontWeight: '800', fontSize: 14 },
   activeText: { color: COLORS.accentText, fontVariant: ['tabular-nums'] },
 });

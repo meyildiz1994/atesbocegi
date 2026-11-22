@@ -16,4 +16,13 @@ export const UI_ICONS = {
   store: require('../../assets/ui/icon_store.png') as number,
   upgrades: require('../../assets/ui/icon_jar.png') as number,
   finger: require('../../assets/ui/finger.png') as number,
+  gear: require('../../assets/ui/icon_gear.png') as number,
+  ad: require('../../assets/ui/icon_ad.png') as number,
+  golden: require('../../assets/ui/icon_golden.png') as number,
+  lock: require('../../assets/ui/icon_lock.png') as number,
+  left: require('../../assets/ui/icon_left.png') as number,
+  right: require('../../assets/ui/icon_right.png') as number,
+  close: require('../../assets/ui/icon_close.png') as number,
+  boost: require('../../assets/ui/icon_boost.png') as number,
+  restore: require('../../assets/ui/icon_restore.png') as number,
 };

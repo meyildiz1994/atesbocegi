@@ -58,7 +58,7 @@
   "offline.title": "While you were away",
   "offline.body": "{{amount}} light was gathered",
   "offline.collect": "Collect",
-  "offline.double": "Watch ad ×2",
+  "offline.double": "×2",
   "dawn.short": "Dawn",
   "a11y.prevZone": "Previous zone",
   "a11y.nextZone": "Next zone",
@@ -73,11 +73,11 @@
   "settings.resetConfirm": "All light, upgrades and stardust will be lost. Are you sure?",
   "settings.resetYes": "Reset",
   "a11y.settings": "Settings",
-  "boost.offer": "▶ ×{{mult}} Light",
+  "boost.offer": "×{{mult}} Light",
   "boost.active": "×{{mult}} · {{time}}",
   "boost.a11y": "Watch an ad for ×{{mult}} light for 2 minutes",
   "golden.title": "Golden Firefly!",
-  "golden.watch": "▶ Watch ad: +{{amount}}",
+  "golden.watch": "Watch ad: +{{amount}}",
   "golden.take": "Take +{{amount}}",
   "golden.a11y": "Golden firefly. Tap to catch.",
   "store.removeAds": "Remove Ads",
@@ -93,5 +93,8 @@
   "settings.adPrivacy": "Ad privacy choices",
   "settings.privacyPolicy": "Privacy policy",
   "offline.collectDouble": "Collect ×2",
-  "boost.free": "×{{mult}} Light"
+  "settings.language": "Language",
+  "settings.lang.system": "Device",
+  "settings.lang.en": "English",
+  "settings.lang.tr": "Türkçe"
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Linking, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Image, Linking, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { APP_CONFIG } from '../config/app';
 
@@ -11,12 +11,14 @@ import { t, type I18nKey } from '../i18n';
 import { privacyOptionsRequired, showPrivacyOptions } from '../services/ads';
 import { hapticSuccess } from '../services/haptics';
 import { iapAvailable, restore } from '../services/iap';
+import { UI_ICONS } from './icons';
 import { Sheet } from './Sheet';
 
 type Toggle = Exclude<keyof Settings, 'language'>;
 const TOGGLES: Toggle[] = ['sound', 'music', 'haptics'];
+const LANGS: Settings['language'][] = ['system', 'en', 'tr'];
 
-/** Ayarlar. Dil seçimi Faz 11'de eklenecek. */
+/** Ayarlar: sesler, titreşim, dil, satın alımlar, gizlilik, sıfırlama. */
 export function SettingsPanel({ onClose }: { onClose: () => void }) {
   const settings = useGame((s) => s.settings);
   const setSettings = useGame((s) => s.setSettings);
@@ -51,8 +53,27 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
           </View>
         ))}
 
+        <View style={styles.langBlock}>
+          <Text style={styles.label}>{t('settings.language')}</Text>
+          <View style={styles.segments}>
+            {LANGS.map((l) => (
+              <Pressable
+                key={l}
+                onPress={() => setSettings({ language: l })}
+                style={[styles.segment, settings.language === l && styles.segmentActive]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: settings.language === l }}
+              >
+                <Text style={[styles.segmentText, settings.language === l && styles.segmentTextActive]}>
+                  {t(`settings.lang.${l}` as I18nKey)}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
         {iapAvailable() ? (
-          <LinkRow label={t('store.restore')} onPress={onRestore} note={restoreNote} />
+          <LinkRow label={t('store.restore')} onPress={onRestore} note={restoreNote} icon={UI_ICONS.restore} />
         ) : null}
         {privacyOptionsRequired() ? <LinkRow label={t('settings.adPrivacy')} onPress={showPrivacyOptions} /> : null}
         {APP_CONFIG.privacyPolicyUrl ? (
@@ -91,10 +112,23 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
   );
 }
 
-function LinkRow({ label, onPress, note }: { label: string; onPress: () => void; note?: string | null }) {
+function LinkRow({
+  label,
+  onPress,
+  note,
+  icon,
+}: {
+  label: string;
+  onPress: () => void;
+  note?: string | null;
+  icon?: number;
+}) {
   return (
     <Pressable onPress={onPress} style={styles.row} accessibilityRole="button">
-      <Text style={styles.label}>{label}</Text>
+      <View style={styles.labelRow}>
+        {icon ? <Image source={icon} style={styles.rowIcon} /> : null}
+        <Text style={styles.label}>{label}</Text>
+      </View>
       <Text style={styles.chevron}>{note ?? '›'}</Text>
     </Pressable>
   );
@@ -111,8 +145,29 @@ const styles = StyleSheet.create({
     borderColor: COLORS.panelBorder,
   },
   label: { color: COLORS.hudText, fontSize: 16 },
+  labelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  rowIcon: { width: 24, height: 24 },
   chevron: { color: COLORS.hudSubText, fontSize: 14, flexShrink: 1, textAlign: 'right', marginLeft: 12 },
   danger: { marginTop: 18, gap: 10 },
+  langBlock: {
+    paddingVertical: 10,
+    gap: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: COLORS.panelBorder,
+  },
+  segments: { flexDirection: 'row', gap: 6 },
+  segment: {
+    flex: 1,
+    minHeight: UI.minTouch,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: COLORS.panelBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  segmentActive: { backgroundColor: COLORS.accent, borderColor: COLORS.accent },
+  segmentText: { color: COLORS.hudSubText, fontWeight: '700', fontSize: 14 },
+  segmentTextActive: { color: COLORS.accentText },
   button: {
     minHeight: UI.minTouch,
     borderRadius: 12,

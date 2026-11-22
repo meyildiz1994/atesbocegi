@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { COLORS, UI } from '../config/balance';
 import { t } from '../i18n';
+import { UI_ICONS } from './icons';
 
 type Props = {
   title: string;
@@ -37,7 +38,7 @@ export function Sheet({ title, onClose, children, headerRight }: Props) {
           <View style={styles.headerRight}>
             {headerRight}
             <Pressable onPress={onClose} style={styles.close} accessibilityRole="button" accessibilityLabel={t('ui.close')}>
-              <Text style={styles.closeText}>✕</Text>
+              <Image source={UI_ICONS.close} style={styles.closeIcon} />
             </Pressable>
           </View>
         </View>
@@ -71,5 +72,5 @@ const styles = StyleSheet.create({
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   title: { color: COLORS.hudText, fontSize: 20, fontWeight: '700' },
   close: { width: UI.minTouch, height: UI.minTouch, alignItems: 'center', justifyContent: 'center' },
-  closeText: { color: COLORS.hudSubText, fontSize: 20 },
+  closeIcon: { width: 22, height: 22, opacity: 0.85 },
 });

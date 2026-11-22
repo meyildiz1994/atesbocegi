@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, {
   Easing,
   FadeIn,
@@ -20,6 +20,7 @@ import { t } from '../i18n';
 import { track } from '../services/analytics';
 import { showRewarded, useRewardedReady } from '../services/ads';
 import { hapticSuccess } from '../services/haptics';
+import { UI_ICONS } from './icons';
 import { useAdOffer } from './useAdOffer';
 
 const CHECK_MS = 1000;
@@ -116,7 +117,7 @@ function Flight({
         style={styles.hit}
       >
         <View style={styles.halo} />
-        <View style={styles.core} />
+        <Image source={UI_ICONS.golden} style={styles.sprite} />
       </Pressable>
     </Animated.View>
   );
@@ -145,11 +146,12 @@ function RewardCard({ reward, onDone }: { reward: Reward; onDone: () => void }) 
       <Animated.View entering={ZoomIn.springify()} style={styles.card}>
         <View style={styles.cardBug}>
           <View style={styles.halo} />
-          <View style={styles.core} />
+          <Image source={UI_ICONS.golden} style={styles.cardSprite} />
         </View>
         <Text style={styles.title}>{t('golden.title')}</Text>
         {offer ? (
           <Pressable onPress={watch} style={[styles.button, styles.adButton]} accessibilityRole="button">
+            <Image source={UI_ICONS.ad} style={styles.adIcon} />
             <Text style={styles.buttonText}>{t('golden.watch', { amount: formatNumber(reward.full) })}</Text>
           </Pressable>
         ) : null}
@@ -180,16 +182,9 @@ const styles = StyleSheet.create({
     backgroundColor: GOLDEN.color,
     opacity: 0.25,
   },
-  core: {
-    width: S * 0.6,
-    height: S * 0.6,
-    borderRadius: S * 0.3,
-    backgroundColor: '#fff7d0',
-    shadowColor: GOLDEN.color,
-    shadowOpacity: 1,
-    shadowRadius: S * 0.6,
-    shadowOffset: { width: 0, height: 0 },
-  },
+  sprite: { width: S * 1.6, height: S * 1.6 },
+  cardSprite: { width: S * 2.4, height: S * 2.4 },
+  adIcon: { width: 24, height: 24 },
   backdrop: { backgroundColor: '#000000aa', alignItems: 'center', justifyContent: 'center' },
   card: {
     width: '82%',
@@ -201,7 +196,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
-  cardBug: { width: S * 2, height: S * 2, alignItems: 'center', justifyContent: 'center' },
+  cardBug: { width: S * 2.6, height: S * 2.6, alignItems: 'center', justifyContent: 'center' },
   title: { color: GOLDEN.color, fontSize: 20, fontWeight: '800' },
   button: {
     alignSelf: 'stretch',
@@ -212,7 +207,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 16,
   },
-  adButton: { backgroundColor: GOLDEN.color },
+  adButton: { backgroundColor: GOLDEN.color, flexDirection: 'row', gap: 6 },
   secondary: { backgroundColor: 'transparent', borderWidth: 1, borderColor: COLORS.panelBorder },
   buttonText: { color: COLORS.accentText, fontWeight: '800', fontSize: 15 },
   secondaryText: { color: COLORS.hudSubText },
