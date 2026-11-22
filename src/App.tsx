@@ -61,7 +61,7 @@ export default function App() {
               <ForestCanvas onLightGained={(a, x, y) => floaters.current?.spawn(a, x, y)} />
               {/* Dil değişince arayüz yeniden kurulur (sahne etkilenmez). */}
               <View key={lang} style={StyleSheet.absoluteFill} pointerEvents="box-none">
-              <Hud onOpenSettings={() => setPanel('settings')} />
+              <Hud />
               <FloatingNumbers ref={floaters} />
               <ComboCounter />
               <GoldenFirefly />

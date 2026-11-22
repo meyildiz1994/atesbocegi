@@ -96,5 +96,13 @@
   "settings.language": "Language",
   "settings.lang.system": "Device",
   "settings.lang.en": "English",
-  "settings.lang.tr": "Türkçe"
+  "settings.lang.tr": "Türkçe",
+  "tour.store": "Ad-free play and the starter pack live here.",
+  "tour.dawn": "Gather enough light and the forest wakes to Dawn: you start over, but Stardust makes you permanently stronger.",
+  "tour.upgrades": "Spend light to power up your ring, jar and fireflies. The badge shows how many upgrades you can buy.",
+  "tour.settings": "Sound, haptics and language.",
+  "tour.next": "Next",
+  "tour.start": "Let's go",
+  "ui.toUnlock": "Next zone",
+  "zone.progress": "{{current}} / {{target}} Light"
 }

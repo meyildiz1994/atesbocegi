@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Image, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Animated, {
   Easing,
   FadeIn,
@@ -15,7 +15,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS, JAR, TUTORIAL, UI } from '../config/balance';
 import { useGame } from '../game/state';
 import { TUTORIAL_STEP } from '../game/tutorial';
-import { t } from '../i18n';
+import { t, type I18nKey } from '../i18n';
+import { track } from '../services/analytics';
+import { BAR_BUTTON, BAR_ICONS, BAR_LABELS, BAR_SLOTS, barSlotCenters } from './BottomBar';
 import { UI_ICONS } from './icons';
 
 /** İpucu eli (ChatGPT ile üretildi). */
@@ -51,7 +53,10 @@ function Hint({ text, mode, style }: { text: string; mode: 'drag' | 'tap'; style
 export function TutorialOverlay() {
   const step = useGame((s) => s.tutorialStep);
   const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
   if (step >= TUTORIAL_STEP.done) return null;
+  if (step === TUTORIAL_STEP.tour) return <IconTour />;
+  const up = barSlotCenters(width, height, insets).upgrades;
 
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
@@ -71,14 +76,95 @@ export function TutorialOverlay() {
           key="upgrade"
           text={t('hint.upgrade')}
           mode="tap"
-          style={[styles.right, { bottom: insets.bottom + UI.minTouch + 24 }]}
+          style={{ position: 'absolute', left: up.x - 80, width: 160, top: up.y - BAR_BUTTON / 2 - 100 }}
         />
       ) : null}
     </View>
   );
 }
 
+/** Alt çubuktaki ikonları tek tek tanıtır; her dokunuş bir sonrakine geçer. */
+function IconTour() {
+  const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
+  const [i, setI] = useState(0);
+  const centers = barSlotCenters(width, height, insets);
+  const slot = BAR_SLOTS[i] ?? 'settings';
+  const c = centers[slot];
+  const last = i === BAR_SLOTS.length - 1;
+  const next = () => {
+    if (!last) {
+      setI(i + 1);
+      return;
+    }
+    useGame.getState().setTutorialStep(TUTORIAL_STEP.done);
+    track('tutorial_complete', {});
+  };
+  const ring = BAR_BUTTON + 16;
+  return (
+    <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(250)} style={StyleSheet.absoluteFill}>
+      <Pressable style={[StyleSheet.absoluteFill, styles.dim]} onPress={next} accessibilityRole="button" accessibilityLabel={t(last ? 'tour.start' : 'tour.next')} />
+      <Animated.View
+        key={slot}
+        entering={FadeIn.duration(250)}
+        pointerEvents="none"
+        style={[styles.ring, { width: ring, height: ring, borderRadius: ring / 2, left: c.x - ring / 2, top: c.y - ring / 2 }]}
+      >
+        <Image source={BAR_ICONS[slot]} style={styles.ringIcon} />
+      </Animated.View>
+      <Animated.View key={`card-${slot}`} entering={FadeIn.duration(250)} pointerEvents="box-none" style={[styles.card, { bottom: height - c.y + ring / 2 + 14 }]}>
+        <Text style={styles.cardTitle}>{t(BAR_LABELS[slot])}</Text>
+        <Text style={styles.cardBody}>{t(`tour.${slot}` as I18nKey)}</Text>
+        <View style={styles.cardRow}>
+          <Text style={styles.dots}>{BAR_SLOTS.map((_, k) => (k === i ? '●' : '○')).join(' ')}</Text>
+          <Pressable onPress={next} style={styles.cardButton} accessibilityRole="button">
+            <Text style={styles.cardButtonText}>{t(last ? 'tour.start' : 'tour.next')}</Text>
+          </Pressable>
+        </View>
+      </Animated.View>
+    </Animated.View>
+  );
+}
+
 const styles = StyleSheet.create({
+  dim: { backgroundColor: '#02060ccc' },
+  ring: {
+    position: 'absolute',
+    borderWidth: 2,
+    borderColor: COLORS.accent,
+    backgroundColor: COLORS.cardBgAffordable,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.9,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  ringIcon: { width: 42, height: 42 },
+  card: {
+    position: 'absolute',
+    left: 20,
+    right: 20,
+    padding: 16,
+    gap: 6,
+    borderRadius: 18,
+    backgroundColor: COLORS.panelBg,
+    borderWidth: 1,
+    borderColor: COLORS.panelBorder,
+  },
+  cardTitle: { color: COLORS.accent, fontSize: 20, fontWeight: '800' },
+  cardBody: { color: COLORS.hudText, fontSize: 15, lineHeight: 21 },
+  cardRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 },
+  dots: { color: COLORS.hudSubText, fontSize: 12, letterSpacing: 2 },
+  cardButton: {
+    minHeight: UI.minTouch,
+    paddingHorizontal: 22,
+    borderRadius: 14,
+    backgroundColor: COLORS.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardButtonText: { color: COLORS.accentText, fontSize: 16, fontWeight: '800' },
   hint: { position: 'absolute', alignItems: 'center', gap: 6 },
   center: { left: 0, right: 0, top: '42%' },
   centerX: { left: 0, right: 0 },

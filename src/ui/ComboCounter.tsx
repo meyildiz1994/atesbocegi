@@ -34,7 +34,7 @@ export function ComboCounter() {
 
   const style = useAnimatedStyle(() => ({ opacity: opacity.value, transform: [{ scale: pop.value }] }));
   return (
-    <Animated.Text pointerEvents="none" style={[styles.text, { top: insets.top + 120 }, style]}>
+    <Animated.Text pointerEvents="none" style={[styles.text, { top: insets.top + 172 }, style]}>
       ×{count}
     </Animated.Text>
   );

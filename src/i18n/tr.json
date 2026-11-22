@@ -96,5 +96,13 @@
   "settings.language": "Dil",
   "settings.lang.system": "Cihaz",
   "settings.lang.en": "English",
-  "settings.lang.tr": "Türkçe"
+  "settings.lang.tr": "Türkçe",
+  "tour.store": "Reklamsız oyun ve başlangıç paketi burada.",
+  "tour.dawn": "Yeterince ışık toplayınca orman Şafak'a uyanır: baştan başlarsın ama Yıldız Tozu ile kalıcı olarak güçlenirsin.",
+  "tour.upgrades": "Topladığın ışıkla halkanı, kavanozunu ve böceklerini güçlendir. Rozet, alabileceğin yükseltme sayısını gösterir.",
+  "tour.settings": "Ses, titreşim ve dil ayarları.",
+  "tour.next": "Devam",
+  "tour.start": "Başla",
+  "ui.toUnlock": "Sonraki bölge",
+  "zone.progress": "{{current}} / {{target}} Işık"
 }

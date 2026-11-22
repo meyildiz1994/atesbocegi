@@ -18,7 +18,7 @@ function save(now) {
     levels: { ring: 10, jar: 12, bright: 8, crowd: 15, spirit: 4, autoEmpty: 0, magnet: 3 },
     skills: {}, stardust: 0, stardustEarned: 0, prestigeCount: 0,
     settings: { sound: false, music: false, haptics: false, language: LANG },
-    lastSeen: now, playTimeSec: 0, firstLaunchAt: now, tutorialStep: 5, offlineReport: null,
+    lastSeen: now, playTimeSec: 0, firstLaunchAt: now, tutorialStep: 6, offlineReport: null,
     boostUntil: 0, lastInterstitialAt: 0, purchases: { removeAds: true, starter: false },
   };
 }

@@ -15,7 +15,9 @@ export const TUTORIAL_STEP = {
   earn: 3,
   /** Yükseltme butonunu göster; ilk satın almada biter. */
   upgrade: 4,
-  done: 5,
+  /** Alt çubuktaki ikonların tanıtımı; oyuncu "Başla"ya basınca biter. */
+  tour: 5,
+  done: 6,
 } as const;
 
 export type TutorialSnapshot = {
@@ -40,7 +42,9 @@ function advanceOnce(step: number, s: TutorialSnapshot): number {
     case TUTORIAL_STEP.earn:
       return s.anyUpgradeAffordable || s.anyUpgradeOwned ? TUTORIAL_STEP.upgrade : step;
     case TUTORIAL_STEP.upgrade:
-      return s.anyUpgradeOwned ? TUTORIAL_STEP.done : step;
+      return s.anyUpgradeOwned ? TUTORIAL_STEP.tour : step;
+    case TUTORIAL_STEP.tour:
+      return step;
     default:
       return TUTORIAL_STEP.done;
   }
@@ -48,8 +52,9 @@ function advanceOnce(step: number, s: TutorialSnapshot): number {
 
 /** Mevcut duruma göre gelinen adım (birden fazla adım birden geçilebilir). */
 export function advanceTutorial(step: number, s: TutorialSnapshot): number {
-  // Eski kayıtlar ya da prestij yapmış oyuncular onboarding görmez.
-  if (s.prestigeCount > 0 || s.anyUpgradeOwned) return TUTORIAL_STEP.done;
+  if (step >= TUTORIAL_STEP.tour) return step;
+  // Eski kayıtlar ya da prestij yapmış oyuncular ilk adımları atlar, yalnızca ikon tanıtımını görür.
+  if (s.prestigeCount > 0 || s.anyUpgradeOwned) return TUTORIAL_STEP.tour;
   let cur = step;
   for (;;) {
     const next = advanceOnce(cur, s);
@@ -63,6 +68,11 @@ export function tutorialFireflyCap(step: number, normalMax: number): number {
   if (step <= TUTORIAL_STEP.drag) return Math.min(normalMax, TUTORIAL.firstFireflies);
   if (step < TUTORIAL_STEP.earn) return Math.min(normalMax, TUTORIAL.earlyFireflies);
   return normalMax;
+}
+
+/** Onboarding'in oynanış kısmı bitti mi (tam HUD, altın böcek, güçlendirme)? */
+export function gameplayUnlocked(step: number): boolean {
+  return step >= TUTORIAL_STEP.tour;
 }
 
 /** Alt çubuk (mağaza, yükseltmeler) ilk boşaltmadan sonra belirir. */

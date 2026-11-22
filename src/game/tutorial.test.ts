@@ -24,12 +24,15 @@ describe('tutorial', () => {
     const s = { ...base, lifetimeLight: 10 };
     expect(advanceTutorial(TUTORIAL_STEP.earn, s)).toBe(TUTORIAL_STEP.earn);
     expect(advanceTutorial(TUTORIAL_STEP.earn, { ...s, anyUpgradeAffordable: true })).toBe(TUTORIAL_STEP.upgrade);
-    expect(advanceTutorial(TUTORIAL_STEP.upgrade, { ...s, anyUpgradeOwned: true })).toBe(TUTORIAL_STEP.done);
+    expect(advanceTutorial(TUTORIAL_STEP.upgrade, { ...s, anyUpgradeOwned: true })).toBe(TUTORIAL_STEP.tour);
+    // İkon tanıtımı yalnızca oyuncunun dokunuşuyla biter.
+    expect(advanceTutorial(TUTORIAL_STEP.tour, { ...s, anyUpgradeOwned: true })).toBe(TUTORIAL_STEP.tour);
+    expect(advanceTutorial(TUTORIAL_STEP.done, base)).toBe(TUTORIAL_STEP.done);
   });
 
   it('birden fazla adım tek seferde geçilebilir; eski kayıtlar onboarding görmez', () => {
     expect(advanceTutorial(0, { ...base, lifetimeLight: 50, anyUpgradeAffordable: true })).toBe(TUTORIAL_STEP.upgrade);
-    expect(advanceTutorial(0, { ...base, prestigeCount: 1 })).toBe(TUTORIAL_STEP.done);
+    expect(advanceTutorial(0, { ...base, prestigeCount: 1 })).toBe(TUTORIAL_STEP.tour);
   });
 
   it('böcek sınırı ve alt çubuk', () => {

@@ -3,7 +3,9 @@ import {
   Circle,
   Group,
   Image,
+  LinearGradient,
   RadialGradient,
+  Rect,
   vec,
   RoundedRect,
   rect,
@@ -46,7 +48,7 @@ function Spark({ u, v, phase, fill, time }: { u: number; v: number; phase: numbe
   const cy = useDerivedValue(() => gBottom - (gBottom - gTop) * v + 2 * Math.cos(time.value * 1.1 + phase));
   const opacity = useDerivedValue(() => (v < fill.value ? 0.55 + 0.45 * Math.sin(time.value * 3 + phase) : 0));
   return (
-    <Circle cx={cx} cy={cy} r={2.2} color={COLORS.jarGlow} opacity={opacity}>
+    <Circle cx={cx} cy={cy} r={2.8} color={COLORS.jarGlow} opacity={opacity}>
       <BlurMask blur={2} style="solid" />
     </Circle>
   );
@@ -74,6 +76,14 @@ export function Jar({ x, y, count, capacity, time }: Props) {
   });
   const glowOpacity = useDerivedValue(() => 0.12 + 0.88 * fill.value);
   const haloR = useDerivedValue(() => W * (0.55 + 0.5 * fill.value + 0.15 * full.value));
+  /** Işık yüzeyi: dolum seviyesinin net görünmesi için parlak çizgi. */
+  const surfaceY = useDerivedValue(() => gBottom - (gBottom - gTop) * fill.value - 1.5);
+  const surfaceOpacity = useDerivedValue(() => (fill.value > 0.02 ? 0.95 : 0));
+  /** Kavanozun altındaki doluluk çubuğu. */
+  const barW = W * 0.78;
+  const barFillW = useDerivedValue(() => Math.max(0.001, barW * fill.value));
+  const barColor = useDerivedValue(() => (full.value ? COLORS.jarFull : COLORS.jarGlow));
+  const barOpacity = useDerivedValue(() => (full.value ? 0.75 + 0.25 * Math.sin(time.value * 8) : 1));
 
   return (
     <Group transform={transform}>
@@ -89,20 +99,35 @@ export function Jar({ x, y, count, capacity, time }: Props) {
       ) : (
         <RoundedRect x={gx} y={gTop} width={gw} height={gBottom - gTop} r={gr} color={`${COLORS.jarGlass}33`} />
       )}
-      {/* Camın içindeki ışık: görselin üstüne eklenerek çizilir, cam içten aydınlanmış görünür */}
+      {/* Camın içindeki ışık sıvısı: dipte sıcak ve yoğun, yüzeye doğru açılır; seviye net okunur */}
+      <RoundedRect rect={liquid} opacity={0.72}>
+        <LinearGradient
+          start={vec(0, gBottom)}
+          end={vec(0, gTop)}
+          colors={[`${COLORS.jarFull}ff`, `${COLORS.jarGlow}cc`]}
+        />
+      </RoundedRect>
       <Group opacity={glowOpacity} blendMode="plus">
         <RoundedRect rect={liquid}>
           <RadialGradient
             c={vec(0, (gTop + gBottom) / 2 + 8)}
             r={gw * 0.75}
-            colors={[`${COLORS.jarGlow}b0`, `${COLORS.jarGlow}40`]}
+            colors={[`${COLORS.jarGlow}90`, `${COLORS.jarGlow}30`]}
           />
           <BlurMask blur={7} style="normal" />
         </RoundedRect>
+        <Rect x={gx + 4} y={surfaceY} width={gw - 8} height={3} color={COLORS.jarGlow} opacity={surfaceOpacity}>
+          <BlurMask blur={2} style="solid" />
+        </Rect>
         {SPARKS.map((sp, i) => (
           <Spark key={i} {...sp} fill={fill} time={time} />
         ))}
       </Group>
+      {/* Doluluk çubuğu */}
+      <RoundedRect x={-barW / 2} y={H / 2 + 6} width={barW} height={6} r={3} color="#0a1a1fcc" />
+      <RoundedRect x={-barW / 2} y={H / 2 + 6} width={barFillW} height={6} r={3} color={barColor} opacity={barOpacity}>
+        <BlurMask blur={1.5} style="solid" />
+      </RoundedRect>
     </Group>
   );
 }

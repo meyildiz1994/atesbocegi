@@ -12,6 +12,8 @@ export const COLORS = {
   ring: '#fff4b0',
   jarGlass: '#9fb8c8',
   jarGlow: '#e8ff9a',
+  /** Kavanozun dibindeki sıcak ışık ve dolu kavanozun rengi. */
+  jarFull: '#ffc94a',
   hudText: '#e8f0ff',
   hudSubText: '#8fa3b8',
   floatingNumber: '#f4ffb0',
@@ -27,6 +29,8 @@ export const COLORS = {
   cardBg: '#132030',
   cardBgAffordable: '#1a2e22',
   accent: '#d8ff6a',
+  /** Bildirim rozeti (alınabilir yükseltme, hazır Şafak). */
+  badge: '#ffc94a',
   accentText: '#0a1008',
   disabled: '#4a5866',
   stardust: '#c8b8ff',

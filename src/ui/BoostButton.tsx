@@ -32,7 +32,7 @@ export function BoostButton() {
   const insets = useSafeAreaInsets();
   const boostUntil = useGame((s) => s.boostUntil);
   const startBoost = useGame((s) => s.startBoost);
-  const done = useGame((s) => s.tutorialStep >= TUTORIAL_STEP.done);
+  const done = useGame((s) => s.tutorialStep >= TUTORIAL_STEP.tour);
   const allowed = useGame((s) => adsAllowed(s.playTimeSec));
   const ready = useRewardedReady();
   const removeAds = useGame((s) => s.purchases.removeAds);

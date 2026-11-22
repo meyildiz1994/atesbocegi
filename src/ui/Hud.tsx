@@ -23,8 +23,8 @@ function useLightPerSecond(): number {
   return rate;
 }
 
-/** Üst bilgi: bölge adı ve okları, büyük Işık sayacı, Işık/sn, kavanoz doluluğu. */
-export function Hud({ onOpenSettings }: { onOpenSettings: () => void }) {
+/** Üst bilgi: bölge başlığı (oklarla), sonraki bölgenin ilerleme çubuğu, büyük Işık sayacı, Işık/sn ve kavanoz. */
+export function Hud() {
   const insets = useSafeAreaInsets();
   const light = useGame((s) => s.light);
   const jarCount = useGame((s) => s.jarCount);
@@ -33,29 +33,20 @@ export function Hud({ onOpenSettings }: { onOpenSettings: () => void }) {
   const setZone = useGame((s) => s.setZone);
   const stats = useStats();
   const rate = useLightPerSecond();
-  // Onboarding bitene kadar yalnızca Işık sayacı görünür.
-  const full = useGame((s) => s.tutorialStep >= TUTORIAL_STEP.done);
+  // Onboarding'in oynanış kısmı bitene kadar yalnızca Işık sayacı görünür.
+  const full = useGame((s) => s.tutorialStep >= TUTORIAL_STEP.tour);
 
   const unlocked = unlockedZoneCount(runLight);
   const hasPrev = zoneIndex > 0;
   const next = ZONES[zoneIndex + 1];
   const nextOpen = zoneIndex + 1 < unlocked;
+  const locked = !!next && !nextOpen;
+  const progress = locked ? Math.min(1, runLight / next.unlockAt) : 0;
 
   return (
-    <View
-      pointerEvents="box-none"
-      style={[styles.top, { paddingTop: insets.top + 6 }]}
-    >
-      <Pressable
-        onPress={onOpenSettings}
-        style={[styles.gear, { top: insets.top + 2 }]}
-        accessibilityRole="button"
-        accessibilityLabel={t("a11y.settings")}
-      >
-        <Image source={UI_ICONS.gear} style={styles.gearIcon} accessibilityIgnoresInvertColors />
-      </Pressable>
+    <View pointerEvents="box-none" style={[styles.top, { paddingTop: insets.top + 4 }]}>
       {full ? (
-        <View style={styles.zoneRow}>
+        <View style={styles.zonePill}>
           <Pressable
             onPress={() => setZone(zoneIndex - 1)}
             disabled={!hasPrev}
@@ -65,42 +56,50 @@ export function Hud({ onOpenSettings }: { onOpenSettings: () => void }) {
           >
             <Image source={UI_ICONS.left} style={styles.arrowIcon} />
           </Pressable>
-          <Text style={styles.zone}>
+          <Text style={styles.zone} numberOfLines={1}>
             {t(`zone.${zoneIndex + 1}` as I18nKey)}
           </Text>
           <Pressable
             onPress={() => setZone(zoneIndex + 1)}
             disabled={!next || !nextOpen}
-            style={[
-              styles.arrow,
-              !next && styles.hidden,
-              next && !nextOpen && styles.lockedArrow,
-            ]}
+            style={[styles.arrow, !next && styles.hidden]}
             accessibilityRole="button"
             accessibilityLabel={t("a11y.nextZone")}
           >
-            <Image
-              source={next && !nextOpen ? UI_ICONS.lock : UI_ICONS.right}
-              style={styles.arrowIcon}
-            />
+            <Image source={locked ? UI_ICONS.lock : UI_ICONS.right} style={styles.arrowIcon} />
           </Pressable>
         </View>
       ) : null}
-      {full && next && !nextOpen ? (
-        <Text style={styles.lockHint}>
-          {t("ui.locked", { amount: formatNumber(next.unlockAt) })}
-        </Text>
+      {full && locked ? (
+        <View
+          style={styles.unlock}
+          accessible
+          accessibilityLabel={t("ui.locked", { amount: formatNumber(next.unlockAt) })}
+        >
+          <View style={styles.track}>
+            <View style={[styles.trackFill, { width: `${Math.max(2, progress * 100)}%` }]} />
+          </View>
+          <Text style={styles.unlockText}>
+            {t("zone.progress", { current: formatNumber(runLight), target: formatNumber(next.unlockAt) })}
+          </Text>
+        </View>
       ) : null}
       <View pointerEvents="none" style={styles.center}>
         <Text style={styles.light} accessibilityRole="text">
           {formatNumber(light)}
         </Text>
-        <Text style={styles.sub}>
-          {full
-            ? `${t("hud.perSecond", { value: formatNumber(rate) })}   ·   `
-            : ""}
-          {t("hud.perJar", { count: jarCount, capacity: stats.jarCapacity })}
-        </Text>
+        <View style={styles.chips}>
+          {full ? (
+            <View style={styles.chip}>
+              <Image source={UI_ICONS.boost} style={styles.chipIcon} />
+              <Text style={styles.chipText}>{t("hud.perSecond", { value: formatNumber(rate) })}</Text>
+            </View>
+          ) : null}
+          <View style={styles.chip}>
+            <Image source={UI_ICONS.upgrades} style={styles.chipIcon} />
+            <Text style={styles.chipText}>{t("hud.perJar", { count: jarCount, capacity: stats.jarCapacity })}</Text>
+          </View>
+        </View>
       </View>
     </View>
   );
@@ -108,44 +107,68 @@ export function Hud({ onOpenSettings }: { onOpenSettings: () => void }) {
 
 const styles = StyleSheet.create({
   top: { position: "absolute", left: 0, right: 0, alignItems: "center" },
-  zoneRow: { flexDirection: "row", alignItems: "center", gap: 4 },
+  zonePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    height: UI.minTouch,
+    paddingHorizontal: 2,
+    borderRadius: UI.minTouch / 2,
+    backgroundColor: COLORS.panelBg,
+    borderWidth: 1,
+    borderColor: COLORS.panelBorder,
+  },
   arrow: {
     width: UI.minTouch,
     height: UI.minTouch,
     alignItems: "center",
     justifyContent: "center",
   },
-  arrowIcon: { width: 24, height: 24 },
+  arrowIcon: { width: 22, height: 22 },
   hidden: { opacity: 0 },
-  gear: {
-    position: "absolute",
-    right: 8,
-    width: UI.minTouch,
-    height: UI.minTouch,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  gearIcon: { width: 30, height: 30 },
-  lockedArrow: { opacity: 0.6 },
-  lockHint: { color: COLORS.hudSubText, fontSize: 11, marginTop: -8 },
-  center: { alignItems: "center" },
   zone: {
-    color: COLORS.hudSubText,
-    fontSize: 13,
-    letterSpacing: 1.5,
-    textTransform: "uppercase",
+    color: COLORS.hudText,
+    fontSize: 16,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+    minWidth: 130,
+    textAlign: "center",
+    textShadowColor: COLORS.firefly,
+    textShadowRadius: 8,
   },
+  unlock: { alignItems: "center", marginTop: 6, gap: 3 },
+  track: {
+    width: 150,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: "#0a1a1fcc",
+    borderWidth: 1,
+    borderColor: COLORS.panelBorder,
+    overflow: "hidden",
+  },
+  trackFill: { height: "100%", borderRadius: 3, backgroundColor: COLORS.accent },
+  unlockText: { color: COLORS.hudSubText, fontSize: 11, fontWeight: "600", fontVariant: ["tabular-nums"] },
+  center: { alignItems: "center", marginTop: 2 },
   light: {
     color: COLORS.hudText,
-    fontSize: 44,
-    fontWeight: "700",
+    fontSize: 46,
+    fontWeight: "800",
     fontVariant: ["tabular-nums"],
     textShadowColor: COLORS.firefly,
-    textShadowRadius: 12,
+    textShadowRadius: 14,
   },
-  sub: {
-    color: COLORS.hudSubText,
-    fontSize: 14,
-    fontVariant: ["tabular-nums"],
+  chips: { flexDirection: "row", gap: 8 },
+  chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingLeft: 6,
+    paddingRight: 10,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: COLORS.panelBg,
+    borderWidth: 1,
+    borderColor: COLORS.panelBorder,
   },
+  chipIcon: { width: 18, height: 18 },
+  chipText: { color: COLORS.hudText, fontSize: 13, fontWeight: "700", fontVariant: ["tabular-nums"] },
 });

@@ -35,7 +35,7 @@ type Reward = { full: number; free: number };
 /** Ara sıra ekranda süzülen Altın Ateşböceği; dokununca ödül kartı açılır. */
 export function GoldenFirefly() {
   const { width, height } = useWindowDimensions();
-  const done = useGame((s) => s.tutorialStep >= TUTORIAL_STEP.done);
+  const done = useGame((s) => s.tutorialStep >= TUTORIAL_STEP.tour);
   const [flying, setFlying] = useState<{ y: number; leftToRight: boolean } | null>(null);
   const [reward, setReward] = useState<Reward | null>(null);
   const nextAt = useRef(0);
