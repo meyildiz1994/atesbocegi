@@ -4,7 +4,7 @@
  * satın alma kapalı kalır.
  */
 export const APP_CONFIG = {
-  privacyPolicyUrl: process.env.EXPO_PUBLIC_PRIVACY_URL ?? '',
+  privacyPolicyUrl: process.env.EXPO_PUBLIC_PRIVACY_URL ?? 'https://docs.google.com/document/d/1hW75ZN4oGEL--nWhurw80nhRxIyPwPWqf6REgNiSenc',
   /** PostHog proje anahtarı (genel, istemci tarafı) ve sunucusu. Anahtar yoksa olaylar yalnızca cihazda tutulur. */
   posthog: {
     key: process.env.EXPO_PUBLIC_POSTHOG_KEY ?? '',
