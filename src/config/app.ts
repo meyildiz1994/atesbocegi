@@ -5,6 +5,11 @@
  */
 export const APP_CONFIG = {
   privacyPolicyUrl: process.env.EXPO_PUBLIC_PRIVACY_URL ?? '',
+  /** PostHog proje anahtarı (genel, istemci tarafı) ve sunucusu. Anahtar yoksa olaylar yalnızca cihazda tutulur. */
+  posthog: {
+    key: process.env.EXPO_PUBLIC_POSTHOG_KEY ?? '',
+    host: process.env.EXPO_PUBLIC_POSTHOG_HOST ?? 'https://eu.i.posthog.com',
+  },
   admob: {
     ios: {
       rewarded: process.env.EXPO_PUBLIC_ADMOB_IOS_REWARDED ?? '',

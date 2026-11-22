@@ -8,7 +8,7 @@ import { showBottomBar } from '../game/tutorial';
 import { t } from '../i18n';
 import { UI_ICONS } from './icons';
 
-export type PanelId = 'upgrades' | 'dawn' | 'store' | 'settings';
+export type PanelId = 'upgrades' | 'dawn' | 'store' | 'settings' | 'events';
 
 /** Herhangi bir yükseltmenin bir seviyesi alınabiliyor mu? */
 function useAnyAffordable(): boolean {

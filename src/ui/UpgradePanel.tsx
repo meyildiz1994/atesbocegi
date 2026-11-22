@@ -5,6 +5,7 @@ import { levelsLeft, purchasePlan, type BuyMode } from '../game/economy';
 import { formatNumber } from '../game/numbers';
 import { useGame } from '../game/state';
 import { t, type I18nKey } from '../i18n';
+import { track } from '../services/analytics';
 import { hapticJarEmpty } from '../services/haptics';
 import { UPGRADE_ICONS } from './icons';
 import { Sheet } from './Sheet';
@@ -57,7 +58,10 @@ function UpgradeRow({ id }: { id: UpgradeId }) {
   const oneTime = UPGRADES[id].maxLevel === 1;
 
   const onPress = () => {
-    if (buy(id)) hapticJarEmpty();
+    if (!buy(id)) return;
+    hapticJarEmpty();
+    const s = useGame.getState();
+    track('upgrade_purchased', { id, level: s.levels[id], playTimeSec: Math.round(s.playTimeSec) });
   };
 
   return (

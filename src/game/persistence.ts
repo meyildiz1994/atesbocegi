@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 
 import { SAVE } from '../config/balance';
+import { track } from '../services/analytics';
 import { getStore } from '../services/storage';
 import { bootFrom, resetIn, saveTo } from './session';
 import { useGame } from './state';
@@ -25,6 +26,8 @@ export function usePersistence(): boolean {
 
   useEffect(() => {
     bootFrom(getStore(), Date.now());
+    let sessionStart = Date.now();
+    track('session_start', { playTimeSec: Math.round(useGame.getState().playTimeSec) });
     // Kayıt yükleme senkron bir dış sistem okumasıdır; bitince bir kez render tetiklenir.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setReady(true);
@@ -40,14 +43,24 @@ export function usePersistence(): boolean {
       saveNow();
     }, SAVE.autosaveSeconds * 1000);
 
+    let wasBackground = false;
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'active') {
         last = Date.now();
+        if (wasBackground) {
+          sessionStart = last;
+          track('session_start', { playTimeSec: Math.round(useGame.getState().playTimeSec) });
+        }
+        wasBackground = false;
         useGame.getState().computeOffline(Date.now());
         saveNow();
       } else {
         tickPlayTime();
         saveNow();
+        if (state === 'background' && !wasBackground) {
+          wasBackground = true;
+          track('session_end', { durationSec: Math.round((Date.now() - sessionStart) / 1000) });
+        }
       }
     });
 

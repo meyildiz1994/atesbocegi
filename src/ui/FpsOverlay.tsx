@@ -9,10 +9,10 @@ import { useGame } from '../game/state';
 
 /**
  * Geliştirme ve test build'lerinde gösterilen FPS sayacı. Dokununca stres testi:
- * ekrandaki böcek sayısı sırayla 500 / 1000 / 1500 / normal olur.
+ * ekrandaki böcek sayısı sırayla 500 / 1000 / 1500 / normal olur. Basılı tutunca analitik olay listesi açılır.
  * Kareler UI thread'de sayılır; React state saniyede en fazla birkaç kez güncellenir.
  */
-export function FpsOverlay() {
+export function FpsOverlay({ onLongPress }: { onLongPress: () => void }) {
   const insets = useSafeAreaInsets();
   const [fps, setFps] = useState(0);
   const active = useGame((s) => s.activeFireflies);
@@ -39,7 +39,7 @@ export function FpsOverlay() {
   });
 
   return (
-    <Pressable onPress={nextStress} hitSlop={12} style={[styles.box, { top: insets.top + 4 }]} accessibilityRole="button">
+    <Pressable onPress={nextStress} onLongPress={onLongPress} hitSlop={12} style={[styles.box, { top: insets.top + 4 }]} accessibilityRole="button">
       <Text style={styles.text}>
         {fps} FPS · {active} 🪲{stress > 0 ? ` · test ${stress}` : ''}
       </Text>

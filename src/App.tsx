@@ -18,6 +18,7 @@ import { ComboCounter } from './ui/ComboCounter';
 import { BottomBar, type PanelId } from './ui/BottomBar';
 import { DawnFlash } from './ui/DawnFlash';
 import { DawnPanel } from './ui/DawnPanel';
+import { EventsPanel } from './ui/EventsPanel';
 import { FloatingNumbers, type FloatingNumbersHandle } from './ui/FloatingNumbers';
 import { FpsOverlay } from './ui/FpsOverlay';
 import { GoldenFirefly } from './ui/GoldenFirefly';
@@ -70,7 +71,8 @@ export default function App() {
               {panel === 'settings' ? <SettingsPanel onClose={close} /> : null}
               <OfflinePanel />
               <DawnFlash />
-              {SHOW_FPS ? <FpsOverlay /> : null}
+              {SHOW_FPS ? <FpsOverlay onLongPress={() => setPanel('events')} /> : null}
+              {SHOW_FPS && panel === 'events' ? <EventsPanel onClose={close} /> : null}
             </>
           ) : null}
         </View>

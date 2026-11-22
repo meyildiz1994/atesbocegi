@@ -5,6 +5,7 @@ import { canBuySkill, canPrestige, globalMultiplier, stardustForPrestige } from 
 import { formatNumber } from '../game/numbers';
 import { useGame } from '../game/state';
 import { t, type I18nKey } from '../i18n';
+import { track } from '../services/analytics';
 import { hapticSuccess } from '../services/haptics';
 import { Sheet } from './Sheet';
 
@@ -19,7 +20,10 @@ export function DawnPanel({ onClose }: { onClose: () => void }) {
   const gain = stardustForPrestige(runLight);
 
   const onDawn = () => {
-    if (prestige() > 0) {
+    const dust = prestige();
+    if (dust > 0) {
+      const s = useGame.getState();
+      track('prestige', { count: s.prestigeCount, stardust: dust, playTimeSec: Math.round(s.playTimeSec) });
       hapticSuccess();
       onClose();
     }
@@ -74,7 +78,9 @@ function SkillRow({ id }: { id: SkillId }) {
       </View>
       <Pressable
         onPress={() => {
-          if (buy(id)) hapticSuccess();
+          if (!buy(id)) return;
+          hapticSuccess();
+          track('skill_purchased', { id });
         }}
         disabled={!available}
         style={[styles.skillBuy, !available && styles.disabled]}

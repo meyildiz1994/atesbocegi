@@ -89,3 +89,11 @@ Belirsiz kalan konularda en basit makul seçenek uygulandı. Değiştirmek isted
 62. **Kimlikler build ortamından gelir** (`src/config/app.ts`, `EXPO_PUBLIC_*`). AdMob kimliği yoksa Google'ın resmi test reklamları gösterilir; RevenueCat anahtarı yoksa mağaza "şu an kullanılamıyor" der. `app.json`'daki AdMob uygulama kimlikleri şimdilik Google'ın test kimlikleri; gerçekleri gelince değiştirilecek.
 63. **Web ve testlerde** reklam ve satın alma modülleri yüklenmez (`ads.ts`/`iap.ts` boş sürümler, gerçekleri `*.native.ts`).
 64. **Gizlilik politikası** bağlantısı `EXPO_PUBLIC_PRIVACY_URL` ile gelir; sayfa Faz 12'de Hostinger sunucusunda yayınlanacak. Ayarlarda boşsa satır gizli.
+
+## Faz 9
+
+65. **Sağlayıcı PostHog** (Firebase yerine): yerel yapılandırma dosyası (GoogleService-Info.plist) ve ek yerel modül gerektirmiyor; elde retention (D1/D7/D30), huni ve oturum süresi raporları hazır. SDK yerine PostHog'un `/batch/` HTTP uç noktasına doğrudan `fetch` ile gönderiyoruz, böylece yeni yerel bağımlılık yok.
+66. **Olaylar cihazda kuyruğa alınır** (MMKV), 20 olayda, 30 saniyede bir ya da arka plana geçerken gönderilir. Çevrimdışıyken en fazla 500 olay bekler. Anahtar yoksa gönderim yapılmaz, kuyruk birikir.
+67. **Kimlik:** rastgele cihaz kimliği (UUID); kişisel bilgi, reklam kimliği ya da konum gönderilmez. Her olaya platform ve uygulama sürümü eklenir.
+68. **Olay listesi:** `tutorial_step`, `tutorial_complete`, `upgrade_purchased` (id, seviye, oyun süresi), `skill_purchased`, `zone_unlocked`, `prestige` (kaçıncı, Yıldız Tozu, oyun süresi), `ad_offer_shown` / `ad_watched` (yer), `golden_caught`, `iap_view` / `iap_purchase`, `session_start` / `session_end` (süre).
+69. **Debug görünümü:** test build'lerinde FPS yazısına basılı tutunca son 60 olay ve gönderim durumu listelenir.

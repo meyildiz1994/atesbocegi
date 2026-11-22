@@ -369,3 +369,15 @@ export const GOLDEN = {
 
 /** Reklam yüklenemezse yeniden deneme aralığı (ms). */
 export const ADS_RETRY_MS = 30_000;
+
+/** Analitik gönderimi. */
+export const ANALYTICS = {
+  /** Kuyruk bu kadar olaya ulaşınca hemen gönderilir. */
+  batchSize: 20,
+  /** En geç bu aralıkla gönderilir (ms). */
+  flushIntervalMs: 30_000,
+  /** Cihazda saklanan en fazla gönderilmemiş olay (çevrimdışı uzun süre). */
+  maxQueued: 500,
+  /** Test görünümünde tutulan son olay sayısı. */
+  debugKeep: 60,
+} as const;
