@@ -1,7 +1,9 @@
 /**
  * Satın alma servisi, web ve test sürümü: mağaza yok. Gerçek uygulama `iap.native.ts`'i kullanır.
  */
-export type ProductKind = 'removeAds' | 'starter' | 'starterLaunch';
+import type { APP_CONFIG } from '../config/app';
+
+export type ProductKind = keyof typeof APP_CONFIG.iap.products;
 export type StoreProduct = { kind: ProductKind; title: string; price: string };
 export type BuyResult = 'purchased' | 'cancelled' | 'failed';
 

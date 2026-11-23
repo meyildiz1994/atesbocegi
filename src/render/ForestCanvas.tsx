@@ -28,6 +28,7 @@ import { containerOf, crystalWeights, fogBand, fogRingScale, windGustIndex } fro
 import { comboPitch } from '../game/combo';
 import { registerCatch } from '../game/comboFeed';
 import { selectBrightness, useGame, useStats } from '../game/state';
+import { skinColor } from '../game/store';
 import { tutorialFireflyCap } from '../game/tutorial';
 import { t } from '../i18n';
 import { collectSoundId, playSfx } from '../services/audio';
@@ -171,10 +172,13 @@ export function ForestCanvas({ onLightGained }: Props) {
   }, [dawnCounter]);
 
   const zoneIndex = useGame((s) => s.zoneIndex);
-  const tint = useSharedValue(hexToRgb01((ZONES[zoneIndex] ?? ZONES[0]).fireflyColor));
+  // Kostüm seçiliyse böcek rengi onun rengi, yoksa bölgenin.
+  const skin = useGame((s) => skinColor(s.skin));
+  const fireflyHex = skin ?? (ZONES[zoneIndex] ?? ZONES[0]).fireflyColor;
+  const tint = useSharedValue(hexToRgb01(fireflyHex));
   useEffect(() => {
-    tint.value = hexToRgb01((ZONES[zoneIndex] ?? ZONES[0]).fireflyColor);
-  }, [tint, zoneIndex]);
+    tint.value = hexToRgb01(fireflyHex);
+  }, [tint, fireflyHex]);
 
   const brightnessTarget = useGame(selectBrightness);
   const brightness = useSharedValue(0);

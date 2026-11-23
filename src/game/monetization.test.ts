@@ -37,8 +37,8 @@ it('×2 güçlendirme 2 dk sürer ve üst üste eklenir', () => {
 });
 
 it('Başlangıç Paketi: kalıcı ×2, indirim ilk 48 saat', () => {
-  expect(purchaseMultiplier({ removeAds: false, starter: true })).toBe(2);
-  expect(purchaseMultiplier({ removeAds: true, starter: false })).toBe(1);
+  expect(purchaseMultiplier({ removeAds: false, starter: true, vip: false })).toBe(2);
+  expect(purchaseMultiplier({ removeAds: true, starter: false, vip: false })).toBe(1);
   expect(starterDiscountActive(T, T + 47 * 3600_000)).toBe(true);
   expect(starterDiscountActive(T, T + 49 * 3600_000)).toBe(false);
 });
@@ -50,4 +50,8 @@ it('Altın Ateşböceği aralığı ve ödülü', () => {
   expect(goldenReward(0, stats)).toBe(10 * 2 * GOLDEN.minRewardJars);
   expect(goldenReward(1000, stats)).toBe(1000 * GOLDEN.rewardSeconds);
   expect(goldenFreeReward(100)).toBeCloseTo(100 * GOLDEN.freeShare);
+});
+
+test('Gece Işığı aboneliği ×1.5 ve Başlangıç ile çarpılır', () => {
+  expect(purchaseMultiplier({ removeAds: true, starter: true, vip: true })).toBe(3);
 });

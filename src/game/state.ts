@@ -13,6 +13,8 @@ import {
   type StarUpgradeId,
   QUESTS,
   RATE_WINDOW_SECONDS,
+  VIP,
+  type SkinId,
   SKILLS,
   ZONES,
   type GardenId,
@@ -41,11 +43,13 @@ import {
   ensureDaily,
   gardenCost,
   gardenMaxed,
+  localDay,
   questProgress,
   rollRare,
   tokensForEmpty,
   type MetaCounters,
 } from './meta';
+import { currentPass, lightForHours, passReward, passTier, type PassReward } from './store';
 import { emptyLevels, newSave, type SaveData, type Settings } from './save';
 import {
   containerOf,
@@ -126,6 +130,16 @@ export type GameActions = {
   noteBestZone: (zoneIndex: number) => void;
   takePerk: (branch: PerkBranch) => void;
   resetProgress: (now: number) => void;
+  /** Mağaza: jeton, saatlik Işık, kostüm. */
+  grantTokens: (n: number) => void;
+  grantLightHours: (hours: number, now?: number) => number;
+  grantSkins: (ids: SkinId[]) => void;
+  setSkin: (id: SkinId | null) => void;
+  /** Gece Kartı: premium yolu bu sezon için açar; basamak ödülünü alır. */
+  activatePass: (now: number) => void;
+  claimPass: (tier: number, premium: boolean, now: number) => PassReward | null;
+  /** Gece Işığı: günde bir jeton. */
+  claimVipDaily: (now: number) => number;
   /** Kaydedilecek veri. */
   snapshot: (now: number) => SaveData;
 };
@@ -227,6 +241,7 @@ export const useGame = create<GameState & GameActions>()((set, get) => ({
       jarTokens,
       jarsFilled: s.jarsFilled + (filled ? 1 : 0),
       runJars: s.runJars + (filled ? 1 : 0),
+      pass: filled ? { ...currentPass(s.pass, now), jars: currentPass(s.pass, now).jars + 1 } : s.pass,
       collection,
       raresFound,
       lastRare,
@@ -354,7 +369,7 @@ export const useGame = create<GameState & GameActions>()((set, get) => ({
 
   setPurchases: (purchases) => {
     const cur = get().purchases;
-    if (cur.removeAds !== purchases.removeAds || cur.starter !== purchases.starter) set({ purchases });
+    if (cur.removeAds !== purchases.removeAds || cur.starter !== purchases.starter || cur.vip !== purchases.vip) set({ purchases });
   },
 
   markInterstitial: (lastInterstitialAt) => set({ lastInterstitialAt }),
@@ -450,8 +465,56 @@ export const useGame = create<GameState & GameActions>()((set, get) => ({
 
   resetProgress: (now) => {
     // Ayarlar ve satın alımlar (parası ödenmiş) sıfırlanmaz.
-    const { settings, purchases } = get();
-    set({ ...initialGameState(now), settings, purchases });
+    const { settings, purchases, skins, skin } = get();
+    set({ ...initialGameState(now), settings, purchases, skins, skin });
+  },
+
+  grantTokens: (n) => {
+    if (n > 0) set({ jarTokens: get().jarTokens + n });
+  },
+
+  grantLightHours: (hours, now = Date.now()) => {
+    const s = get();
+    const st = statsOf(s);
+    const amount = lightForHours(hours, lightPerSecond(s, now), st.jarCapacity * st.valuePerFirefly);
+    get().grantLight(amount, now);
+    return amount;
+  },
+
+  grantSkins: (ids) => {
+    const s = get();
+    const add = ids.filter((id) => !s.skins.includes(id));
+    if (add.length) set({ skins: [...s.skins, ...add] });
+  },
+
+  setSkin: (skin) => {
+    if (skin === null || get().skins.includes(skin)) set({ skin });
+  },
+
+  activatePass: (now) => set({ pass: { ...currentPass(get().pass, now), premium: true } }),
+
+  claimPass: (tier, premium, now) => {
+    const s = get();
+    const p = currentPass(s.pass, now);
+    if (tier < 1 || tier > passTier(p.jars) || (premium && !p.premium)) return null;
+    const list = premium ? p.claimedPremium : p.claimedFree;
+    if (list.includes(tier)) return null;
+    const r = passReward(tier, premium);
+    set({
+      pass: premium ? { ...p, claimedPremium: [...list, tier] } : { ...p, claimedFree: [...list, tier] },
+      jarTokens: s.jarTokens + r.tokens,
+    });
+    if (r.lightHours) get().grantLightHours(r.lightHours, now);
+    if (r.skin) get().grantSkins([r.skin]);
+    return r;
+  },
+
+  claimVipDaily: (now) => {
+    const s = get();
+    const day = localDay(now);
+    if (!s.purchases.vip || s.vipDay === day) return 0;
+    set({ vipDay: day, jarTokens: s.jarTokens + VIP.dailyTokens });
+    return VIP.dailyTokens;
   },
 
   snapshot: (now) => {
@@ -493,6 +556,10 @@ export const useGame = create<GameState & GameActions>()((set, get) => ({
       perks: s.perks,
       perksTaken: s.perksTaken,
       runJars: s.runJars,
+      skins: s.skins,
+      skin: s.skin,
+      pass: s.pass,
+      vipDay: s.vipDay,
     };
   },
 }));

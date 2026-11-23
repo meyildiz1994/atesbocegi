@@ -1,10 +1,11 @@
 /** Reklam zamanlaması, güçlendirme ve Altın Ateşböceği kuralları. Saf. */
-import { GOLDEN, MONETIZATION } from '../config/balance';
+import { GOLDEN, MONETIZATION, VIP } from '../config/balance';
 import type { Stats } from './economy';
 
-export type Purchases = { removeAds: boolean; starter: boolean };
+/** `removeAds` Gece Işığı aboneliğinde de açıktır; `vip` abonelik etkin mi. */
+export type Purchases = { removeAds: boolean; starter: boolean; vip: boolean };
 
-export const noPurchases = (): Purchases => ({ removeAds: false, starter: false });
+export const noPurchases = (): Purchases => ({ removeAds: false, starter: false, vip: false });
 
 /** İlk 10 dakikada (oyun süresi) hiçbir reklam teklif edilmez. */
 export function adsAllowed(playTimeSec: number): boolean {
@@ -35,7 +36,7 @@ export function extendBoost(nowMs: number, boostUntil: number): number {
 
 /** Satın alımlardan gelen kalıcı Işık çarpanı. */
 export function purchaseMultiplier(p: Purchases): number {
-  return p.starter ? MONETIZATION.starterMultiplier : 1;
+  return (p.starter ? MONETIZATION.starterMultiplier : 1) * (p.vip ? VIP.lightMult : 1);
 }
 
 /** Başlangıç Paketi indirimli mi (ilk 48 saat)? */

@@ -28,13 +28,34 @@ export const APP_CONFIG = {
     ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY ?? 'appl_QdidBJaOsQSdmqaGzfRFPCNQDgU',
     android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY ?? '',
   },
-  /** RevenueCat'te tanımlanacak yetki (entitlement) ve ürün kimlikleri. */
+  /** RevenueCat'te tanımlanacak yetki (entitlement) ve ürün kimlikleri (App Store'daki ürün kimlikleriyle aynı). */
   iap: {
-    entitlements: { removeAds: 'no_ads', starter: 'starter' },
+    entitlements: {
+      removeAds: 'no_ads',
+      starter: 'starter',
+      vip: 'vip',
+      skin_ember: 'skin_ember',
+      skin_aurora: 'skin_aurora',
+      skin_sakura: 'skin_sakura',
+    },
     products: {
       removeAds: 'atesbocegi.remove_ads',
       starter: 'atesbocegi.starter_pack',
       starterLaunch: 'atesbocegi.starter_pack_launch',
+      vip: 'atesbocegi.vip_monthly',
+      pass: 'atesbocegi.night_pass',
+      tokens1: 'atesbocegi.tokens_1',
+      tokens2: 'atesbocegi.tokens_2',
+      tokens3: 'atesbocegi.tokens_3',
+      tokens4: 'atesbocegi.tokens_4',
+      light1: 'atesbocegi.light_1',
+      light2: 'atesbocegi.light_2',
+      light3: 'atesbocegi.light_3',
+      skin_ember: 'atesbocegi.skin_ember',
+      skin_aurora: 'atesbocegi.skin_aurora',
+      skin_sakura: 'atesbocegi.skin_sakura',
     },
+    /** Abonelik olan ürünler (diğerleri tek seferlik veya tüketilebilir). */
+    subscriptions: ['vip'],
   },
 } as const;

@@ -2,10 +2,11 @@
  * Kayıt formatı, sürüm migrasyonu ve (de)serileştirme. Saf; depolama soyutlanmıştır
  * (oyunda MMKV, testte bellek içi).
  */
-import { CONTAINER_ORDER, PERK_ORDER, PERKS, SAVE, SKILL_ORDER, STAR_UPGRADE_ORDER, UPGRADE_ORDER, ZONES, type ContainerId } from '../config/balance';
+import { CONTAINER_ORDER, PERK_ORDER, PERKS, SAVE, SKILL_ORDER, STAR_UPGRADE_ORDER, UPGRADE_ORDER, ZONES, type ContainerId, type SkinId } from '../config/balance';
 import type { Levels, Skills } from './economy';
 import { emptyGarden, type DailyState, type GardenLevels } from './meta';
 import { noPurchases, type Purchases } from './monetization';
+import { isSkin, type PassState } from './store';
 import { emptyPerks, emptyStarLevels, type PerkLevels, type StarLevels } from './zoneMechanics';
 
 export type Settings = {
@@ -69,6 +70,13 @@ export type SaveData = {
   perks: PerkLevels;
   perksTaken: number;
   runJars: number;
+  /** Sahip olunan ve seçili ateşböceği kostümü (null = bölge rengi). */
+  skins: SkinId[];
+  skin: SkinId | null;
+  /** Gece Kartı (sezonu geçmişse yeni sezonda sıfırlanır). */
+  pass: PassState | null;
+  /** Gece Işığı günlük jetonunun alındığı gün. */
+  vipDay: string;
 };
 
 export interface KeyValueStore {
@@ -128,6 +136,10 @@ export function newSave(now: number): SaveData {
     perks: emptyPerks(),
     perksTaken: 0,
     runJars: 0,
+    skins: [],
+    skin: null,
+    pass: null,
+    vipDay: '',
   };
 }
 
@@ -198,6 +210,7 @@ export function sanitize(raw: Raw, now: number): SaveData {
     purchases: {
       removeAds: bool(purchasesRaw.removeAds),
       starter: bool(purchasesRaw.starter),
+      vip: bool(purchasesRaw.vip),
     },
     jarTokens: num(raw.jarTokens),
     garden: Object.fromEntries(
@@ -221,6 +234,22 @@ export function sanitize(raw: Raw, now: number): SaveData {
     ) as PerkLevels,
     perksTaken: Math.floor(num(raw.perksTaken)),
     runJars: Math.floor(num(raw.runJars)),
+    skins: Array.isArray(raw.skins) ? [...new Set(raw.skins.filter(isSkin))] : [],
+    skin: isSkin(raw.skin) ? raw.skin : null,
+    pass: passOf(raw.pass),
+    vipDay: typeof raw.vipDay === 'string' ? raw.vipDay : '',
+  };
+}
+
+function passOf(v: unknown): PassState | null {
+  if (!v || typeof v !== 'object') return null;
+  const p = v as Raw;
+  return {
+    season: Math.floor(num(p.season)),
+    jars: Math.floor(num(p.jars)),
+    premium: bool(p.premium),
+    claimedFree: indexList(p.claimedFree),
+    claimedPremium: indexList(p.claimedPremium),
   };
 }
 

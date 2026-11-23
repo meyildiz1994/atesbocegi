@@ -640,3 +640,65 @@ export type PerkBranch = keyof typeof PERKS;
 export const PERK_ORDER: PerkBranch[] = ['pull', 'jar', 'spirit', 'combo', 'glow', 'luck'];
 /** Teklif: dolu kavanoz sayısına göre (ilk teklif 4. kavanozda, sonra aralık büyür). */
 export const PERK_OFFER = { first: 4, gapStart: 5, gapGrowth: 2 } as const;
+
+/**
+ * Mağaza kataloğu. Fiyatı mağaza verir; `fallbackPrice` yalnızca mağazaya ulaşılamazken
+ * (web, test) kartlarda gösterilen tahmini fiyattır. `bonus` kartta "+%N" rozeti.
+ */
+export const STORE = {
+  tokenPacks: [
+    { id: 'tokens1', tokens: 60, bonus: 0, fallbackPrice: '$0.99' },
+    { id: 'tokens2', tokens: 350, bonus: 17, fallbackPrice: '$4.99' },
+    { id: 'tokens3', tokens: 840, bonus: 40, fallbackPrice: '$9.99' },
+    { id: 'tokens4', tokens: 2100, bonus: 75, fallbackPrice: '$19.99' },
+  ],
+  /** Işık kesesi: o anki Işık/sn × bu kadar saat (en az `minJars` dolu kavanoz × saat). */
+  lightPacks: [
+    { id: 'light1', hours: 2, bonus: 0, fallbackPrice: '$0.99' },
+    { id: 'light2', hours: 12, bonus: 20, fallbackPrice: '$4.99' },
+    { id: 'light3', hours: 30, bonus: 50, fallbackPrice: '$9.99' },
+  ],
+  lightMinJarsPerHour: 40,
+  skins: [
+    { id: 'ember', color: '#ffa040', fallbackPrice: '$1.99' },
+    { id: 'aurora', color: '#6affe0', fallbackPrice: '$1.99' },
+    { id: 'sakura', color: '#ff9ad5', fallbackPrice: '$1.99' },
+    /** Gece Kartı'nın son ödülü; satılmaz. */
+    { id: 'starlight', color: '#c9b6ff', fallbackPrice: '' },
+  ],
+  fallbackPrices: {
+    removeAds: '$2.99',
+    starter: '$4.99',
+    starterLaunch: '$1.99',
+    vip: '$4.99',
+    pass: '$3.99',
+  },
+} as const;
+
+export type TokenPackId = (typeof STORE.tokenPacks)[number]['id'];
+export type LightPackId = (typeof STORE.lightPacks)[number]['id'];
+export type SkinId = (typeof STORE.skins)[number]['id'];
+export const SKIN_ORDER: SkinId[] = STORE.skins.map((s) => s.id);
+
+/** Gece Işığı (VIP) aboneliği. */
+export const VIP = {
+  lightMult: 1.5,
+  dailyTokens: 25,
+} as const;
+
+/** Gece Kartı: 28 günlük sezonlar, kavanoz doldurdukça basamak; premium yol satın alınır. */
+export const NIGHT_PASS = {
+  /** İlk sezonun başlangıcı (UTC, ms): 1 Aralık 2026. */
+  epochMs: Date.UTC(2026, 11, 1),
+  seasonDays: 28,
+  tiers: 20,
+  /** Bir basamak için yarıdan fazla dolu kavanoz sayısı. */
+  jarsPerTier: 40,
+  freeTokens: 8,
+  premiumTokens: 30,
+  /** Premium yolda bu basamaklar Işık kesesi (saat) verir. */
+  premiumLightTiers: [5, 10, 15] as readonly number[],
+  premiumLightHours: 4,
+  /** Son basamağın premium ödülü. */
+  finalSkin: 'starlight' as SkinId,
+} as const;

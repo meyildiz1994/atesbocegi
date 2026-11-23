@@ -101,10 +101,10 @@ it('sıfırlama ve Şafak satın alımları korur; Başlangıç Paketi ×2 değe
   const store = memoryStore();
   const before = g().emptyJar(10, T0);
   useGame.setState(initialGameState(T0));
-  g().setPurchases({ removeAds: true, starter: true });
+  g().setPurchases({ removeAds: true, starter: true, vip: false });
   expect(g().emptyJar(10, T0)).toBeCloseTo(before * 2);
   resetIn(store, T0 + 1);
-  expect(g().purchases).toEqual({ removeAds: true, starter: true });
+  expect(g().purchases).toEqual({ removeAds: true, starter: true, vip: false });
   useGame.setState(initialGameState(T0));
   bootFrom(store, T0 + 2);
   expect(g().purchases.starter).toBe(true);
