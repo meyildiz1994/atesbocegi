@@ -67,6 +67,8 @@ export type SimState = {
   caughtKind: number[];
   /** Son adımda combo patlamasıyla patlatılan böcek sayısı. */
   lastPopped: number;
+  /** Ay Döngüsü: yeni doğan böceklerin hız çarpanı. */
+  speedMult: number;
 };
 
 export const MAX_PULSES = 4;
@@ -156,6 +158,7 @@ export function createSimState(capacity: number = SIM.capacity, seed = 12345): S
     pulseR: new Array<number>(MAX_PULSES).fill(0),
     caughtKind: new Array<number>(KIND_COUNT).fill(0),
     lastPopped: 0,
+    speedMult: 1,
   };
 }
 
@@ -225,7 +228,7 @@ export function spawnFirefly(s: SimState, width: number, height: number, inside 
   s.x[slot] = x;
   s.y[slot] = y;
   s.heading[slot] = heading;
-  s.speed[slot] = randRange(s, SIM.speedMin, SIM.speedMax);
+  s.speed[slot] = randRange(s, SIM.speedMin, SIM.speedMax) * s.speedMult;
   s.phase[slot] = randRange(s, 0, Math.PI * 2);
   s.period[slot] = randRange(s, SIM.blinkPeriodMin, SIM.blinkPeriodMax);
   s.wobbleA[slot] = randRange(s, 0, 100);

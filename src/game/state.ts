@@ -5,6 +5,7 @@ import { useShallow } from 'zustand/react/shallow';
 import {
   COLLECTION,
   CRYSTAL,
+  MOON_CYCLES,
   OFFLINE,
   PERKS,
   WORLD_EVENTS,
@@ -49,6 +50,7 @@ import {
   tokensForEmpty,
   type MetaCounters,
 } from './meta';
+import { dawnStardust, moonComplete, moonRules } from './moonCycle';
 import { currentPass, lightForHours, passReward, passTier, type PassReward } from './store';
 import { emptyLevels, newSave, type SaveData, type Settings } from './save';
 import {
@@ -206,7 +208,7 @@ export const useGame = create<GameState & GameActions>()((set, get) => ({
     );
     if (gain <= 0) return 0;
     // Kavanoz jetonu, görev sayacı ve nadir böcek.
-    let jarTokens = s.jarTokens + tokensForEmpty(count, st.jarCapacity);
+    let jarTokens = s.jarTokens + tokensForEmpty(count, st.jarCapacity) * moonRules(s.moonCycle).tokens;
     const filled = countsAsFilled(count, st.jarCapacity);
     const rare = rollRare(
       s.zoneIndex,
@@ -280,7 +282,10 @@ export const useGame = create<GameState & GameActions>()((set, get) => ({
   prestige: () => {
     const s = get();
     if (!canPrestige(s.runLight)) return 0;
-    const dust = stardustForPrestige(s.runLight);
+    const dust = dawnStardust(s.runLight, s.moonCycle);
+    // Ay tamamlandıysa bir sonraki aya geçilir; yeni bir aya ilk girişte jeton.
+    const moonCycle = moonComplete(s.runLight) ? s.moonCycle + 1 : s.moonCycle;
+    const firstTime = moonCycle > s.moonBest;
     const levels = emptyLevels();
     if (s.skills.keepAuto) levels.autoEmpty = s.levels.autoEmpty;
     const head = starEffects(s.starLevels).headStart;
@@ -297,6 +302,9 @@ export const useGame = create<GameState & GameActions>()((set, get) => ({
       stardust: s.stardust + dust,
       stardustEarned: s.stardustEarned + dust,
       prestigeCount: s.prestigeCount + 1,
+      moonCycle,
+      moonBest: Math.max(s.moonBest, moonCycle),
+      jarTokens: s.jarTokens + (firstTime ? MOON_CYCLES.firstTimeTokens : 0),
       jarCount: 0,
       recentGains: [],
       dawnCounter: s.dawnCounter + 1,
@@ -560,6 +568,8 @@ export const useGame = create<GameState & GameActions>()((set, get) => ({
       skin: s.skin,
       pass: s.pass,
       vipDay: s.vipDay,
+      moonCycle: s.moonCycle,
+      moonBest: s.moonBest,
     };
   },
 }));

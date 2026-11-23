@@ -24,6 +24,7 @@ import {
   type SimState,
 } from '../game/simulation';
 import { emitCatch, emitGust, emitPop, pulseQueue, zoneLive } from '../game/zoneBus';
+import { moonRules } from '../game/moonCycle';
 import { containerOf, crystalWeights, fogBand, fogRingScale, windGustIndex } from '../game/zoneMechanics';
 import { comboPitch } from '../game/combo';
 import { registerCatch } from '../game/comboFeed';
@@ -112,6 +113,12 @@ export function ForestCanvas({ onLightGained }: Props) {
   const zoneT0 = useSharedValue(0);
   const fogScale = useSharedValue(1);
   const lastGust = useSharedValue(-1);
+  // Ay Döngüsü kuralları: böcek hızı, doğma ve sis/rüzgâr sıklığı.
+  const moonCycle = useGame((s) => s.moonCycle);
+  const moon = useSharedValue(moonRules(moonCycle));
+  useEffect(() => {
+    moon.value = moonRules(moonCycle);
+  }, [moon, moonCycle]);
   const lanternLevel = useGame((s) => s.garden.lantern);
   const fogImmune = useGame((s) => containerOf(s.container).fogImmune);
   useEffect(() => {
@@ -239,7 +246,8 @@ export function ForestCanvas({ onLightGained }: Props) {
     const d = dims.value;
     const live = zoneLive.value;
     const zi = zoneIdx.value;
-    let spawnMul = live.spawnMult;
+    const mr = moon.value;
+    let spawnMul = live.spawnMult * mr.spawn;
     let gust = -1;
     sim.modify((s) => {
       'worklet';
@@ -247,7 +255,8 @@ export function ForestCanvas({ onLightGained }: Props) {
         seedFireflies(s, Math.max(1, Math.round(maxFireflies.value * SIM.initialSeedShare)), d.width, d.height);
         seeded.value = true;
       }
-      const zt = s.time - zoneT0.value;
+      const zt = (s.time - zoneT0.value) * mr.events;
+      s.speedMult = mr.speed;
       // Sisli Bataklık: sis bandı ve sisle gelen böcekler.
       if (zi === FOG.zoneIndex) {
         const band = fogBand(zt, d.width);

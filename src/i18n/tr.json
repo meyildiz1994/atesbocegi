@@ -275,5 +275,17 @@
   "skin.starlight": "Yıldız Işığı",
   "skin.equip": "Seç",
   "skin.equipped": "Seçili",
-  "skin.passOnly": "Gece Kartı ödülü"
+  "skin.passOnly": "Gece Kartı ödülü",
+  "moon.night": "İlk Gece",
+  "moon.crescent": "Hilal",
+  "moon.half": "Yarım Ay",
+  "moon.full": "Dolunay",
+  "moon.blood": "Kanlı Ay",
+  "moon.eclipse": "Tutulma",
+  "moon.eclipseN": "Tutulma {{n}}",
+  "moon.current": "Ay Döngüsü: {{name}}",
+  "moon.progress": "Ayı tamamlamak için bu koşuda {{target}} Işık: {{current}}",
+  "moon.ready": "Ay tamamlandı! Şafak'ta {{name}} başlar.",
+  "moon.next": "YENİ AY",
+  "moon.nextText": "{{name}}: böcekler daha hızlı, hedefler daha zor; Yıldız Tozu ×{{dust}}"
 }

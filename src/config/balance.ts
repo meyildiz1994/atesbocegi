@@ -702,3 +702,25 @@ export const NIGHT_PASS = {
   /** Son basamağın premium ödülü. */
   finalSkin: 'starlight' as SkinId,
 } as const;
+
+/**
+ * Ay Döngüleri: 5. bölge bitince (koşu Işığı `completeAt`) Şafak'ta bir sonraki aya geçilir.
+ * Aynı bölgeler zorlaşarak yeniden oynanır; karşılığında Yıldız Tozu ve jeton çarpanı.
+ * Son tanımlı aydan sonra sonsuz "Tutulma" katmanları gelir (her katman biraz daha zor).
+ */
+export const MOON_CYCLES = {
+  completeAt: 150_000_000,
+  /** Her yeni aya ilk girişte verilen jeton. */
+  firstTimeTokens: 100,
+  cycles: [
+    { id: 'night', tint: '#00000000', speed: 1, spawn: 1, events: 1, ripe: 1, goal: 1, dust: 1, tokens: 1 },
+    { id: 'crescent', tint: '#7fa8ff', speed: 1.15, spawn: 1, events: 1.15, ripe: 0.9, goal: 1.1, dust: 1.5, tokens: 1.25 },
+    { id: 'half', tint: '#5fe0c8', speed: 1.2, spawn: 0.95, events: 1.3, ripe: 0.8, goal: 1.2, dust: 2, tokens: 1.5 },
+    { id: 'full', tint: '#ffe08a', speed: 1.3, spawn: 0.9, events: 1.4, ripe: 0.75, goal: 1.3, dust: 3, tokens: 1.75 },
+    { id: 'blood', tint: '#ff5a5a', speed: 1.4, spawn: 0.85, events: 1.5, ripe: 0.7, goal: 1.4, dust: 4, tokens: 2 },
+    { id: 'eclipse', tint: '#b07aff', speed: 1.5, spawn: 0.8, events: 1.6, ripe: 0.65, goal: 1.5, dust: 5, tokens: 2.5 },
+  ],
+  /** Tutulma katmanı başına ek zorluk ve ödül. */
+  eclipsePerLayer: { speed: 0.05, goal: 0.05, dust: 1, tokens: 0.25 },
+  tintOpacity: 0.1,
+} as const;

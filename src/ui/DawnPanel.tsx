@@ -2,14 +2,16 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, ZoomIn } from 'react-native-reanimated';
 
-import { COLORS, PRESTIGE, SKILL_ORDER, SKILLS, STAR_UPGRADE_ORDER, UI, type SkillId, type StarUpgradeId } from '../config/balance';
-import { canBuySkill, canPrestige, globalMultiplier, stardustForPrestige } from '../game/economy';
+import { COLORS, MOON_CYCLES, PRESTIGE, SKILL_ORDER, SKILLS, STAR_UPGRADE_ORDER, UI, type SkillId, type StarUpgradeId } from '../config/balance';
+import { canBuySkill, canPrestige, globalMultiplier } from '../game/economy';
+import { dawnStardust, moonComplete, moonRules } from '../game/moonCycle';
 import { formatNumber } from '../game/numbers';
 import { useGame } from '../game/state';
 import { starCost, starMaxed } from '../game/zoneMechanics';
 import { t, type I18nKey } from '../i18n';
 import { track } from '../services/analytics';
 import { hapticSuccess } from '../services/haptics';
+import { moonName } from './run/MoonCycle';
 import { Sheet } from './Sheet';
 
 /** Prestij (Şafak) paneli ve Yıldız Tozu yetenek ağacı. */
@@ -18,9 +20,13 @@ export function DawnPanel({ onClose }: { onClose: () => void }) {
   const stardust = useGame((s) => s.stardust);
   const stardustEarned = useGame((s) => s.stardustEarned);
   const prestige = useGame((s) => s.prestige);
+  const cycle = useGame((s) => s.moonCycle);
+  const bestZone = useGame((s) => s.bestZone);
 
   const ready = canPrestige(runLight);
-  const gain = stardustForPrestige(runLight);
+  const gain = dawnStardust(runLight, cycle);
+  const nextMoon = moonComplete(runLight);
+  const showMoon = cycle > 0 || bestZone >= 4;
   const [confirming, setConfirming] = useState(false);
 
   const onDawn = () => {
@@ -46,6 +52,19 @@ export function DawnPanel({ onClose }: { onClose: () => void }) {
         <Text style={styles.explain}>
           {ready ? t('dawn.explain') : t('dawn.notYet', { amount: formatNumber(PRESTIGE.unlockAt) })}
         </Text>
+        {showMoon ? (
+          <View style={styles.moon}>
+            <Text style={styles.moonTitle}>{t('moon.current', { name: moonName(cycle) })}</Text>
+            <View style={styles.moonBar}>
+              <View style={[styles.moonFill, { width: `${Math.round(Math.min(1, runLight / MOON_CYCLES.completeAt) * 100)}%` }]} />
+            </View>
+            <Text style={styles.moonText}>
+              {nextMoon
+                ? t('moon.ready', { name: moonName(cycle + 1) })
+                : t('moon.progress', { current: formatNumber(runLight), target: formatNumber(MOON_CYCLES.completeAt) })}
+            </Text>
+          </View>
+        ) : null}
         <Pressable
           onPress={() => setConfirming(true)}
           disabled={!ready}
@@ -78,6 +97,13 @@ export function DawnPanel({ onClose }: { onClose: () => void }) {
               text={t('dawn.getsList', { amount: gain, pct: Math.round(gain * PRESTIGE.multPerStardust * 100) })}
               color={COLORS.stardust}
             />
+            {nextMoon ? (
+              <ConfirmLine
+                color="#7fa8ff"
+                label={t('moon.next')}
+                text={t('moon.nextText', { name: moonName(cycle + 1), dust: moonRules(cycle + 1).dust })}
+              />
+            ) : null}
             <Pressable onPress={onDawn} style={styles.dawnButton} accessibilityRole="button">
               <Text style={styles.dawnText}>{t('dawn.confirm')}</Text>
             </Pressable>
@@ -166,6 +192,11 @@ function SkillRow({ id }: { id: SkillId }) {
 }
 
 const styles = StyleSheet.create({
+  moon: { backgroundColor: COLORS.cardBg, borderRadius: 14, borderWidth: 1, borderColor: '#7fa8ff', padding: 12, gap: 6 },
+  moonTitle: { color: '#a9c4ff', fontSize: 15, fontWeight: '800' },
+  moonBar: { height: 8, borderRadius: 4, backgroundColor: '#0a1426', overflow: 'hidden' },
+  moonFill: { height: '100%', backgroundColor: '#7fa8ff' },
+  moonText: { color: COLORS.hudSubText, fontSize: 12 },
   body: { paddingHorizontal: 16, paddingBottom: 8, gap: 10 },
   stats: { flexDirection: 'row', justifyContent: 'space-between' },
   stardust: { color: COLORS.stardust, fontSize: 16, fontWeight: '700' },

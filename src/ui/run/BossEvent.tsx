@@ -16,6 +16,7 @@ import { BOSS, COLORS, UI } from '../../config/balance';
 import { unlockedZoneCount } from '../../game/economy';
 import { formatNumber } from '../../game/numbers';
 import { useGame } from '../../game/state';
+import { moonRules } from '../../game/moonCycle';
 import { gameplayUnlocked } from '../../game/tutorial';
 import { catchRate, onCatch } from '../../game/zoneBus';
 import { bossDue, bossGoal, bossReward } from '../../game/zoneMechanics';
@@ -56,7 +57,7 @@ export function BossEvent() {
       if (s.zoneIndex !== frontier || s.offlineReport || clock() < retryAt.current) return;
       if (!bossDue(s.zoneIndex, s.runLight, s.bossDone)) return;
       zoneRef.current = s.zoneIndex;
-      setState({ kind: 'offer', goal: bossGoal(catchRate()), reward: bossReward(s.zoneIndex) });
+      setState({ kind: 'offer', goal: Math.round(bossGoal(catchRate()) * moonRules(s.moonCycle).goal), reward: bossReward(s.zoneIndex) });
     }, CHECK_MS);
     return () => clearInterval(id);
   }, [unlocked, state]);

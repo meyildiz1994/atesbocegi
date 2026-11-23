@@ -275,5 +275,17 @@
   "skin.starlight": "Starlight",
   "skin.equip": "Equip",
   "skin.equipped": "Equipped",
-  "skin.passOnly": "Night Pass reward"
+  "skin.passOnly": "Night Pass reward",
+  "moon.night": "First Night",
+  "moon.crescent": "Crescent",
+  "moon.half": "Half Moon",
+  "moon.full": "Full Moon",
+  "moon.blood": "Blood Moon",
+  "moon.eclipse": "Eclipse",
+  "moon.eclipseN": "Eclipse {{n}}",
+  "moon.current": "Moon Cycle: {{name}}",
+  "moon.progress": "Finish the moon with {{target}} Light this run: {{current}}",
+  "moon.ready": "Moon complete! {{name}} begins at Dawn.",
+  "moon.next": "NEW MOON",
+  "moon.nextText": "{{name}}: faster fireflies, harder goals; Stardust ×{{dust}}"
 }

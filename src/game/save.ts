@@ -77,6 +77,9 @@ export type SaveData = {
   pass: PassState | null;
   /** Gece Işığı günlük jetonunun alındığı gün. */
   vipDay: string;
+  /** Ay Döngüsü (0 = ilk gece) ve ulaşılan en ileri ay. */
+  moonCycle: number;
+  moonBest: number;
 };
 
 export interface KeyValueStore {
@@ -140,6 +143,8 @@ export function newSave(now: number): SaveData {
     skin: null,
     pass: null,
     vipDay: '',
+    moonCycle: 0,
+    moonBest: 0,
   };
 }
 
@@ -238,6 +243,8 @@ export function sanitize(raw: Raw, now: number): SaveData {
     skin: isSkin(raw.skin) ? raw.skin : null,
     pass: passOf(raw.pass),
     vipDay: typeof raw.vipDay === 'string' ? raw.vipDay : '',
+    moonCycle: Math.floor(num(raw.moonCycle)),
+    moonBest: Math.floor(num(raw.moonBest)),
   };
 }
 

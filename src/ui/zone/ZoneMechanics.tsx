@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS, CRYSTAL, FOG, MUSHROOM, UI, WIND } from '../../config/balance';
 import { formatNumber } from '../../game/numbers';
 import { lightPerSecond, useGame, useStats } from '../../game/state';
+import { moonRules } from '../../game/moonCycle';
 import { gameplayUnlocked } from '../../game/tutorial';
 import { onCatch, onGust, zoneLive } from '../../game/zoneBus';
 import { crystalGoal, windReward } from '../../game/zoneMechanics';
@@ -51,7 +52,8 @@ function MechanicHint({ zoneIndex }: { zoneIndex: number }) {
 function Crystals() {
   const insets = useSafeAreaInsets();
   const stats = useStats();
-  const goal = crystalGoal(stats.jarCapacity);
+  const moonGoal = useGame((s) => moonRules(s.moonCycle).goal);
+  const goal = Math.round(crystalGoal(stats.jarCapacity) * moonGoal);
   const [charge, setCharge] = useState([0, 0, 0]);
   const [scarce, setScarce] = useState(() => Math.floor(Math.random() * 3));
   const [toast, setToast] = useState<string | null>(null);

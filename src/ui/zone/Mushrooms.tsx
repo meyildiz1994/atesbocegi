@@ -16,6 +16,7 @@ import { formatNumber } from '../../game/numbers';
 import { useGame, useStats } from '../../game/state';
 import { queuePulse } from '../../game/zoneBus';
 import { chainOrder, chainReward, isPerfectTap } from '../../game/zoneMechanics';
+import { moonRules } from '../../game/moonCycle';
 import { t } from '../../i18n';
 import { playSfx } from '../../services/audio';
 import { hapticJarEmpty, hapticSuccess } from '../../services/haptics';
@@ -30,7 +31,9 @@ const clock = () => Date.now();
 
 function freshSpot(now: number, first = false): Spot {
   const grow = MUSHROOM.ripenSec * 1000 * (first ? rnd(0.15, 1) : rnd(0.8, 1.3));
-  return { ripeAt: now + grow, rotAt: now + grow + MUSHROOM.ripeSec * 1000, burstN: 0 };
+  // Ay Döngüsü: olgun kalma süresi kısalır.
+  const ripe = MUSHROOM.ripeSec * 1000 * moonRules(useGame.getState().moonCycle).ripe;
+  return { ripeAt: now + grow, rotAt: now + grow + ripe, burstN: 0 };
 }
 
 /** Mantar Vadisi: olgunlaşan mantarlar; dokununca zincirleme patlar ve böcekleri kavanoza yollar. */

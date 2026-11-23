@@ -39,6 +39,7 @@ import { ZoneMechanics } from './ui/zone/ZoneMechanics';
 import { ComboFever } from './ui/run/ComboFever';
 import { PerkDraft } from './ui/run/PerkDraft';
 import { BossEvent } from './ui/run/BossEvent';
+import { MoonCycle } from './ui/run/MoonCycle';
 import { WorldEvents } from './ui/run/WorldEvents';
 
 /** Geliştirme modunda ya da EXPO_PUBLIC_SHOW_FPS=1 ile alınan test build'lerinde FPS sayacı görünür. */
@@ -82,6 +83,7 @@ export default function App() {
               <ForestCanvas onLightGained={(a, x, y) => floaters.current?.spawn(a, x, y)} />
               {/* Dil değişince arayüz yeniden kurulur (sahne etkilenmez). */}
               <View key={lang} style={StyleSheet.absoluteFill} pointerEvents="box-none">
+              <MoonCycle />
               <WorldEvents />
               <ZoneMechanics />
               <Hud />
