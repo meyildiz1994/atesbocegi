@@ -16,6 +16,7 @@ import {
   RATE_WINDOW_SECONDS,
   VIP,
   type SkinId,
+  type ConstellationId,
   SKILLS,
   ZONES,
   type GardenId,
@@ -50,6 +51,7 @@ import {
   tokensForEmpty,
   type MetaCounters,
 } from './meta';
+import { skyComplete, skyCost } from './constellations';
 import { dawnStardust, moonComplete, moonRules } from './moonCycle';
 import { currentPass, lightForHours, passReward, passTier, type PassReward } from './store';
 import { emptyLevels, newSave, type SaveData, type Settings } from './save';
@@ -123,11 +125,13 @@ export type GameActions = {
   hydrate: (data: SaveData) => void;
   setContainer: (id: ContainerId) => boolean;
   buyStar: (id: StarUpgradeId) => boolean;
+  /** Takımyıldızda bir sonraki yıldızı yakar. */
+  buySky: (id: ConstellationId) => boolean;
   /** Boss yenildi: ödül Işık ve jeton. */
   winBoss: (zoneIndex: number, light: number, tokens: number) => void;
   markHint: (zoneIndex: number) => void;
   startWorldEvent: (kind: WorldEventKind, now: number) => void;
-  startResonance: (now: number) => void;
+  startResonance: (now: number, mult?: number) => void;
   /** Açılan en ileri bölgeyi kaydeder (kaplar için). */
   noteBestZone: (zoneIndex: number) => void;
   takePerk: (branch: PerkBranch) => void;
@@ -162,7 +166,7 @@ const transient = (): Transient => ({
 export const initialGameState = (now = Date.now()): GameState => ({ ...newSave(now), ...transient() });
 
 type StatSource = Pick<GameState, 'levels' | 'skills' | 'stardustEarned' | 'zoneIndex' | 'purchases'> &
-  Partial<Pick<GameState, 'garden' | 'collection' | 'container' | 'starLevels' | 'perks'>>;
+  Partial<Pick<GameState, 'garden' | 'collection' | 'container' | 'starLevels' | 'perks' | 'sky'>>;
 
 export function statsOf(s: StatSource): Stats {
   return computeStats({
@@ -176,6 +180,7 @@ export function statsOf(s: StatSource): Stats {
     container: s.container,
     starLevels: s.starLevels,
     perks: s.perks,
+    sky: s.sky,
   });
 }
 
@@ -442,6 +447,16 @@ export const useGame = create<GameState & GameActions>()((set, get) => ({
     return true;
   },
 
+  buySky: (id) => {
+    const s = get();
+    const lit = s.sky[id];
+    if (skyComplete(id, lit)) return false;
+    const cost = skyCost(id, lit);
+    if (s.stardust < cost) return false;
+    set({ stardust: s.stardust - cost, sky: { ...s.sky, [id]: lit + 1 } });
+    return true;
+  },
+
   winBoss: (zoneIndex, light, tokens) => {
     const s = get();
     if (s.bossDone.includes(zoneIndex)) return;
@@ -459,7 +474,7 @@ export const useGame = create<GameState & GameActions>()((set, get) => ({
     else set({ meteorUntil: now + WORLD_EVENTS.meteor.durationSec * 1000 });
   },
 
-  startResonance: (now) => set({ resonanceUntil: now + CRYSTAL.resonanceSec * 1000 }),
+  startResonance: (now, mult = 1) => set({ resonanceUntil: now + CRYSTAL.resonanceSec * 1000 * mult }),
 
   takePerk: (branch) => {
     const s = get();
@@ -570,6 +585,7 @@ export const useGame = create<GameState & GameActions>()((set, get) => ({
       vipDay: s.vipDay,
       moonCycle: s.moonCycle,
       moonBest: s.moonBest,
+      sky: s.sky,
     };
   },
 }));
@@ -602,6 +618,7 @@ export function useStats(): Stats {
       container: s.container,
       starLevels: s.starLevels,
       perks: s.perks,
+      sky: s.sky,
     })),
   );
   return useMemo(() => statsOf(input), [input]);

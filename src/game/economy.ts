@@ -1,6 +1,7 @@
 /**
  * Ekonomi formülleri. Saf fonksiyonlar; render ya da React'e bağımlı değil.
  */
+import { skyEffects, type SkyLevels } from './constellations';
 import {
   EFFECTS,
   OFFLINE,
@@ -140,6 +141,7 @@ export type StatInput = {
   container?: ContainerId;
   /** Yıldız yükseltmeleri. */
   starLevels?: Partial<StarLevels>;
+  sky?: Partial<SkyLevels>;
   /** Bu koşuda seçilen yükseltme kartları. */
   perks?: Partial<PerkLevels>;
 };
@@ -168,8 +170,9 @@ export function computeStats(input: StatInput): Stats {
   jar *= ge.jar;
   const ct = containerOf(input.container);
   const se = starEffects(input.starLevels);
+  const sy = skyEffects(input.sky);
   const pe = perkEffects(input.perks);
-  jar *= ct.capacityMult * se.jar * pe.jar;
+  jar *= ct.capacityMult * se.jar * pe.jar * sy.jar;
 
   let value = flatThenPct(
     START.valuePerFirefly,
@@ -186,7 +189,7 @@ export function computeStats(input: StatInput): Stats {
   return {
     ringRadius: ring,
     jarCapacity: Math.floor(jar),
-    valuePerFirefly: value * zone.multiplier * gm * (input.purchaseMultiplier ?? 1) * ge.value * (input.collectionMultiplier ?? 1) * ct.valueMult * se.value * pe.value,
+    valuePerFirefly: value * zone.multiplier * gm * (input.purchaseMultiplier ?? 1) * ge.value * (input.collectionMultiplier ?? 1) * ct.valueMult * se.value * pe.value * sy.value,
     maxFireflies: START.maxFireflies + EFFECTS.crowdFireflies * l.crowd,
     spawnRate: START.spawnRate * (1 + EFFECTS.crowdSpawnPerLevel * l.crowd),
     spirits,
@@ -201,7 +204,7 @@ export function computeStats(input: StatInput): Stats {
     magnetPull: (EFFECTS.magnetPullSpeed + EFFECTS.magnetPullPerLevel * l.magnet) * (1 + pe.pull),
     globalMultiplier: gm,
     offlineRate: (sk.dreamers ? OFFLINE.rateDreamers : OFFLINE.rate) * ge.offline,
-    offlineCapSeconds: (sk.longNight ? OFFLINE.capSecondsLongNight : OFFLINE.capSeconds) + se.offlineCapBonus,
+    offlineCapSeconds: (sk.longNight ? OFFLINE.capSecondsLongNight : OFFLINE.capSeconds) + se.offlineCapBonus + sy.offlineCapBonus,
   };
 }
 

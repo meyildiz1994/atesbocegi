@@ -2,10 +2,11 @@
  * Kayıt formatı, sürüm migrasyonu ve (de)serileştirme. Saf; depolama soyutlanmıştır
  * (oyunda MMKV, testte bellek içi).
  */
-import { CONTAINER_ORDER, PERK_ORDER, PERKS, SAVE, SKILL_ORDER, STAR_UPGRADE_ORDER, UPGRADE_ORDER, ZONES, type ContainerId, type SkinId } from '../config/balance';
+import { CONSTELLATION_ORDER, CONSTELLATIONS, CONTAINER_ORDER, PERK_ORDER, PERKS, SAVE, SKILL_ORDER, STAR_UPGRADE_ORDER, UPGRADE_ORDER, ZONES, type ContainerId, type SkinId } from '../config/balance';
 import type { Levels, Skills } from './economy';
 import { emptyGarden, type DailyState, type GardenLevels } from './meta';
 import { noPurchases, type Purchases } from './monetization';
+import { emptySky, type SkyLevels } from './constellations';
 import { isSkin, type PassState } from './store';
 import { emptyPerks, emptyStarLevels, type PerkLevels, type StarLevels } from './zoneMechanics';
 
@@ -80,6 +81,8 @@ export type SaveData = {
   /** Ay Döngüsü (0 = ilk gece) ve ulaşılan en ileri ay. */
   moonCycle: number;
   moonBest: number;
+  /** Takımyıldız haritası: yakılan yıldız sayıları. */
+  sky: SkyLevels;
 };
 
 export interface KeyValueStore {
@@ -145,6 +148,7 @@ export function newSave(now: number): SaveData {
     vipDay: '',
     moonCycle: 0,
     moonBest: 0,
+    sky: emptySky(),
   };
 }
 
@@ -245,6 +249,9 @@ export function sanitize(raw: Raw, now: number): SaveData {
     vipDay: typeof raw.vipDay === 'string' ? raw.vipDay : '',
     moonCycle: Math.floor(num(raw.moonCycle)),
     moonBest: Math.floor(num(raw.moonBest)),
+    sky: Object.fromEntries(
+      CONSTELLATION_ORDER.map((id) => [id, Math.min(CONSTELLATIONS[id].stars.length, Math.floor(num(((raw.sky ?? {}) as Raw)[id])))]),
+    ) as SkyLevels,
   };
 }
 

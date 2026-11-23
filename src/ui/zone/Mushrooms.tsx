@@ -16,6 +16,7 @@ import { formatNumber } from '../../game/numbers';
 import { useGame, useStats } from '../../game/state';
 import { queuePulse } from '../../game/zoneBus';
 import { chainOrder, chainReward, isPerfectTap } from '../../game/zoneMechanics';
+import { skyEffects } from '../../game/constellations';
 import { moonRules } from '../../game/moonCycle';
 import { t } from '../../i18n';
 import { playSfx } from '../../services/audio';
@@ -28,6 +29,7 @@ type Spot = { ripeAt: number; rotAt: number; burstN: number };
 
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 const clock = () => Date.now();
+const AUTO_MS = 500;
 
 function freshSpot(now: number, first = false): Spot {
   const grow = MUSHROOM.ripenSec * 1000 * (first ? rnd(0.15, 1) : rnd(0.8, 1.3));
@@ -47,11 +49,18 @@ export function Mushrooms() {
   const [now, setNow] = useState(() => Date.now());
   const [label, setLabel] = useState<{ id: number; text: string; x: number; y: number } | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const tapRef = useRef<(i: number) => void>(() => {});
+  const spotsRef = useRef(spots);
 
   useEffect(() => {
     const id = setInterval(() => {
       const n = Date.now();
       setNow(n);
+      // Bahçıvan takımyıldızı: çürümek üzere olan mantar kendiliğinden patlar.
+      if (skyEffects(useGame.getState().sky).autoMushroom) {
+        const k = spotsRef.current.findIndex((s) => n >= s.rotAt - AUTO_MS && n < s.rotAt);
+        if (k >= 0) tapRef.current(k);
+      }
       // Olgun kalma süresi geçen mantar söner ve yeniden büyür.
       setSpots((list) => (list.some((s) => n >= s.rotAt) ? list.map((s) => (n >= s.rotAt ? freshSpot(n) : s)) : list));
     }, TICK_MS);
@@ -92,13 +101,18 @@ export function Mushrooms() {
       if (depth === 0) fire();
       else timers.current.push(setTimeout(fire, depth * MUSHROOM.chainDelay * 1000));
     });
-    const reward = chainReward(order.length, stats.jarCapacity * stats.valuePerFirefly);
+    const reward = chainReward(order.length, stats.jarCapacity * stats.valuePerFirefly) * skyEffects(useGame.getState().sky).mushroomReward;
     grant(reward);
     if (perfect || order.length > 1) hapticSuccess();
     const p = pos[i]!;
     const parts = [order.length > 1 ? t('mushroom.chain', { n: order.length }) : '', perfect ? t('mushroom.perfect') : '', `+${formatNumber(reward)}`];
     setLabel({ id: tapNow, text: parts.filter(Boolean).join('  '), x: p[0], y: p[1] - CAP });
   };
+
+  useEffect(() => {
+    tapRef.current = onTap;
+    spotsRef.current = spots;
+  });
 
   return (
     <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>

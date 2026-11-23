@@ -17,6 +17,7 @@ import { formatNumber } from '../../game/numbers';
 import { statsOf, useGame } from '../../game/state';
 import { gameplayUnlocked } from '../../game/tutorial';
 import { onPop, queuePulse, zoneLive } from '../../game/zoneBus';
+import { skyEffects } from '../../game/constellations';
 import { perkEffects } from '../../game/zoneMechanics';
 import { t } from '../../i18n';
 import { track } from '../../services/analytics';
@@ -51,7 +52,7 @@ export function ComboFever() {
       busy.current = true;
       lastAt.current = now;
       nextRandom.current = now + rnd(FEVER.randomMinSec, FEVER.randomMaxSec) * 1000;
-      mult.current = perkEffects(useGame.getState().perks).feverMult;
+      mult.current = perkEffects(useGame.getState().perks).feverMult + skyEffects(useGame.getState().sky).feverBonus;
       zoneLive.value = { ...zoneLive.value, gatherOn: true, gatherX: cx, gatherY: cy };
       setPhase({ kind: 'gather' });
       playSfx('sfx_jar_empty', { pitch: 0.7, volume: 0.6 });

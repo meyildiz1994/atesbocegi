@@ -16,6 +16,7 @@ import { BOSS, COLORS, UI } from '../../config/balance';
 import { unlockedZoneCount } from '../../game/economy';
 import { formatNumber } from '../../game/numbers';
 import { useGame } from '../../game/state';
+import { skyEffects } from '../../game/constellations';
 import { moonRules } from '../../game/moonCycle';
 import { gameplayUnlocked } from '../../game/tutorial';
 import { catchRate, onCatch } from '../../game/zoneBus';
@@ -42,6 +43,7 @@ const clock = () => Date.now();
 export function BossEvent() {
   const insets = useSafeAreaInsets();
   const unlocked = useGame((s) => gameplayUnlocked(s.tutorialStep));
+  const extraSec = useGame((s) => skyEffects(s.sky).bossExtraSec);
   const [state, setState] = useState<State>(null);
   const [fed, setFed] = useState(0);
   const [now, setNow] = useState(clock);
@@ -57,7 +59,7 @@ export function BossEvent() {
       if (s.zoneIndex !== frontier || s.offlineReport || clock() < retryAt.current) return;
       if (!bossDue(s.zoneIndex, s.runLight, s.bossDone)) return;
       zoneRef.current = s.zoneIndex;
-      setState({ kind: 'offer', goal: Math.round(bossGoal(catchRate()) * moonRules(s.moonCycle).goal), reward: bossReward(s.zoneIndex) });
+      setState({ kind: 'offer', goal: Math.round(bossGoal(catchRate()) * moonRules(s.moonCycle).goal), reward: bossReward(s.zoneIndex) * skyEffects(s.sky).bossReward });
     }, CHECK_MS);
     return () => clearInterval(id);
   }, [unlocked, state]);
@@ -119,7 +121,7 @@ export function BossEvent() {
           <Text style={styles.body}>
             {t('boss.body', {
               goal: state.goal,
-              sec: BOSS.durationSec,
+              sec: BOSS.durationSec + extraSec,
               reward: formatNumber(state.reward),
               tokens: BOSS.rewardTokens,
             })}
@@ -129,7 +131,7 @@ export function BossEvent() {
               setFed(0);
               setNow(clock());
               track('boss_started', { zone: zoneRef.current });
-              setState({ ...state, kind: 'fight', endsAt: clock() + BOSS.durationSec * 1000 });
+              setState({ ...state, kind: 'fight', endsAt: clock() + (BOSS.durationSec + extraSec) * 1000 });
             }}
             style={styles.button}
             accessibilityRole="button"

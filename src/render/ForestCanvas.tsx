@@ -24,6 +24,7 @@ import {
   type SimState,
 } from '../game/simulation';
 import { emitCatch, emitGust, emitPop, pulseQueue, zoneLive } from '../game/zoneBus';
+import { skyEffects } from '../game/constellations';
 import { moonRules } from '../game/moonCycle';
 import { containerOf, crystalWeights, fogBand, fogRingScale, windGustIndex } from '../game/zoneMechanics';
 import { comboPitch } from '../game/combo';
@@ -115,6 +116,12 @@ export function ForestCanvas({ onLightGained }: Props) {
   const lastGust = useSharedValue(-1);
   // Ay Döngüsü kuralları: böcek hızı, doğma ve sis/rüzgâr sıklığı.
   const moonCycle = useGame((s) => s.moonCycle);
+  // Rüzgâr Çobanı takımyıldızı: rüzgâr her bölgede eser.
+  const windEverywhere = useGame((s) => skyEffects(s.sky).windEverywhere);
+  const windAll = useSharedValue(windEverywhere);
+  useEffect(() => {
+    windAll.value = windEverywhere;
+  }, [windAll, windEverywhere]);
   const moon = useSharedValue(moonRules(moonCycle));
   useEffect(() => {
     moon.value = moonRules(moonCycle);
@@ -268,7 +275,7 @@ export function ForestCanvas({ onLightGained }: Props) {
         s.fogR = 0;
       }
       // Gök Kanyonu: rüzgârla gelen nadir böcekler.
-      if (zi === WIND.zoneIndex) {
+      if (zi === WIND.zoneIndex || windAll.value) {
         const gi = windGustIndex(zt);
         if (gi > lastGust.value) {
           lastGust.value = gi;
@@ -394,7 +401,7 @@ export function ForestCanvas({ onLightGained }: Props) {
             ) : null}
             <Trails sim={sim} tint={tint} />
             <Fireflies key={`c${drawCount}`} sim={sim} tint={tint} count={drawCount} />
-            {zoneIndex === WIND.zoneIndex ? <WindStreaks sim={sim} /> : null}
+            {zoneIndex === WIND.zoneIndex || windEverywhere ? <WindStreaks sim={sim} /> : null}
             <Spirits sim={sim} />
             {zoneIndex === FOG.zoneIndex ? <FogLayer sim={sim} height={height} /> : null}
             <CollectRing x={fingerX} y={fingerY} radius={ringRadius} visibility={ringVisibility} />

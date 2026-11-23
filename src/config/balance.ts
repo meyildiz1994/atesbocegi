@@ -724,3 +724,43 @@ export const MOON_CYCLES = {
   eclipsePerLayer: { speed: 0.05, goal: 0.05, dust: 1, tokens: 0.25 },
   tintOpacity: 0.1,
 } as const;
+
+/**
+ * Takımyıldız haritası: Yıldız Tozu ile yıldız yakılır. Her yıldız küçük bir güç verir;
+ * takımyıldız tamamlanınca yeni bir mekanik açılır. `stars`: haritadaki konumlar (0..1).
+ */
+export const CONSTELLATIONS = {
+  hunter: {
+    color: '#ffd27a', baseCost: 3, growth: 1.6, perStar: 0.03,
+    stars: [[0.2, 0.2], [0.5, 0.1], [0.8, 0.25], [0.6, 0.55], [0.35, 0.8]] as [number, number][],
+  },
+  bearer: {
+    color: '#8fd0ff', baseCost: 4, growth: 1.6, perStar: 0.05,
+    stars: [[0.15, 0.7], [0.35, 0.35], [0.6, 0.2], [0.85, 0.45], [0.7, 0.8]] as [number, number][],
+  },
+  gardener: {
+    color: '#ff9f6a', baseCost: 5, growth: 1.65, perStar: 0.1,
+    stars: [[0.2, 0.5], [0.45, 0.25], [0.75, 0.3], [0.8, 0.7]] as [number, number][],
+  },
+  shepherd: {
+    color: '#fff4c2', baseCost: 6, growth: 1.65, perStar: 0.1,
+    stars: [[0.1, 0.3], [0.35, 0.45], [0.6, 0.3], [0.85, 0.5], [0.55, 0.8]] as [number, number][],
+  },
+  warden: {
+    color: '#9fe0c0', baseCost: 8, growth: 1.7, perStar: 0.08,
+    stars: [[0.3, 0.15], [0.7, 0.15], [0.8, 0.6], [0.5, 0.85], [0.2, 0.6]] as [number, number][],
+  },
+  heart: {
+    color: '#ff6fb5', baseCost: 10, growth: 1.75, perStar: 0.1,
+    stars: [[0.5, 0.85], [0.15, 0.4], [0.35, 0.15], [0.5, 0.35], [0.65, 0.15], [0.85, 0.4]] as [number, number][],
+  },
+} as const;
+export type ConstellationId = keyof typeof CONSTELLATIONS;
+export const CONSTELLATION_ORDER: ConstellationId[] = ['hunter', 'bearer', 'gardener', 'shepherd', 'warden', 'heart'];
+/** Tamamlanma ödülleri. */
+export const CONSTELLATION_BONUS = {
+  feverMult: 5,
+  offlineHours: 4,
+  bossExtraSec: 15,
+  resonanceMult: 2,
+} as const;

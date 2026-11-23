@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS, CRYSTAL, FOG, MUSHROOM, UI, WIND } from '../../config/balance';
 import { formatNumber } from '../../game/numbers';
 import { lightPerSecond, useGame, useStats } from '../../game/state';
+import { skyEffects } from '../../game/constellations';
 import { moonRules } from '../../game/moonCycle';
 import { gameplayUnlocked } from '../../game/tutorial';
 import { onCatch, onGust, zoneLive } from '../../game/zoneBus';
@@ -22,12 +23,13 @@ export function ZoneMechanics() {
   const zoneIndex = useGame((s) => s.zoneIndex);
   const unlocked = useGame((s) => gameplayUnlocked(s.tutorialStep));
   const seen = useGame((s) => s.hintsSeen.includes(s.zoneIndex));
+  const windAll = useGame((s) => skyEffects(s.sky).windEverywhere);
   if (!unlocked) return null;
   return (
     <>
       {zoneIndex === MUSHROOM.zoneIndex ? <Mushrooms /> : null}
       {zoneIndex === CRYSTAL.zoneIndex ? <Crystals /> : null}
-      {zoneIndex === WIND.zoneIndex ? <WindRewards /> : null}
+      {zoneIndex === WIND.zoneIndex || windAll ? <WindRewards /> : null}
       {MECHANIC_ZONES.includes(zoneIndex) && !seen ? <MechanicHint zoneIndex={zoneIndex} /> : null}
     </>
   );
@@ -77,8 +79,9 @@ function Crystals() {
           const next = c.map((v, k) => Math.min(g, v + (kinds[k + 1] ?? 0)));
           if (next.every((v) => v >= g)) {
             const s = useGame.getState();
-            s.startResonance(Date.now());
-            const reward = CRYSTAL.rewardJars * valueRef.current;
+            const sky = skyEffects(s.sky);
+            s.startResonance(Date.now(), sky.resonanceMult);
+            const reward = CRYSTAL.rewardJars * valueRef.current * sky.crystalReward;
             s.grantLight(reward);
             hapticSuccess();
             track('crystal_resonance', {});
@@ -137,7 +140,7 @@ function WindRewards() {
       const n = kinds[4] ?? 0;
       if (n <= 0) return;
       const s = useGame.getState();
-      const reward = windReward(lightPerSecond(s, Date.now()), valueRef.current) * n;
+      const reward = windReward(lightPerSecond(s, Date.now()), valueRef.current) * n * skyEffects(s.sky).windReward;
       s.grantLight(reward);
       hapticSuccess();
       setToast((p) => ({ text: `${t('wind.caught')}  +${formatNumber(reward)}`, n: (p?.n ?? 0) + 1 }));
