@@ -456,7 +456,7 @@ function NightPass({ shop }: { shop: Shop }) {
 
 function RewardChip(props: { reward: PassReward; state: 'locked' | 'ready' | 'claimed'; premium?: boolean; onPress: () => void }) {
   const { reward, state } = props;
-  const icon = reward.skin ? UI_ICONS.collection : reward.lightHours ? UI_ICONS.golden : UI_ICONS.upgrades;
+  const icon = reward.skin ? SKIN_ART[reward.skin] : reward.lightHours ? UI_ICONS.golden : UI_ICONS.upgrades;
   const label = reward.skin
     ? t('pass.skin')
     : reward.lightHours
@@ -504,8 +504,8 @@ function Skins({ shop }: { shop: Shop }) {
           >
             <View style={styles.packTop} />
             <Text style={styles.packName}>{t(`skin.${id ?? 'default'}` as I18nKey)}</Text>
-            <View style={styles.packArt}>
-              <SkinOrb color={color} />
+            <View style={styles.skinArt}>
+              <SkinArt id={id} color={color} locked={!has} />
             </View>
             {has ? (
               <View style={[styles.priceBar, selected ? styles.priceOwned : styles.priceEquip]}>
@@ -525,37 +525,19 @@ function Skins({ shop }: { shop: Shop }) {
   );
 }
 
-const ORB_DOTS: [number, number, number][] = [
-  [0, 0, 18],
-  [-34, -18, 9],
-  [30, -26, 7],
-  [-22, 26, 8],
-  [36, 18, 10],
-  [6, -40, 6],
-];
+const SKIN_ART: Record<SkinId | 'default', number> = {
+  default: require('../../assets/ui/skin_default.png'),
+  ember: require('../../assets/ui/skin_ember.png'),
+  aurora: require('../../assets/ui/skin_aurora.png'),
+  sakura: require('../../assets/ui/skin_sakura.png'),
+  starlight: require('../../assets/ui/skin_starlight.png'),
+};
 
-function SkinOrb({ color }: { color: string }) {
+function SkinArt({ id, color, locked }: { id: SkinId | null; color: string; locked: boolean }) {
   return (
-    <View style={styles.pile}>
-      <View style={[styles.pileGlow, { backgroundColor: color, opacity: 0.25 }]} />
-      {ORB_DOTS.map(([x, y, r], i) => (
-        <View
-          key={i}
-          style={{
-            position: 'absolute',
-            left: 70 + x - r,
-            top: 46 + y - r,
-            width: r * 2,
-            height: r * 2,
-            borderRadius: r,
-            backgroundColor: color,
-            shadowColor: color,
-            shadowOpacity: 1,
-            shadowRadius: r,
-            shadowOffset: { width: 0, height: 0 },
-          }}
-        />
-      ))}
+    <View style={styles.skinWrap}>
+      <View style={[styles.skinGlow, { backgroundColor: color }]} />
+      <Image source={SKIN_ART[id ?? 'default']} style={[styles.skinImg, locked && styles.skinLocked]} resizeMode="contain" />
     </View>
   );
 }
@@ -667,6 +649,11 @@ const styles = StyleSheet.create({
   priceEquip: { backgroundColor: '#7fb2ff', borderColor: '#cfe2ff' },
   priceText: { color: '#2a1a00', fontSize: 17, fontWeight: '900' },
   pile: { width: 140, height: 100 },
+  skinArt: { height: 128, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center' },
+  skinWrap: { width: 128, height: 128, alignItems: 'center', justifyContent: 'center' },
+  skinGlow: { position: 'absolute', width: 96, height: 96, borderRadius: 48, opacity: 0.22 },
+  skinImg: { width: 128, height: 128 },
+  skinLocked: { opacity: 0.85 },
   pileGlow: {
     position: 'absolute',
     left: 20,
