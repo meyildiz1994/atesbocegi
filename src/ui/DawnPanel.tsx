@@ -20,6 +20,7 @@ import { useGame } from '../game/state';
 import { starCost, starMaxed } from '../game/zoneMechanics';
 import { t, type I18nKey } from '../i18n';
 import { track } from '../services/analytics';
+import { submitAll } from '../services/gameCenter';
 import { hapticSuccess } from '../services/haptics';
 import { moonName } from './run/MoonCycle';
 import { Sheet } from './Sheet';
@@ -52,6 +53,7 @@ export function DawnPanel({ onClose }: { onClose: () => void }) {
         playTimeSec: Math.round(s.playTimeSec),
       });
       hapticSuccess();
+      submitAll();
       onClose();
     }
   };

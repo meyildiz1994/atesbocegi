@@ -10,8 +10,19 @@ import { MAX_PULSES } from './simulation';
 /** Bekleyen patlamalar: [x, y, r, x, y, r, ...]. Döngü her karede boşaltır. */
 export const pulseQueue = makeMutable<number[]>([]);
 
-/** Canlı ayarlar: dünya olayı doğma çarpanı ve kristal bölgesinin kıt rengi. */
-export const zoneLive = makeMutable({ spawnMult: 1, scarce: 0, gatherOn: false, gatherX: 0, gatherY: 0 });
+/** Canlı ayarlar: dünya olayı doğma çarpanı, kristal bölgesinin kıt rengi, kombo toplanması ve Gece Kulesi kuralları. */
+export const zoneLive = makeMutable({
+  spawnMult: 1,
+  scarce: 0,
+  gatherOn: false,
+  gatherX: 0,
+  gatherY: 0,
+  /** Gece Kulesi katı sürerken: hız ve doğma çarpanı, rüzgâr. */
+  towerOn: false,
+  towerSpeed: 1,
+  towerSpawn: 1,
+  towerWind: false,
+});
 
 export function queuePulse(x: number, y: number, r: number): void {
   pulseQueue.modify((q) => {

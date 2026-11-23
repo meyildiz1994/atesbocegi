@@ -19,7 +19,7 @@ import { useGame } from '../../game/state';
 import { skyEffects } from '../../game/constellations';
 import { moonRules } from '../../game/moonCycle';
 import { gameplayUnlocked } from '../../game/tutorial';
-import { catchRate, onCatch } from '../../game/zoneBus';
+import { catchRate, onCatch, zoneLive } from '../../game/zoneBus';
 import { bossDue, bossGoal, bossReward } from '../../game/zoneMechanics';
 import { t } from '../../i18n';
 import { track } from '../../services/analytics';
@@ -56,7 +56,7 @@ export function BossEvent() {
     const id = setInterval(() => {
       const s = useGame.getState();
       const frontier = unlockedZoneCount(s.runLight) - 1;
-      if (s.zoneIndex !== frontier || s.offlineReport || clock() < retryAt.current) return;
+      if (s.zoneIndex !== frontier || s.offlineReport || zoneLive.value.towerOn || clock() < retryAt.current) return;
       if (!bossDue(s.zoneIndex, s.runLight, s.bossDone)) return;
       zoneRef.current = s.zoneIndex;
       setState({ kind: 'offer', goal: Math.round(bossGoal(catchRate()) * moonRules(s.moonCycle).goal), reward: bossReward(s.zoneIndex) * skyEffects(s.sky).bossReward });
@@ -157,7 +157,7 @@ export function BossEvent() {
     const left = Math.max(0, Math.ceil((state.endsAt - now) / 1000));
     const pct = Math.min(1, fed / state.goal);
     return (
-      <View pointerEvents="none" style={[styles.fight, { top: insets.top + 112 }]}>
+      <View pointerEvents="none" style={[styles.fight, { top: insets.top + 142 }]}>
         <GiantFirefly size={70 + 40 * pct} />
         <View style={styles.barRow}>
           <View style={styles.bar}>

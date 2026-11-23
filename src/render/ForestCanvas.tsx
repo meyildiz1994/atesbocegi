@@ -114,6 +114,7 @@ export function ForestCanvas({ onLightGained }: Props) {
   const zoneT0 = useSharedValue(0);
   const fogScale = useSharedValue(1);
   const lastGust = useSharedValue(-1);
+  const lastTowerGust = useSharedValue(0);
   // Ay Döngüsü kuralları: böcek hızı, doğma ve sis/rüzgâr sıklığı.
   const moonCycle = useGame((s) => s.moonCycle);
   // Rüzgâr Çobanı takımyıldızı: rüzgâr her bölgede eser.
@@ -254,7 +255,7 @@ export function ForestCanvas({ onLightGained }: Props) {
     const live = zoneLive.value;
     const zi = zoneIdx.value;
     const mr = moon.value;
-    let spawnMul = live.spawnMult * mr.spawn;
+    let spawnMul = live.spawnMult * mr.spawn * live.towerSpawn;
     let gust = -1;
     sim.modify((s) => {
       'worklet';
@@ -263,7 +264,7 @@ export function ForestCanvas({ onLightGained }: Props) {
         seeded.value = true;
       }
       const zt = (s.time - zoneT0.value) * mr.events;
-      s.speedMult = mr.speed;
+      s.speedMult = mr.speed * live.towerSpeed;
       // Sisli Bataklık: sis bandı ve sisle gelen böcekler.
       if (zi === FOG.zoneIndex) {
         const band = fogBand(zt, d.width);
@@ -275,7 +276,14 @@ export function ForestCanvas({ onLightGained }: Props) {
         s.fogR = 0;
       }
       // Gök Kanyonu: rüzgârla gelen nadir böcekler.
-      if (zi === WIND.zoneIndex || windAll.value) {
+      if (live.towerWind) {
+        // Gece Kulesi rüzgâr katı: 8 sn'de bir rüzgâr.
+        const ti = Math.floor(s.time / 8);
+        if (ti > lastTowerGust.value) {
+          lastTowerGust.value = ti;
+          spawnWindGust(s, WIND.count, d.width, d.height);
+        }
+      } else if (zi === WIND.zoneIndex || windAll.value) {
         const gi = windGustIndex(zt);
         if (gi > lastGust.value) {
           lastGust.value = gi;

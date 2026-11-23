@@ -22,6 +22,12 @@ export const APP_CONFIG = {
       interstitial: process.env.EXPO_PUBLIC_ADMOB_ANDROID_INTERSTITIAL ?? 'ca-app-pub-4059277331959292/6926922181',
     },
   },
+  /** Game Center sıralamaları (App Store Connect'teki kimliklerle aynı). */
+  leaderboards: {
+    tower: 'glowjar.tower_best',
+    light: 'glowjar.lifetime_light',
+    stardust: 'glowjar.stardust',
+  },
   /** RevenueCat genel (public) SDK anahtarları. */
   revenueCat: {
     /** Herkese açık SDK anahtarı (RevenueCat, uygulamaya gömülmek için). */

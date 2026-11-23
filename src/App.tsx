@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { AppState, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -14,6 +14,7 @@ import { useLanguage } from './i18n/useLanguage';
 import { ForestCanvas } from './render/ForestCanvas';
 import { initAds } from './services/ads';
 import { preloadSfx } from './services/audio';
+import { initGameCenter, submitAll } from './services/gameCenter';
 import { initIap } from './services/iap';
 import { BoostButton } from './ui/BoostButton';
 import { ComboCounter } from './ui/ComboCounter';
@@ -40,6 +41,7 @@ import { ComboFever } from './ui/run/ComboFever';
 import { PerkDraft } from './ui/run/PerkDraft';
 import { BossEvent } from './ui/run/BossEvent';
 import { MoonCycle } from './ui/run/MoonCycle';
+import { Tower } from './ui/run/Tower';
 import { WorldEvents } from './ui/run/WorldEvents';
 
 /** Geliştirme modunda ya da EXPO_PUBLIC_SHOW_FPS=1 ile alınan test build'lerinde FPS sayacı görünür. */
@@ -73,6 +75,13 @@ export default function App() {
   useEffect(() => {
     if (ready && tutorialDone) void initAds();
   }, [ready, tutorialDone]);
+  // Game Center: onboarding'den sonra oturum; arka plana geçerken skorlar gönderilir.
+  useEffect(() => {
+    if (!ready || !tutorialDone) return;
+    void initGameCenter();
+    const sub = AppState.addEventListener('change', (st) => st !== 'active' && submitAll());
+    return () => sub.remove();
+  }, [ready, tutorialDone]);
 
   return (
     <GestureHandlerRootView style={styles.root}>
@@ -96,6 +105,7 @@ export default function App() {
               {newZone !== null ? <ZoneToast zone={newZone} onDone={clearNewZone} /> : null}
               <ComboFever />
               <BossEvent />
+              <Tower />
               <TutorialOverlay />
               <BottomBar onOpen={setPanel} />
               {panel === 'upgrades' ? <UpgradePanel onClose={close} /> : null}

@@ -6,6 +6,7 @@ import {
   COLLECTION,
   CRYSTAL,
   MOON_CYCLES,
+  TOWER,
   OFFLINE,
   PERKS,
   WORLD_EVENTS,
@@ -52,6 +53,7 @@ import {
   type MetaCounters,
 } from './meta';
 import { skyComplete, skyCost } from './constellations';
+import { towerReward } from './tower';
 import { dawnStardust, moonComplete, moonRules } from './moonCycle';
 import { currentPass, lightForHours, passReward, passTier, type PassReward } from './store';
 import { emptyLevels, newSave, type SaveData, type Settings } from './save';
@@ -127,6 +129,10 @@ export type GameActions = {
   buyStar: (id: StarUpgradeId) => boolean;
   /** Takımyıldızda bir sonraki yıldızı yakar. */
   buySky: (id: ConstellationId) => boolean;
+  /** Gece Kulesi: kat geçildi / kaybedildi / jetonla ek hak. */
+  towerWin: (floor: number) => void;
+  towerFail: (now: number) => void;
+  towerBuyTry: (now: number) => boolean;
   /** Boss yenildi: ödül Işık ve jeton. */
   winBoss: (zoneIndex: number, light: number, tokens: number) => void;
   markHint: (zoneIndex: number) => void;
@@ -457,6 +463,35 @@ export const useGame = create<GameState & GameActions>()((set, get) => ({
     return true;
   },
 
+  towerWin: (floor) => {
+    const s = get();
+    if (floor !== s.towerFloor + 1) return;
+    const r = towerReward(floor);
+    set({
+      towerFloor: floor,
+      jarTokens: s.jarTokens + r.tokens,
+      stardust: s.stardust + r.stardust,
+      stardustEarned: s.stardustEarned + r.stardust,
+    });
+  },
+
+  towerFail: (now) => {
+    const s = get();
+    const day = localDay(now);
+    const used = s.towerDay === day ? s.towerTries : 0;
+    // Önce satın alınmış haklar harcanır.
+    if (used >= TOWER.dailyTries && s.towerBought > 0) set({ towerDay: day, towerBought: s.towerBought - 1, towerTries: used });
+    else set({ towerDay: day, towerTries: used + 1 });
+  },
+
+  towerBuyTry: (now) => {
+    const s = get();
+    if (s.jarTokens < TOWER.extraTryTokens) return false;
+    const day = localDay(now);
+    set({ jarTokens: s.jarTokens - TOWER.extraTryTokens, towerBought: s.towerBought + 1, towerDay: day, towerTries: s.towerDay === day ? s.towerTries : 0 });
+    return true;
+  },
+
   winBoss: (zoneIndex, light, tokens) => {
     const s = get();
     if (s.bossDone.includes(zoneIndex)) return;
@@ -586,6 +621,10 @@ export const useGame = create<GameState & GameActions>()((set, get) => ({
       moonCycle: s.moonCycle,
       moonBest: s.moonBest,
       sky: s.sky,
+      towerFloor: s.towerFloor,
+      towerDay: s.towerDay,
+      towerTries: s.towerTries,
+      towerBought: s.towerBought,
     };
   },
 }));

@@ -764,3 +764,22 @@ export const CONSTELLATION_BONUS = {
   bossExtraSec: 15,
   resonanceMult: 2,
 } as const;
+
+/** Gece Kulesi: kat kat 45 sn'lik meydan okumalar; kaybetmek bir hak yer, kazanmak yer yemez. */
+export const TOWER = {
+  unlockZone: 2,
+  durationSec: 45,
+  goalShare: 0.7,
+  minGoal: 30,
+  growthPerFloor: 0.07,
+  dailyTries: 3,
+  extraTryTokens: 15,
+  tokensPerFloor: 2,
+  /** Her 10 katta sandık. */
+  chestEvery: 10,
+  chestTokens: 25,
+  chestStardust: 2,
+  /** Katın kuralı (kat % 4): 0 normal, 1 hızlı, 2 seyrek, 3 rüzgâr. */
+  speedMult: 1.4,
+  sparseMult: 0.65,
+} as const;

@@ -9,6 +9,7 @@ import type { Settings } from '../game/save';
 import { useGame } from '../game/state';
 import { t, type I18nKey } from '../i18n';
 import { privacyOptionsRequired, showPrivacyOptions } from '../services/ads';
+import { gameCenterAvailable, showLeaderboard } from '../services/gameCenter';
 import { hapticSuccess } from '../services/haptics';
 import { iapAvailable, restore } from '../services/iap';
 import { UI_ICONS } from './icons';
@@ -75,6 +76,7 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
         {iapAvailable() ? (
           <LinkRow label={t('store.restore')} onPress={onRestore} note={restoreNote} icon={UI_ICONS.restore} />
         ) : null}
+        {gameCenterAvailable() ? <LinkRow label={t('settings.leaderboards')} onPress={() => void showLeaderboard('light')} /> : null}
         {privacyOptionsRequired() ? <LinkRow label={t('settings.adPrivacy')} onPress={showPrivacyOptions} /> : null}
         {APP_CONFIG.privacyPolicyUrl ? (
           <LinkRow label={t('settings.privacyPolicy')} onPress={() => Linking.openURL(APP_CONFIG.privacyPolicyUrl)} />

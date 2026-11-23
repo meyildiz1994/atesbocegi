@@ -83,6 +83,11 @@ export type SaveData = {
   moonBest: number;
   /** Takımyıldız haritası: yakılan yıldız sayıları. */
   sky: SkyLevels;
+  /** Gece Kulesi: geçilen en yüksek kat ve günlük haklar. */
+  towerFloor: number;
+  towerDay: string;
+  towerTries: number;
+  towerBought: number;
 };
 
 export interface KeyValueStore {
@@ -149,6 +154,10 @@ export function newSave(now: number): SaveData {
     moonCycle: 0,
     moonBest: 0,
     sky: emptySky(),
+    towerFloor: 0,
+    towerDay: '',
+    towerTries: 0,
+    towerBought: 0,
   };
 }
 
@@ -252,6 +261,10 @@ export function sanitize(raw: Raw, now: number): SaveData {
     sky: Object.fromEntries(
       CONSTELLATION_ORDER.map((id) => [id, Math.min(CONSTELLATIONS[id].stars.length, Math.floor(num(((raw.sky ?? {}) as Raw)[id])))]),
     ) as SkyLevels,
+    towerFloor: Math.floor(num(raw.towerFloor)),
+    towerDay: typeof raw.towerDay === 'string' ? raw.towerDay : '',
+    towerTries: Math.floor(num(raw.towerTries)),
+    towerBought: Math.floor(num(raw.towerBought)),
   };
 }
 

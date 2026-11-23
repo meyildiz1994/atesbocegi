@@ -12,6 +12,9 @@
       "buildNumber": "1",
       "config": {
         "usesNonExemptEncryption": false
+      },
+      "entitlements": {
+        "com.apple.developer.game-center": true
       }
     },
     "android": {

@@ -1,0 +1,8 @@
+{
+  "name": "glowjar-game-center",
+  "version": "1.0.0",
+  "description": "Game Center sign-in, score submission and leaderboards for Glowjar",
+  "main": "index.ts",
+  "license": "UNLICENSED",
+  "private": true
+}
