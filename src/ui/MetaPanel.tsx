@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { COLORS, GARDEN, GARDEN_ORDER, QUESTS, UI, ZONES, type GardenId } from '../config/balance';
+import { COLORS, CONTAINER_ORDER, CONTAINERS, GARDEN, GARDEN_ORDER, QUESTS, UI, ZONES, type GardenId } from '../config/balance';
 import {
   ALL_RARES,
   foundCount,
@@ -19,12 +19,18 @@ import { countersOf, useGame } from '../game/state';
 import { t, type I18nKey } from '../i18n';
 import { track } from '../services/analytics';
 import { hapticJarEmpty, hapticSuccess } from '../services/haptics';
-import { GARDEN_ICONS, UI_ICONS } from './icons';
+import { CONTAINER_ART, GARDEN_ICONS, UI_ICONS } from './icons';
+import { containerUnlocked } from '../game/zoneMechanics';
 import { Sheet } from './Sheet';
 
-type Tab = 'quests' | 'garden' | 'collection';
-const TABS: Tab[] = ['quests', 'garden', 'collection'];
-const TAB_ICONS: Record<Tab, number> = { quests: UI_ICONS.quests, garden: UI_ICONS.garden, collection: UI_ICONS.collection };
+type Tab = 'quests' | 'garden' | 'collection' | 'containers';
+const TABS: Tab[] = ['quests', 'garden', 'collection', 'containers'];
+const TAB_ICONS: Record<Tab, number> = {
+  quests: UI_ICONS.quests,
+  garden: UI_ICONS.garden,
+  collection: UI_ICONS.collection,
+  containers: UI_ICONS.upgrades,
+};
 
 /** Gece Bahçesi: Günlük Görevler, Işık Bahçesi ve Koleksiyon tek panelde. */
 export function MetaPanel({ onClose }: { onClose: () => void }) {
@@ -58,6 +64,7 @@ export function MetaPanel({ onClose }: { onClose: () => void }) {
         {tab === 'quests' ? <Quests /> : null}
         {tab === 'garden' ? <Garden /> : null}
         {tab === 'collection' ? <Collection /> : null}
+        {tab === 'containers' ? <Containers /> : null}
       </ScrollView>
     </Sheet>
   );
@@ -357,3 +364,46 @@ const styles = StyleSheet.create({
   rareUnknown: { color: COLORS.disabled },
   rareCount: { color: COLORS.hudSubText, fontSize: 10 },
 });
+
+// ---------------------------------------------------------------------------
+// Kaplar
+
+function Containers() {
+  const best = useGame((s) => s.bestZone);
+  const current = useGame((s) => s.container);
+  const setContainer = useGame((s) => s.setContainer);
+  return (
+    <>
+      {CONTAINER_ORDER.map((id) => {
+        const open = containerUnlocked(id, best);
+        const inUse = current === id;
+        return (
+          <View key={id} style={[styles.card, inUse && styles.cardReady, !open && styles.unbuilt]}>
+            <Image source={CONTAINER_ART[id]} style={styles.icon} resizeMode="contain" />
+            <View style={styles.info}>
+              <Text style={styles.name}>{t(`container.${id}.name` as I18nKey)}</Text>
+              <Text style={styles.desc}>
+                {open
+                  ? t(`container.${id}.desc` as I18nKey)
+                  : t('container.locked', { zone: t(`zone.${CONTAINERS[id].unlockZone + 1}` as I18nKey) })}
+              </Text>
+            </View>
+            <Pressable
+              onPress={() => {
+                if (setContainer(id)) {
+                  hapticSuccess();
+                  track('container_selected', { id });
+                }
+              }}
+              disabled={!open || inUse}
+              style={[styles.button, (!open || inUse) && styles.buttonOff]}
+              accessibilityRole="button"
+            >
+              <Text style={[styles.buttonText, (!open || inUse) && styles.buttonTextOff]}>{inUse ? t('container.inUse') : t('container.use')}</Text>
+            </Pressable>
+          </View>
+        );
+      })}
+    </>
+  );
+}

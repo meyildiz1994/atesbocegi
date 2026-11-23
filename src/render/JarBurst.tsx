@@ -1,4 +1,4 @@
-import { BlurMask, Circle, Group, RadialGradient, Rect, vec } from '@shopify/react-native-skia';
+import { Circle, Group, LinearGradient, RadialGradient, Rect, vec } from '@shopify/react-native-skia';
 import { useDerivedValue, type SharedValue } from 'react-native-reanimated';
 
 import { COLORS, JAR } from '../config/balance';
@@ -37,10 +37,15 @@ function Spark({ angle, speed, size, warm, progress, power }: (typeof SPARKS)[nu
   });
   const r = useDerivedValue(() => size * (1 - 0.6 * progress.value));
   const opacity = useDerivedValue(() => (progress.value >= 1 ? 0 : Math.pow(1 - progress.value, 1.4)));
+  const halo = useDerivedValue(() => r.value * 2.4);
+  const haloOpacity = useDerivedValue(() => opacity.value * 0.25);
+  const color = warm ? COLORS.jarFull : COLORS.jarGlow;
+  // Bulanıklık (BlurMask) yok: her karede 20+ blur çizimi cihazda kare düşürüyordu.
   return (
-    <Circle cx={cx} cy={cy} r={r} color={warm ? COLORS.jarFull : COLORS.jarGlow} opacity={opacity}>
-      <BlurMask blur={2.5} style="solid" />
-    </Circle>
+    <Group>
+      <Circle cx={cx} cy={cy} r={halo} color={color} opacity={haloOpacity} />
+      <Circle cx={cx} cy={cy} r={r} color={color} opacity={opacity} />
+    </Group>
   );
 }
 
@@ -50,8 +55,8 @@ function Ray({ angle, progress, power }: { angle: number } & Omit<Props, 'x' | '
   const opacity = useDerivedValue(() => (progress.value >= 1 ? 0 : 0.55 * Math.pow(1 - progress.value, 2)));
   return (
     <Group transform={transform} opacity={opacity}>
-      <Rect x={-2.5} y={0} width={5} height={len} color={COLORS.jarFull}>
-        <BlurMask blur={4} style="normal" />
+      <Rect x={-3} y={0} width={6} height={len}>
+        <LinearGradient start={vec(0, 0)} end={vec(0, 160)} colors={[`${COLORS.jarFull}ee`, `${COLORS.jarFull}00`]} />
       </Rect>
     </Group>
   );
@@ -81,9 +86,7 @@ export function JarBurst({ x, y, progress, power }: Props) {
         <Ray key={i} angle={r.angle} progress={progress} power={power} />
       ))}
       {/* Genişleyen halka */}
-      <Circle cx={0} cy={OY} r={ringR} style="stroke" strokeWidth={ringWidth} color={COLORS.jarGlow} opacity={ringOpacity}>
-        <BlurMask blur={3} style="solid" />
-      </Circle>
+      <Circle cx={0} cy={OY} r={ringR} style="stroke" strokeWidth={ringWidth} color={COLORS.jarGlow} opacity={ringOpacity} />
       {/* Kıvılcımlar */}
       {SPARKS.map((s, i) => (
         <Spark key={i} {...s} progress={progress} power={power} />

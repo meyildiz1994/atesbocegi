@@ -52,6 +52,24 @@ function init(): void {
   setAudioModeAsync({ playsInSilentMode: false, interruptionMode: 'mixWithOthers' }).catch(() => {});
 }
 
+/**
+ * Ses oynatıcılarını önceden hazırlar. Oynatıcı ilk çalışta oluşturulursa dosya senkron
+ * yüklenir ve oyun bir an takılır (ilk kavanoz boşaltmada görülen donma). Açılışta, oyun
+ * başlamadan bir kez çağrılır; sesler zaman aralığıyla teker teker hazırlanır.
+ */
+export function preloadSfx(): void {
+  const ids = (Object.keys(SOURCES) as SoundId[]).filter((id) => id.startsWith('sfx_'));
+  ids.forEach((id, k) =>
+    setTimeout(() => {
+      try {
+        poolFor(id);
+      } catch {
+        // Ses hatası oyunu durdurmamalı.
+      }
+    }, 300 + k * 120),
+  );
+}
+
 function poolFor(id: SoundId) {
   let pool = pools.get(id);
   if (!pool) {

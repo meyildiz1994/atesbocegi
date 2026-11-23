@@ -2,10 +2,11 @@
  * Kayıt formatı, sürüm migrasyonu ve (de)serileştirme. Saf; depolama soyutlanmıştır
  * (oyunda MMKV, testte bellek içi).
  */
-import { SAVE, SKILL_ORDER, UPGRADE_ORDER, ZONES } from '../config/balance';
+import { CONTAINER_ORDER, PERK_ORDER, PERKS, SAVE, SKILL_ORDER, STAR_UPGRADE_ORDER, UPGRADE_ORDER, ZONES, type ContainerId } from '../config/balance';
 import type { Levels, Skills } from './economy';
 import { emptyGarden, type DailyState, type GardenLevels } from './meta';
 import { noPurchases, type Purchases } from './monetization';
+import { emptyPerks, emptyStarLevels, type PerkLevels, type StarLevels } from './zoneMechanics';
 
 export type Settings = {
   sound: boolean;
@@ -55,6 +56,19 @@ export type SaveData = {
   upgradesBought: number;
   raresFound: number;
   daily: DailyState | null;
+  /** Şimdiye kadar açılmış en ileri bölge (Şafak'ta korunur; kaplar buna göre açılır). */
+  bestZone: number;
+  container: ContainerId;
+  /** Bu koşuda yenilen bosslar (bölge indeksleri); Şafak'ta sıfırlanır. */
+  bossDone: number[];
+  /** Yıldız Tozu ile sınırsız seviyelenen yükseltmeler. */
+  starLevels: StarLevels;
+  /** Gösterilmiş tanıtımlar (bölge indeksleri; 50+ diğer tanıtımlar). */
+  hintsSeen: number[];
+  /** Bu koşuda seçilen yükseltme kartları, alınan kart sayısı ve doldurulan kavanoz. */
+  perks: PerkLevels;
+  perksTaken: number;
+  runJars: number;
 };
 
 export interface KeyValueStore {
@@ -106,6 +120,14 @@ export function newSave(now: number): SaveData {
     upgradesBought: 0,
     raresFound: 0,
     daily: null,
+    bestZone: 0,
+    container: 'jar',
+    bossDone: [],
+    starLevels: emptyStarLevels(),
+    hintsSeen: [],
+    perks: emptyPerks(),
+    perksTaken: 0,
+    runJars: 0,
   };
 }
 
@@ -187,7 +209,24 @@ export function sanitize(raw: Raw, now: number): SaveData {
     upgradesBought: Math.floor(num(raw.upgradesBought)),
     raresFound: Math.floor(num(raw.raresFound)),
     daily: dailyOf(raw.daily),
+    bestZone: Math.min(ZONES.length - 1, Math.floor(num(raw.bestZone))),
+    container: CONTAINER_ORDER.includes(raw.container as ContainerId) ? (raw.container as ContainerId) : 'jar',
+    bossDone: indexList(raw.bossDone),
+    starLevels: Object.fromEntries(
+      STAR_UPGRADE_ORDER.map((id) => [id, Math.floor(num(((raw.starLevels ?? {}) as Raw)[id]))]),
+    ) as StarLevels,
+    hintsSeen: indexList(raw.hintsSeen),
+    perks: Object.fromEntries(
+      PERK_ORDER.map((id) => [id, Math.min(PERKS[id].maxTier, Math.floor(num(((raw.perks ?? {}) as Raw)[id])))]),
+    ) as PerkLevels,
+    perksTaken: Math.floor(num(raw.perksTaken)),
+    runJars: Math.floor(num(raw.runJars)),
   };
+}
+
+function indexList(v: unknown): number[] {
+  if (!Array.isArray(v)) return [];
+  return [...new Set(v.filter((x): x is number => typeof x === 'number' && Number.isInteger(x) && x >= 0 && x < 64))];
 }
 
 function collectionOf(v: unknown): Record<string, number> {

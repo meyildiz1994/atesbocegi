@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeIn, FadeOut, ZoomIn } from 'react-native-reanimated';
 
-import { COLORS, PRESTIGE, SKILL_ORDER, SKILLS, UI, type SkillId } from '../config/balance';
+import { COLORS, PRESTIGE, SKILL_ORDER, SKILLS, STAR_UPGRADE_ORDER, UI, type SkillId, type StarUpgradeId } from '../config/balance';
 import { canBuySkill, canPrestige, globalMultiplier, stardustForPrestige } from '../game/economy';
 import { formatNumber } from '../game/numbers';
 import { useGame } from '../game/state';
+import { starCost, starMaxed } from '../game/zoneMechanics';
 import { t, type I18nKey } from '../i18n';
 import { track } from '../services/analytics';
 import { hapticSuccess } from '../services/haptics';
@@ -18,8 +21,10 @@ export function DawnPanel({ onClose }: { onClose: () => void }) {
 
   const ready = canPrestige(runLight);
   const gain = stardustForPrestige(runLight);
+  const [confirming, setConfirming] = useState(false);
 
   const onDawn = () => {
+    setConfirming(false);
     const dust = prestige();
     if (dust > 0) {
       const s = useGame.getState();
@@ -42,7 +47,7 @@ export function DawnPanel({ onClose }: { onClose: () => void }) {
           {ready ? t('dawn.explain') : t('dawn.notYet', { amount: formatNumber(PRESTIGE.unlockAt) })}
         </Text>
         <Pressable
-          onPress={onDawn}
+          onPress={() => setConfirming(true)}
           disabled={!ready}
           style={[styles.dawnButton, !ready && styles.disabled]}
           accessibilityRole="button"
@@ -56,8 +61,75 @@ export function DawnPanel({ onClose }: { onClose: () => void }) {
         {SKILL_ORDER.map((id) => (
           <SkillRow key={id} id={id} />
         ))}
+
+        <Text style={styles.section}>{t('dawn.starUpgrades')}</Text>
+        {STAR_UPGRADE_ORDER.map((id) => (
+          <StarRow key={id} id={id} />
+        ))}
       </ScrollView>
+      {confirming ? (
+        <Animated.View entering={FadeIn} exiting={FadeOut} style={[StyleSheet.absoluteFill, styles.confirmBackdrop]}>
+          <Animated.View entering={ZoomIn.springify()} style={styles.confirmCard}>
+            <Text style={styles.confirmTitle}>{t('dawn.confirmTitle')}</Text>
+            <ConfirmLine label={t('dawn.resets')} text={t('dawn.resetsList')} color="#ff9a8a" />
+            <ConfirmLine label={t('dawn.keeps')} text={t('dawn.keepsList')} color={COLORS.accent} />
+            <ConfirmLine
+              label={t('dawn.gets')}
+              text={t('dawn.getsList', { amount: gain, pct: Math.round(gain * PRESTIGE.multPerStardust * 100) })}
+              color={COLORS.stardust}
+            />
+            <Pressable onPress={onDawn} style={styles.dawnButton} accessibilityRole="button">
+              <Text style={styles.dawnText}>{t('dawn.confirm')}</Text>
+            </Pressable>
+            <Pressable onPress={() => setConfirming(false)} style={styles.cancel} accessibilityRole="button">
+              <Text style={styles.cancelText}>{t('dawn.cancel')}</Text>
+            </Pressable>
+          </Animated.View>
+        </Animated.View>
+      ) : null}
     </Sheet>
+  );
+}
+
+function ConfirmLine({ label, text, color }: { label: string; text: string; color: string }) {
+  return (
+    <View style={styles.confirmLine}>
+      <Text style={[styles.confirmLabel, { color }]}>{label}</Text>
+      <Text style={styles.confirmText}>{text}</Text>
+    </View>
+  );
+}
+
+/** Sınırsız seviyelenen Yıldız yükseltmesi: maliyet her seviyede artar. */
+function StarRow({ id }: { id: StarUpgradeId }) {
+  const level = useGame((s) => s.starLevels[id]);
+  const stardust = useGame((s) => s.stardust);
+  const buy = useGame((s) => s.buyStar);
+  const maxed = starMaxed(id, level);
+  const cost = starCost(id, level);
+  const available = !maxed && stardust >= cost;
+  return (
+    <View style={[styles.skill, level > 0 && styles.skillOwned]}>
+      <View style={styles.skillInfo}>
+        <Text style={styles.skillName}>
+          {t(`star.${id}.name` as I18nKey)} <Text style={styles.level}>{t('star.level', { level })}</Text>
+        </Text>
+        <Text style={styles.skillDesc}>{t(`star.${id}.desc` as I18nKey)}</Text>
+      </View>
+      <Pressable
+        onPress={() => {
+          if (!buy(id)) return;
+          hapticSuccess();
+          track('star_upgrade', { id, level: level + 1 });
+        }}
+        disabled={!available}
+        style={[styles.skillBuy, !available && styles.disabled]}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: !available }}
+      >
+        <Text style={styles.skillBuyText}>{maxed ? t('star.max') : t('skill.cost', { cost })}</Text>
+      </Pressable>
+    </View>
   );
 }
 
@@ -134,4 +206,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   skillBuyText: { color: '#1a1030', fontWeight: '800' },
+  level: { color: COLORS.stardust, fontSize: 13, fontWeight: '700' },
+  confirmBackdrop: { backgroundColor: '#000000c0', alignItems: 'center', justifyContent: 'center', padding: 20 },
+  confirmCard: {
+    width: '100%',
+    backgroundColor: COLORS.panelBg,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.dawn,
+    padding: 20,
+    gap: 12,
+  },
+  confirmTitle: { color: COLORS.dawn, fontSize: 22, fontWeight: '800', textAlign: 'center' },
+  confirmLine: { gap: 2 },
+  confirmLabel: { fontSize: 13, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1 },
+  confirmText: { color: COLORS.hudText, fontSize: 15, lineHeight: 20 },
+  cancel: { minHeight: UI.minTouch, alignItems: 'center', justifyContent: 'center' },
+  cancelText: { color: COLORS.hudSubText, fontSize: 15, fontWeight: '700' },
 });

@@ -12,8 +12,8 @@ import {
 import { useMemo } from 'react';
 import type { SharedValue } from 'react-native-reanimated';
 
-import { FX, SIM } from '../config/balance';
-import { fireflyBrightness, STATUS_DEAD, type SimState } from '../game/simulation';
+import { CRYSTAL, FOG, FX, KIND, SIM, WIND } from '../config/balance';
+import { fireflyBrightness, inFog, STATUS_DEAD, type SimState } from '../game/simulation';
 
 type Props = {
   sim: SharedValue<SimState>;
@@ -31,6 +31,14 @@ const T = SIM.textureSize;
 const TEXTURE_SIZE = { width: T, height: T };
 const HALF = T / 2;
 const SCALE = SIM.spriteSize / T;
+
+function rgb(hex: string): [number, number, number] {
+  const n = parseInt(hex.slice(1, 7), 16);
+  return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
+}
+/** Türe göre renk (0: bölge rengi). */
+const KIND_RGB: [number, number, number][] = [[1, 1, 1], rgb(CRYSTAL.colors[0]), rgb(CRYSTAL.colors[1]), rgb(CRYSTAL.colors[2]), rgb(WIND.color)];
+const KIND_SCALE = [1, 1.2, 1.2, 1.2, 1.8];
 
 /** Hale dokusu: yumuşak, düz düşen ışık. */
 function HaloSprite() {
@@ -85,15 +93,18 @@ export function Fireflies({ sim, tint, layer = 'core', count = SIM.capacity }: P
       return;
     }
     const b = fireflyBrightness(s, i);
-    const scale = scaleMul * (0.75 + 0.35 * b);
+    const scale = scaleMul * (0.75 + 0.35 * b) * KIND_SCALE[s.kind[i]!]!;
     val.set(scale, 0, s.x[i]! - scale * HALF, s.y[i]! - scale * HALF);
   });
 
   const colors = useColorBuffer(capacity, (val, i) => {
     'worklet';
     const s = sim.value;
-    const c = tint.value;
-    const a = s.status[i] === STATUS_DEAD ? 0 : fireflyBrightness(s, i);
+    const k = s.kind[i]!;
+    const c = k === KIND.normal ? tint.value : KIND_RGB[k]!;
+    let a = s.status[i] === STATUS_DEAD ? 0 : fireflyBrightness(s, i);
+    if (k === KIND.wind) a = 0.7 + 0.3 * a;
+    if (a > 0 && inFog(s, i)) a *= FOG.hiddenAlpha;
     val[0] = c[0];
     val[1] = c[1];
     val[2] = c[2];

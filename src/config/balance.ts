@@ -99,6 +99,8 @@ export const SIM = {
   gridCell: 48,
   gridMaxCells: 512,
   maxDt: 0.05,
+  /** Combo Fever'da toplanma hızı (px/sn). */
+  gatherSpeed: 520,
 } as const;
 
 /** Kavanoz ve dokunma. */
@@ -238,7 +240,7 @@ export const UI = {
  * Etkiler `economy.ts` içindeki `computeStats` ile hesaplanır.
  */
 export const UPGRADES = {
-  ring: { baseCost: 10, growth: 1.15, maxLevel: 60 },
+  ring: { baseCost: 10, growth: 1.15, maxLevel: 16 },
   jar: { baseCost: 25, growth: 1.2, maxLevel: 200 },
   bright: { baseCost: 50, growth: 2.1, maxLevel: 300 },
   crowd: { baseCost: 100, growth: 1.8, maxLevel: 150 },
@@ -255,7 +257,8 @@ export const EFFECTS = {
   /** Işık Halkası: seviye başına yarıçap çarpanı. */
   ringPerLevel: 1.08,
   /** Yarıçap üst sınırı (px); ekranı tamamen kaplamasın. */
-  ringMax: 220,
+  /** Halkanın sınırı (Emre: "ışık halkasının bir sınırı olmalı"); yükseltme burada biter. */
+  ringMax: 130,
   /** Büyük Kavanoz: ilk N seviye +5, sonrası ×1.1. */
   jarFlatLevels: 10,
   jarFlatStep: 5,
@@ -475,3 +478,165 @@ export const QUESTS = {
   chestTokens: 15,
 } as const;
 export type QuestKind = (typeof QUESTS.templates)[number]['kind'];
+
+// ---------------------------------------------------------------------------
+// Bölge mekanikleri: her bölgenin kendi oyun biçimi (Emre: "bir noktadan sonra sıkıcı").
+
+/** Ateşböceği türleri (simülasyonda `kind`). 0 sıradan; 1..3 kristal renkleri; 4 rüzgâr böceği. */
+export const KIND = { normal: 0, crystalA: 1, crystalB: 2, crystalC: 3, wind: 4 } as const;
+
+/** Sisli Bataklık: ekranı yatay geçen sis dalgaları. Sisin içinde halka zayıflar, Ruhlar göremez. */
+export const FOG = {
+  zoneIndex: 1,
+  /** Bir döngü (sn) ve sisin ekranı geçme süresi (sn). */
+  period: 45,
+  duration: 16,
+  /** İlk dalganın gecikmesi (sn): bölgeye girer girmez gelmesin. */
+  firstDelay: 12,
+  /** Sis bandının genişliği (ekran genişliğine oranla). */
+  bandWidth: 0.75,
+  /** Sisin içinde halkanın yarıçap çarpanı; her Fener (bahçe) seviyesi bunu artırır. */
+  ringScale: 0.4,
+  ringScalePerLantern: 0.04,
+  /** Sis böcek getirir: sis geçerken doğma hızı çarpanı. */
+  spawnMult: 2.5,
+  /** Sisin içindeki böceklerin görünürlüğü. */
+  hiddenAlpha: 0.18,
+} as const;
+
+/** Mantar Vadisi: olgunlaşan mantarlara dokununca zincirleme parlama. */
+export const MUSHROOM = {
+  zoneIndex: 2,
+  /** Mantarların ekrandaki yerleri (genişlik, oyun alanı yüksekliği oranı). */
+  spots: [
+    [0.18, 0.34],
+    [0.5, 0.26],
+    [0.82, 0.36],
+    [0.3, 0.58],
+    [0.7, 0.6],
+    [0.5, 0.82],
+  ] as const,
+  /** Bir mantarın olgunlaşma süresi (sn) ve olgun kalma süresi. */
+  ripenSec: 7,
+  ripeSec: 9,
+  /** Patlama: yarıçap (px), komşuya sıçrama mesafesi (px) ve gecikme (sn). */
+  burstRadius: 95,
+  chainRange: 260,
+  chainDelay: 0.22,
+  /** Zamanlama: olgun mantarın nabzı tepedeyken dokunmak "Tam zamanında!" sayılır. */
+  pulsePeriod: 1.1,
+  perfectWindow: 0.2,
+  perfectRadiusMult: 1.45,
+  /** Zincir ödülü: zincirdeki her mantar için dolu kavanoz değeri × zincir uzunluğu. */
+  rewardJarsPerLink: 0.35,
+} as const;
+
+/** Kristal Mağara: üç renkli kristal, aynı renkteki böceklerle şarj olur. */
+export const CRYSTAL = {
+  zoneIndex: 3,
+  colors: ['#ff6fb5', '#5fd4ff', '#9dff6a'] as const,
+  /** Renkli böceklerin oranı; her döngüde bir renk kıt olur. */
+  coloredShare: 0.55,
+  scarceWeight: 0.2,
+  /** Bir kristali doldurmak için gereken böcek (kavanoz kapasitesine oranla). */
+  chargePerCrystalJars: 0.6,
+  minCharge: 12,
+  /** Üçü dolunca: rezonans süresi (sn) ve Işık çarpanı. */
+  resonanceSec: 30,
+  resonanceMult: 2,
+  rewardJars: 6,
+} as const;
+
+/** Gök Kanyonu: rüzgârla gelen, hızlı geçen nadir böcekler. */
+export const WIND = {
+  zoneIndex: 4,
+  period: 40,
+  firstDelay: 10,
+  /** Bir rüzgârda gelen böcek sayısı ve hızları (px/sn). */
+  count: 6,
+  speedMin: 170,
+  speedMax: 240,
+  /** Her biri: son Işık/sn × bu kadar saniye, en az bu kadar dolu kavanoz. */
+  rewardSeconds: 15,
+  minRewardJars: 2,
+  color: '#fff4c2',
+} as const;
+
+/** Bölge sonu: dev ateşböceğini 60 sn içinde besle. */
+export const BOSS = {
+  /** Sonraki eşiğin bu oranına gelince ortaya çıkar (son bölgede: Şafak eşiği). */
+  appearAt: 0.6,
+  durationSec: 60,
+  /** Hedef: son yakalama hızının bu katı × süre (en az minGoal). */
+  goalShare: 0.75,
+  minGoal: 40,
+  /** Kazanınca: sonraki eşiğin bu oranı kadar Işık ve jeton. */
+  rewardShare: 0.15,
+  rewardTokens: 5,
+  /** Kaybedince yeniden deneme (sn). */
+  retrySec: 180,
+} as const;
+
+/** Rastgele dünya olayları. */
+export const WORLD_EVENTS = {
+  /** İlk olay bu oyun süresinden sonra (sn); sonra bu aralıkta rastgele. */
+  firstAfterSec: 10 * 60,
+  minGapSec: 4 * 60,
+  maxGapSec: 7 * 60,
+  meteor: { durationSec: 20, spawnMult: 4 },
+  moon: { durationSec: 60, lightMult: 2 },
+} as const;
+
+/** Kaplar: kavanoz yerine başka kaplar (her biri farklı bir avantaj). */
+export const CONTAINERS = {
+  jar: { unlockZone: 0, rareMult: 1.5, capacityMult: 1, valueMult: 1, fogImmune: false },
+  bottle: { unlockZone: 2, rareMult: 1, capacityMult: 1.25, valueMult: 1, fogImmune: false },
+  lantern: { unlockZone: 3, rareMult: 1, capacityMult: 1, valueMult: 1.15, fogImmune: true },
+} as const;
+export type ContainerId = keyof typeof CONTAINERS;
+export const CONTAINER_ORDER: ContainerId[] = ['jar', 'bottle', 'lantern'];
+
+/**
+ * Yıldız Tozu için sınırsız seviyelenen yükseltmeler (ağaç bittikten sonra da harcanacak yer).
+ * Maliyet = ceil(base × growth^seviye). Etki seviye başına.
+ */
+export const STAR_UPGRADES = {
+  starGlow: { base: 1, growth: 1.45, perLevel: 0.25 },
+  starJar: { base: 2, growth: 1.5, perLevel: 0.1 },
+  starNight: { base: 2, growth: 1.6, perLevel: 3600, maxLevel: 16 },
+  starHead: { base: 3, growth: 1.7, perLevel: 1 },
+} as const;
+export type StarUpgradeId = keyof typeof STAR_UPGRADES;
+export const STAR_UPGRADE_ORDER: StarUpgradeId[] = ['starGlow', 'starJar', 'starNight', 'starHead'];
+/** starHead: Şafak sonrası bu kadar Işıkla başla (× 4^(seviye-1)). */
+export const STAR_HEAD_START = 500;
+
+/** Combo Fever: böcekler ortada toplanır ve "COMBO" diye patlar. */
+export const FEVER = {
+  /** Bu combo sayısına ulaşınca tetiklenir; ayrıca arada bir kendiliğinden. */
+  comboThreshold: 40,
+  randomMinSec: 150,
+  randomMaxSec: 300,
+  cooldownSec: 75,
+  /** Toplanma süresi (sn), patlama yarıçapı (px) ve Işık çarpanı. */
+  gatherSec: 1.6,
+  popRadius: 170,
+  multiplier: 10,
+} as const;
+
+/**
+ * Seçimli yükseltmeler (koşu boyunca; Şafak'ta sıfırlanır). Her dal 5 basamak.
+ * Belirli basamaklar yeni bir yetenek açar (ör. Ruh 3: +1 ruh).
+ */
+export const PERKS = {
+  pull: { maxTier: 5, perTier: 0.25 },
+  jar: { maxTier: 5, perTier: 0.12 },
+  spirit: { maxTier: 5, perTier: 0.15, bonusSpiritAt: 3 },
+  combo: { maxTier: 5, perTier: 3, autoFeverAt: 3 },
+  glow: { maxTier: 5, perTier: 0.15 },
+  luck: { maxTier: 5, perTier: 0.1 },
+} as const;
+export type PerkBranch = keyof typeof PERKS;
+export const PERK_ORDER: PerkBranch[] = ['pull', 'jar', 'spirit', 'combo', 'glow', 'luck'];
+/** Teklif: dolu kavanoz sayısına göre (ilk teklif 4. kavanozda, sonra aralık büyür). */
+export const PERK_OFFER = { first: 4, gapStart: 5, gapGrowth: 2 } as const;

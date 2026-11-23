@@ -11,7 +11,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
-import { AUDIO, DEV, FX, JAR, RING, SIM, SPIRIT, START, UI, ZONES } from '../config/balance';
+import { AUDIO, CRYSTAL, DEV, FOG, FX, JAR, RING, SIM, SPIRIT, START, UI, WIND, ZONES } from '../config/balance';
 import {
   countByStatus,
   createSimState,
@@ -19,8 +19,12 @@ import {
   stepSimulation,
   STATUS_DEAD,
   STATUS_FREE,
+  MAX_PULSES,
+  spawnWindGust,
   type SimState,
 } from '../game/simulation';
+import { emitCatch, emitGust, emitPop, pulseQueue, zoneLive } from '../game/zoneBus';
+import { containerOf, crystalWeights, fogBand, fogRingScale, windGustIndex } from '../game/zoneMechanics';
 import { comboPitch } from '../game/combo';
 import { registerCatch } from '../game/comboFeed';
 import { selectBrightness, useGame, useStats } from '../game/state';
@@ -36,11 +40,16 @@ import { Jar } from './Jar';
 import { JarBurst } from './JarBurst';
 import { Spirits } from './Spirits';
 import { Trails } from './Trails';
+import { FogLayer, WindStreaks } from './ZoneLayers';
 
 type Props = {
   /** Kavanoz boşaltılınca kazanılan Işık ile çağrılır (uçan sayı için). */
   onLightGained?: (amount: number, x: number, y: number) => void;
 };
+
+const CW0 = crystalWeights(0);
+const CW1 = crystalWeights(1);
+const CW2 = crystalWeights(2);
 
 function hexToRgb01(hex: string): [number, number, number] {
   const n = parseInt(hex.slice(1, 7), 16);
@@ -87,6 +96,26 @@ export function ForestCanvas({ onLightGained }: Props) {
   /** Boşaltma patlaması: 0'dan 1'e akar (boştayken 1); gücü boşaltılan doluluk. */
   const burst = useSharedValue(1);
   const burstPower = useSharedValue(0);
+  // Isınma: açılışta patlama neredeyse görünmez biçimde bir kez çizilir; gölgelendiriciler
+  // derlenmiş olur ve ilk gerçek boşaltmada takılma yaşanmaz.
+  useEffect(() => {
+    scheduleOnUI(() => {
+      'worklet';
+      burst.value = 0.97;
+      burst.value = withTiming(1, { duration: 400 });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // Bölge mekanikleri: bölge, bölgeye giriş anı (sim zamanı), sisteki halka ölçeği, son rüzgâr.
+  const zoneIdx = useSharedValue(0);
+  const zoneT0 = useSharedValue(0);
+  const fogScale = useSharedValue(1);
+  const lastGust = useSharedValue(-1);
+  const lanternLevel = useGame((s) => s.garden.lantern);
+  const fogImmune = useGame((s) => containerOf(s.container).fogImmune);
+  useEffect(() => {
+    fogScale.value = fogRingScale(lanternLevel, fogImmune);
+  }, [fogScale, lanternLevel, fogImmune]);
   useEffect(() => {
     ringRadius.value = withTiming(stats.ringRadius, { duration: 300 });
     jarCapacity.value = stats.jarCapacity;
@@ -105,6 +134,12 @@ export function ForestCanvas({ onLightGained }: Props) {
   const [firstZone] = useState(zoneForJar);
   useEffect(() => {
     jarCount.set(0);
+    zoneIdx.value = zoneForJar;
+    scheduleOnUI(() => {
+      'worklet';
+      zoneT0.value = sim.value.time;
+      lastGust.value = -1;
+    });
     if (zoneForJar === firstZone) return;
     scheduleOnUI(() => {
       'worklet';
@@ -115,7 +150,7 @@ export function ForestCanvas({ onLightGained }: Props) {
         return st;
       }, true);
     });
-  }, [zoneForJar, firstZone, jarCount, dims, sim, maxFireflies]);
+  }, [zoneForJar, firstZone, jarCount, dims, sim, maxFireflies, zoneIdx, zoneT0, lastGust]);
 
   // Şafak'ta sahne sıfırlanır.
   const dawnCounter = useGame((s) => s.dawnCounter);
@@ -190,25 +225,68 @@ export function ForestCanvas({ onLightGained }: Props) {
   const startBurst = (n: number) => {
     'worklet';
     burstPower.value = Math.min(1, n / Math.max(1, jarCapacity.value));
-    burst.value = 0;
-    burst.value = withTiming(1, { duration: JAR.burstDuration * 1000 });
+    burst.set(0);
+    burst.set(withTiming(1, { duration: JAR.burstDuration * 1000 }));
   };
 
   const loop = useFrameCallback((info) => {
     'worklet';
     const dt = (info.timeSincePreviousFrame ?? 16) / 1000;
     const d = dims.value;
+    const live = zoneLive.value;
+    const zi = zoneIdx.value;
+    let spawnMul = live.spawnMult;
+    let gust = -1;
     sim.modify((s) => {
       'worklet';
       if (!seeded.value) {
         seedFireflies(s, Math.max(1, Math.round(maxFireflies.value * SIM.initialSeedShare)), d.width, d.height);
         seeded.value = true;
       }
+      const zt = s.time - zoneT0.value;
+      // Sisli Bataklık: sis bandı ve sisle gelen böcekler.
+      if (zi === FOG.zoneIndex) {
+        const band = fogBand(zt, d.width);
+        s.fogL = band[0];
+        s.fogR = band[1];
+        if (band[1] > band[0]) spawnMul *= FOG.spawnMult;
+      } else {
+        s.fogL = 0;
+        s.fogR = 0;
+      }
+      // Gök Kanyonu: rüzgârla gelen nadir böcekler.
+      if (zi === WIND.zoneIndex) {
+        const gi = windGustIndex(zt);
+        if (gi > lastGust.value) {
+          lastGust.value = gi;
+          spawnWindGust(s, WIND.count, d.width, d.height);
+          gust = gi;
+        }
+      }
+      // Mantar patlamaları.
+      const q = pulseQueue.value;
+      if (q.length > 0) {
+        let n = 0;
+        for (let k = 0; k + 2 < q.length && n < MAX_PULSES; k += 3) {
+          s.pulseX[n] = q[k]!;
+          s.pulseY[n] = q[k + 1]!;
+          s.pulseR[n] = q[k + 2]!;
+          n++;
+        }
+        s.pulseN = n;
+        pulseQueue.value = [];
+      }
       stepSimulation(s, dt, {
         width: d.width,
         height: d.height,
         maxFireflies: maxFireflies.value,
-        spawnRate: spawnRate.value,
+        spawnRate: spawnRate.value * spawnMul,
+        fogRingScale: fogScale.value,
+        crystalShare: zi === CRYSTAL.zoneIndex ? CRYSTAL.coloredShare : 0,
+        crystalWeights: live.scarce === 0 ? CW0 : live.scarce === 1 ? CW1 : CW2,
+        gatherOn: live.gatherOn,
+        gatherX: live.gatherX,
+        gatherY: live.gatherY,
         ringRadius: ringRadius.value,
         jarCapacity: jarCapacity.value,
         jarCount: jarCount.value,
@@ -239,7 +317,13 @@ export function ForestCanvas({ onLightGained }: Props) {
         scheduleOnRN(onJarEmptied, n);
       }
     }
-    if (caughtNow > 0) scheduleOnRN(onCaught, caughtNow);
+    if (caughtNow > 0) {
+      scheduleOnRN(onCaught, caughtNow);
+      const ck = st.caughtKind;
+      scheduleOnRN(emitCatch, caughtNow, [ck[0]!, ck[1]!, ck[2]!, ck[3]!, ck[4]!]);
+    }
+    if (gust >= 0) scheduleOnRN(emitGust, gust);
+    if (st.lastPopped > 0) scheduleOnRN(emitPop, st.lastPopped);
 
     hudAcc.value += dt;
     if (hudAcc.value >= hudInterval) {
@@ -297,7 +381,9 @@ export function ForestCanvas({ onLightGained }: Props) {
             ) : null}
             <Trails sim={sim} tint={tint} />
             <Fireflies key={`c${drawCount}`} sim={sim} tint={tint} count={drawCount} />
+            {zoneIndex === WIND.zoneIndex ? <WindStreaks sim={sim} /> : null}
             <Spirits sim={sim} />
+            {zoneIndex === FOG.zoneIndex ? <FogLayer sim={sim} height={height} /> : null}
             <CollectRing x={fingerX} y={fingerY} radius={ringRadius} visibility={ringVisibility} />
             <Jar x={jarX} y={jarY} count={jarCountRo} capacity={capacityRo} time={simTime} burst={burst} />
             <JarBurst x={jarX} y={jarY} progress={burst} power={burstPower} />

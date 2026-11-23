@@ -1,5 +1,5 @@
 /** ChatGPT ile üretilmiş arayüz görselleri (assets/ui). */
-import type { UpgradeId } from '../config/balance';
+import type { ContainerId, UpgradeId } from '../config/balance';
 
 export const UPGRADE_ICONS: Record<UpgradeId, number> = {
   ring: require('../../assets/ui/icon_ring.png'),
@@ -37,4 +37,11 @@ export const UI_ICONS = {
   close: require('../../assets/ui/icon_close.png') as number,
   boost: require('../../assets/ui/icon_boost.png') as number,
   restore: require('../../assets/ui/icon_restore.png') as number,
+};
+
+/** Kapların görselleri (şişe ve fener için Gemini görselleri gelene kadar kavanoz). */
+export const CONTAINER_ART: Record<ContainerId, number> = {
+  jar: require('../../assets/ui/jar.png') as number,
+  bottle: require('../../assets/ui/jar.png') as number,
+  lantern: require('../../assets/ui/jar.png') as number,
 };

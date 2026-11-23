@@ -2,7 +2,7 @@
  * Ateşböceği simülasyonu. Saf fonksiyonlar; Reanimated worklet'i olarak UI thread'de
  * her karede çalışır, Jest'te de doğrudan test edilir. React state'e dokunmaz.
  */
-import { FX, SIM, SPIRIT } from '../config/balance';
+import { FX, KIND, SIM, SPIRIT, WIND } from '../config/balance';
 
 export const STATUS_DEAD = 0;
 export const STATUS_FREE = 1;
@@ -53,7 +53,24 @@ export type SimState = {
   /** Ruhun peşinden gittiği böcek (-1: yok) ve hedef yenileme sayacı. */
   spTarget: number[];
   spRetarget: number[];
+  /** Böcek türü (KIND): sıradan, kristal renkleri, rüzgâr böceği. */
+  kind: number[];
+  /** Sis bandı (ekran x aralığı); sağ ≤ sol ise sis yok. Çizim de buradan okur. */
+  fogL: number;
+  fogR: number;
+  /** Bu adımda işlenecek patlamalar (mantar zinciri): merkez ve yarıçap. */
+  pulseN: number;
+  pulseX: number[];
+  pulseY: number[];
+  pulseR: number[];
+  /** Son adımda türe göre yakalanan böcek sayısı. */
+  caughtKind: number[];
+  /** Son adımda combo patlamasıyla patlatılan böcek sayısı. */
+  lastPopped: number;
 };
+
+export const MAX_PULSES = 4;
+const KIND_COUNT = 5;
 
 export type SimParams = {
   width: number;
@@ -76,6 +93,15 @@ export type SimParams = {
   /** Mıknatıs: halkanın etrafındaki böcekleri çekme alanı (0 = kapalı) ve hızı. */
   magnetRange: number;
   magnetPull: number;
+  /** Sisin içinde halka yarıçapı çarpanı (1 = etkisiz). */
+  fogRingScale?: number;
+  /** Kristal Mağara: renkli böceklerin oranı (0 = kapalı) ve üç rengin ağırlıkları. */
+  crystalShare?: number;
+  crystalWeights?: [number, number, number];
+  /** Combo Fever: serbest böcekler bu noktaya toplanır. */
+  gatherOn?: boolean;
+  gatherX?: number;
+  gatherY?: number;
 };
 
 export type StepResult = {
@@ -121,6 +147,15 @@ export function createSimState(capacity: number = SIM.capacity, seed = 12345): S
     spH: new Array<number>(SPIRIT.maxOnScreen).fill(0),
     spTarget: new Array<number>(SPIRIT.maxOnScreen).fill(-1),
     spRetarget: new Array<number>(SPIRIT.maxOnScreen).fill(0),
+    kind: arr(),
+    fogL: 0,
+    fogR: 0,
+    pulseN: 0,
+    pulseX: new Array<number>(MAX_PULSES).fill(0),
+    pulseY: new Array<number>(MAX_PULSES).fill(0),
+    pulseR: new Array<number>(MAX_PULSES).fill(0),
+    caughtKind: new Array<number>(KIND_COUNT).fill(0),
+    lastPopped: 0,
   };
 }
 
@@ -149,7 +184,7 @@ export function countByStatus(s: SimState, status: number): number {
 }
 
 /** Boş bir yuvaya kenardan içeri süzülen yeni bir ateşböceği koyar. -1: yer yok. */
-export function spawnFirefly(s: SimState, width: number, height: number, inside = false): number {
+export function spawnFirefly(s: SimState, width: number, height: number, inside = false, kind: number = KIND.normal): number {
   'worklet';
   let slot = -1;
   for (let i = 0; i < s.capacity; i++) {
@@ -197,6 +232,7 @@ export function spawnFirefly(s: SimState, width: number, height: number, inside 
   s.wobbleB[slot] = randRange(s, 0, 100);
   s.born[slot] = s.time;
   s.t[slot] = 0;
+  s.kind[slot] = kind;
   return slot;
 }
 
@@ -241,6 +277,50 @@ function startFlight(s: SimState, i: number): void {
   s.sx[i] = s.x[i]!;
   s.sy[i] = s.y[i]!;
   s.t[i] = 0;
+}
+
+/** Böcek sisin içinde mi? (Rüzgâr böcekleri sisten etkilenmez.) */
+export function inFog(s: SimState, i: number): boolean {
+  'worklet';
+  return s.fogR > s.fogL && s.kind[i] !== KIND.wind && s.x[i]! >= s.fogL && s.x[i]! <= s.fogR;
+}
+
+/** Yakalanan böceği uçuşa geçirir ve türünü sayar. */
+function catchFirefly(s: SimState, i: number): void {
+  'worklet';
+  startFlight(s, i);
+  const k = s.kind[i]!;
+  s.caughtKind[k] = (s.caughtKind[k] ?? 0) + 1;
+}
+
+/** Rüzgâr: ekranın solundan arka arkaya giren hızlı, nadir böcekler. Eklenen sayıyı döner. */
+export function spawnWindGust(s: SimState, count: number, width: number, height: number): number {
+  'worklet';
+  const bottom = playAreaBottom(height);
+  let n = 0;
+  for (let k = 0; k < count; k++) {
+    const slot = spawnFirefly(s, width, height, false, KIND.wind);
+    if (slot < 0) break;
+    s.x[slot] = -20 - k * 70;
+    s.y[slot] = randRange(s, bottom * 0.18, bottom * 0.8);
+    s.heading[slot] = randRange(s, -0.15, 0.15);
+    s.speed[slot] = randRange(s, WIND.speedMin, WIND.speedMax);
+    n++;
+  }
+  return n;
+}
+
+/** Kristal Mağara için doğacak böceğin türü. */
+function pickKind(s: SimState, p: SimParams): number {
+  'worklet';
+  const share = p.crystalShare ?? 0;
+  if (share <= 0 || rand(s) >= share) return KIND.normal;
+  const w = p.crystalWeights ?? [1, 1, 1];
+  const total = w[0] + w[1] + w[2];
+  let x = rand(s) * total;
+  if ((x -= w[0]) < 0) return KIND.crystalA;
+  if ((x -= w[1]) < 0) return KIND.crystalB;
+  return KIND.crystalC;
 }
 
 /** Serbest böcekleri ızgaraya yerleştirir (her adımda yeniden). */
@@ -371,11 +451,11 @@ function stepSpirits(s: SimState, dt: number, p: SimParams, bottom: number, room
 
     if (room <= 0) continue;
     // Yakındaki hedef ve rastgele komşular: tam tarama yerine hedefe bak.
-    if (tgt >= 0 && s.status[tgt] === STATUS_FREE) {
+    if (tgt >= 0 && s.status[tgt] === STATUS_FREE && s.kind[tgt] !== KIND.wind && !inFog(s, tgt)) {
       const dx = s.x[tgt]! - x;
       const dy = s.y[tgt]! - y;
       if (dx * dx + dy * dy <= r2) {
-        startFlight(s, tgt);
+        catchFirefly(s, tgt);
         s.spTarget[k] = -1;
         s.spRetarget[k] = SPIRIT.catchCooldown;
         room--;
@@ -404,6 +484,7 @@ export function stepSimulation(s: SimState, dtRaw: number, p: SimParams): StepRe
   let arrived = 0;
   let caught = 0;
   s.flyCount = 0;
+  for (let k = 0; k < KIND_COUNT; k++) s.caughtKind[k] = 0;
   s.jarX = p.jarX;
   s.jarY = p.jarY;
   // Kavanozda yer var mı? Uçuştakiler de yer ayırmış sayılır.
@@ -411,7 +492,27 @@ export function stepSimulation(s: SimState, dtRaw: number, p: SimParams): StepRe
 
   for (let i = 0; i < s.capacity; i++) {
     const st = s.status[i];
-    if (st === STATUS_FREE) {
+    if (st === STATUS_FREE && s.kind[i] === KIND.wind) {
+      // Rüzgâr böceği: hafif dalgalanarak dümdüz geçer, ekrandan çıkınca kaybolur.
+      const h = s.heading[i]! + Math.sin(s.time * 3 + s.wobbleA[i]!) * 0.6 * dt;
+      s.heading[i] = h;
+      s.x[i] = s.x[i]! + Math.cos(h) * s.speed[i]! * dt;
+      s.y[i] = s.y[i]! + Math.sin(h) * s.speed[i]! * dt + Math.sin(s.time * 4 + s.wobbleB[i]!) * 30 * dt;
+      if (s.x[i]! > p.width + 30) {
+        s.status[i] = STATUS_DEAD;
+        free--;
+      }
+    } else if (st === STATUS_FREE && p.gatherOn) {
+      // Combo Fever: hepsi ekranın ortasına doğru hızla toplanır, orada kaynar.
+      const gx = p.gatherX ?? p.width / 2;
+      const gy = p.gatherY ?? bottom / 2;
+      const dx = gx - s.x[i]!;
+      const dy = gy - s.y[i]!;
+      const d = Math.sqrt(dx * dx + dy * dy) || 1;
+      const sp = Math.min(d * 3, SIM.gatherSpeed);
+      s.x[i] = s.x[i]! + (dx / d) * sp * dt + Math.cos(s.time * 9 + s.wobbleA[i]!) * 40 * dt;
+      s.y[i] = s.y[i]! + (dy / d) * sp * dt + Math.sin(s.time * 9 + s.wobbleB[i]!) * 40 * dt;
+    } else if (st === STATUS_FREE) {
       // Organik süzülme: iki sinüsün karışımıyla yön değişimi.
       const w =
         Math.sin(s.time * 0.9 + s.wobbleA[i]!) + 0.6 * Math.sin(s.time * 2.3 + s.wobbleB[i]!);
@@ -451,6 +552,8 @@ export function stepSimulation(s: SimState, dtRaw: number, p: SimParams): StepRe
 
   // Parmak: yalnızca halkanın (ve mıknatısın) kapsadığı ızgara hücrelerine bakılır.
   if (p.fingerActive) {
+    const fs = p.fogRingScale ?? 1;
+    const r2f = r2 * fs * fs;
     const reach = Math.max(p.ringRadius, p.magnetRange);
     const [x0, x1, y0, y1] = cellRange(s, p.fingerX, p.fingerY, reach);
     const m2 = p.magnetRange * p.magnetRange;
@@ -463,9 +566,9 @@ export function stepSimulation(s: SimState, dtRaw: number, p: SimParams): StepRe
             const dx = s.x[i]! - p.fingerX;
             const dy = s.y[i]! - p.fingerY;
             const d2 = dx * dx + dy * dy;
-            if (d2 <= r2) {
+            if (d2 <= (inFog(s, i) ? r2f : r2)) {
               if (room > 0) {
-                startFlight(s, i);
+                catchFirefly(s, i);
                 room--;
                 caught++;
                 free--;
@@ -484,6 +587,52 @@ export function stepSimulation(s: SimState, dtRaw: number, p: SimParams): StepRe
     }
   }
 
+  // Patlamalar (mantar zinciri): yarıçaptaki tüm serbest böcekler kavanoza uçar.
+  // Negatif yarıçap: combo patlaması; böcekler kavanoza gitmez, yerinde patlar ve sayılır.
+  s.lastPopped = 0;
+  for (let q = 0; q < s.pulseN; q++) {
+    const px = s.pulseX[q]!;
+    const py = s.pulseY[q]!;
+    const pr = s.pulseR[q]!;
+    if (pr < 0) {
+      const rr = pr * pr;
+      for (let i = 0; i < s.capacity; i++) {
+        if (s.status[i] !== STATUS_FREE) continue;
+        const dx = s.x[i]! - px;
+        const dy = s.y[i]! - py;
+        if (dx * dx + dy * dy <= rr) {
+          s.status[i] = STATUS_DEAD;
+          s.lastPopped++;
+          free--;
+        }
+      }
+      continue;
+    }
+    const pr2 = pr * pr;
+    const [x0, x1, y0, y1] = cellRange(s, px, py, pr);
+    for (let cy = y0; cy <= y1 && room > 0; cy++) {
+      for (let cx = x0; cx <= x1 && room > 0; cx++) {
+        let i = s.gridHead[cy * s.gridCols + cx]!;
+        while (i >= 0 && room > 0) {
+          const nextI = s.gridNext[i]!;
+          if (s.status[i] === STATUS_FREE) {
+            const dx = s.x[i]! - px;
+            const dy = s.y[i]! - py;
+            if (dx * dx + dy * dy <= pr2) {
+              catchFirefly(s, i);
+              room--;
+              caught++;
+              free--;
+              flying++;
+            }
+          }
+          i = nextI;
+        }
+      }
+    }
+  }
+  s.pulseN = 0;
+
   const spiritCaught = stepSpirits(s, dt, p, bottom, room);
   caught += spiritCaught;
   free -= spiritCaught;
@@ -493,7 +642,7 @@ export function stepSimulation(s: SimState, dtRaw: number, p: SimParams): StepRe
     s.spawnAcc += p.spawnRate * dt;
     while (s.spawnAcc >= 1 && free < p.maxFireflies) {
       s.spawnAcc -= 1;
-      if (spawnFirefly(s, p.width, p.height) < 0) break;
+      if (spawnFirefly(s, p.width, p.height, false, pickKind(s, p)) < 0) break;
       free++;
     }
   } else {

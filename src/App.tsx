@@ -13,6 +13,7 @@ import { useTutorialDriver } from './game/useTutorial';
 import { useLanguage } from './i18n/useLanguage';
 import { ForestCanvas } from './render/ForestCanvas';
 import { initAds } from './services/ads';
+import { preloadSfx } from './services/audio';
 import { initIap } from './services/iap';
 import { BoostButton } from './ui/BoostButton';
 import { ComboCounter } from './ui/ComboCounter';
@@ -34,6 +35,11 @@ import { StorePanel } from './ui/StorePanel';
 import { TutorialOverlay } from './ui/TutorialOverlay';
 import { UpgradePanel } from './ui/UpgradePanel';
 import { ZoneToast } from './ui/ZoneToast';
+import { ZoneMechanics } from './ui/zone/ZoneMechanics';
+import { ComboFever } from './ui/run/ComboFever';
+import { PerkDraft } from './ui/run/PerkDraft';
+import { BossEvent } from './ui/run/BossEvent';
+import { WorldEvents } from './ui/run/WorldEvents';
 
 /** Geliştirme modunda ya da EXPO_PUBLIC_SHOW_FPS=1 ile alınan test build'lerinde FPS sayacı görünür. */
 const SHOW_FPS = __DEV__ || process.env.EXPO_PUBLIC_SHOW_FPS === '1';
@@ -51,7 +57,9 @@ export default function App() {
   // Satın alımlar açılışta; reklamlar (rıza formu ve ATT istemi) onboarding bittikten sonra.
   const tutorialDone = useGame((s) => s.tutorialStep >= TUTORIAL_STEP.done);
   useEffect(() => {
-    if (ready) void initIap();
+    if (!ready) return;
+    void initIap();
+    preloadSfx();
   }, [ready]);
   // Günlük görevler: açılışta ve dakikada bir gün değişimi kontrolü.
   useEffect(() => {
@@ -74,6 +82,8 @@ export default function App() {
               <ForestCanvas onLightGained={(a, x, y) => floaters.current?.spawn(a, x, y)} />
               {/* Dil değişince arayüz yeniden kurulur (sahne etkilenmez). */}
               <View key={lang} style={StyleSheet.absoluteFill} pointerEvents="box-none">
+              <WorldEvents />
+              <ZoneMechanics />
               <Hud />
               <FloatingNumbers ref={floaters} />
               <ComboCounter />
@@ -82,6 +92,8 @@ export default function App() {
               <MetaButton onPress={() => setPanel('meta')} />
               <RareToast />
               {newZone !== null ? <ZoneToast zone={newZone} onDone={clearNewZone} /> : null}
+              <ComboFever />
+              <BossEvent />
               <TutorialOverlay />
               <BottomBar onOpen={setPanel} />
               {panel === 'upgrades' ? <UpgradePanel onClose={close} /> : null}
@@ -89,6 +101,7 @@ export default function App() {
               {panel === 'store' ? <StorePanel onClose={close} /> : null}
               {panel === 'settings' ? <SettingsPanel onClose={close} /> : null}
               {panel === 'meta' ? <MetaPanel onClose={close} /> : null}
+              <PerkDraft />
               <OfflinePanel />
               <DawnFlash />
               {SHOW_FPS ? <FpsOverlay onLongPress={() => setPanel('events')} /> : null}

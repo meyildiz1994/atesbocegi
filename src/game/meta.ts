@@ -130,9 +130,9 @@ export function rareColor(id: string): string {
  * Bir boşaltmada nadir böcek bulundu mu? `r1` olasılık, `r2` tür seçimi için [0,1) rastgele.
  * Yalnızca yarıdan fazla dolu kavanozlarda.
  */
-export function rollRare(zoneIndex: number, count: number, capacity: number, r1: number, r2: number): string | null {
+export function rollRare(zoneIndex: number, count: number, capacity: number, r1: number, r2: number, chanceMult = 1): string | null {
   if (!countsAsFilled(count, capacity)) return null;
-  if (r1 >= COLLECTION.chancePerJar) return null;
+  if (r1 >= COLLECTION.chancePerJar * chanceMult) return null;
   const w = COLLECTION.weights;
   const total = w.reduce((a, b) => a + b, 0);
   let x = r2 * total;

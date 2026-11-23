@@ -18,6 +18,8 @@ export function useGameEvents(): [number | null, () => void] {
 
   useEffect(() => {
     let known = unlockedZoneCount(useGame.getState().runLight);
+    // Eski kayıtlar: açılmış en ileri bölge (kaplar buna göre açılır).
+    useGame.getState().noteBestZone(known - 1);
     let lastDawn = useGame.getState().dawnCounter;
     return useGame.subscribe((s, prev) => {
       // Oyuncunun bölge değiştirmesi: kurallar uygunsa seyrek geçiş reklamı.
@@ -31,6 +33,7 @@ export function useGameEvents(): [number | null, () => void] {
       const n = unlockedZoneCount(s.runLight);
       if (n > known) {
         known = n;
+        useGame.getState().noteBestZone(n - 1);
         hapticSuccess();
         track('zone_unlocked', { zone: n, playTimeSec: Math.round(s.playTimeSec) });
         setUnlocked(n - 1);

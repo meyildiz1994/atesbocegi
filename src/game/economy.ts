@@ -11,10 +11,12 @@ import {
   START,
   UPGRADES,
   ZONES,
+  type ContainerId,
   type SkillId,
   type UpgradeId,
 } from '../config/balance';
 import { gardenEffects, type GardenLevels } from './meta';
+import { containerOf, perkEffects, starEffects, type PerkLevels, type StarLevels } from './zoneMechanics';
 
 export type Levels = Record<UpgradeId, number>;
 export type Skills = Record<SkillId, boolean>;
@@ -134,6 +136,12 @@ export type StatInput = {
   garden?: Partial<GardenLevels>;
   /** Koleksiyon setlerinden gelen Işık çarpanı. */
   collectionMultiplier?: number;
+  /** Seçili kap (kavanoz, şişe, fener). */
+  container?: ContainerId;
+  /** Yıldız yükseltmeleri. */
+  starLevels?: Partial<StarLevels>;
+  /** Bu koşuda seçilen yükseltme kartları. */
+  perks?: Partial<PerkLevels>;
 };
 
 function flatThenPct(base: number, level: number, flatLevels: number, step: number, pct: number): number {
@@ -158,6 +166,10 @@ export function computeStats(input: StatInput): Stats {
   let jar = flatThenPct(START.jarCapacity, l.jar, EFFECTS.jarFlatLevels, EFFECTS.jarFlatStep, EFFECTS.jarPctAfter);
   if (sk.deepJar) jar *= SKILL_EFFECTS.deepJarMult;
   jar *= ge.jar;
+  const ct = containerOf(input.container);
+  const se = starEffects(input.starLevels);
+  const pe = perkEffects(input.perks);
+  jar *= ct.capacityMult * se.jar * pe.jar;
 
   let value = flatThenPct(
     START.valuePerFirefly,
@@ -169,23 +181,27 @@ export function computeStats(input: StatInput): Stats {
   if (sk.starlight) value *= SKILL_EFFECTS.starlightMult;
   const gm = globalMultiplier(input.stardustEarned);
 
-  const spirits = l.spirit + (sk.kindredSpirit ? 1 : 0);
+  const spirits = l.spirit + (sk.kindredSpirit ? 1 : 0) + pe.bonusSpirits;
 
   return {
     ringRadius: ring,
     jarCapacity: Math.floor(jar),
-    valuePerFirefly: value * zone.multiplier * gm * (input.purchaseMultiplier ?? 1) * ge.value * (input.collectionMultiplier ?? 1),
+    valuePerFirefly: value * zone.multiplier * gm * (input.purchaseMultiplier ?? 1) * ge.value * (input.collectionMultiplier ?? 1) * ct.valueMult * se.value * pe.value,
     maxFireflies: START.maxFireflies + EFFECTS.crowdFireflies * l.crowd,
     spawnRate: START.spawnRate * (1 + EFFECTS.crowdSpawnPerLevel * l.crowd),
     spirits,
-    spiritSpeed: SPIRIT.speed * (sk.kindredSpirit ? SKILL_EFFECTS.kindredSpiritSpeed : 1) * ge.spirit,
+    spiritSpeed: SPIRIT.speed * (sk.kindredSpirit ? SKILL_EFFECTS.kindredSpiritSpeed : 1) * ge.spirit * pe.spiritSpeed,
     autoEmpty: l.autoEmpty > 0,
     magnetLevel: l.magnet,
-    magnetRange: l.magnet > 0 ? ring * (EFFECTS.magnetRangeBase + EFFECTS.magnetRangePerLevel * l.magnet) : 0,
-    magnetPull: EFFECTS.magnetPullSpeed + EFFECTS.magnetPullPerLevel * l.magnet,
+    // Çekim kartları mıknatısı güçlendirir; mıknatıs alınmamışsa küçük bir çekim verir.
+    magnetRange:
+      l.magnet > 0 || pe.pull > 0
+        ? ring * (EFFECTS.magnetRangeBase + EFFECTS.magnetRangePerLevel * l.magnet + pe.pull)
+        : 0,
+    magnetPull: (EFFECTS.magnetPullSpeed + EFFECTS.magnetPullPerLevel * l.magnet) * (1 + pe.pull),
     globalMultiplier: gm,
     offlineRate: (sk.dreamers ? OFFLINE.rateDreamers : OFFLINE.rate) * ge.offline,
-    offlineCapSeconds: sk.longNight ? OFFLINE.capSecondsLongNight : OFFLINE.capSeconds,
+    offlineCapSeconds: (sk.longNight ? OFFLINE.capSecondsLongNight : OFFLINE.capSeconds) + se.offlineCapBonus,
   };
 }
 

@@ -4,7 +4,13 @@ import { useShallow } from 'zustand/react/shallow';
 
 import {
   COLLECTION,
+  CRYSTAL,
   OFFLINE,
+  PERKS,
+  WORLD_EVENTS,
+  type PerkBranch,
+  type ContainerId,
+  type StarUpgradeId,
   QUESTS,
   RATE_WINDOW_SECONDS,
   SKILLS,
@@ -41,6 +47,17 @@ import {
   type MetaCounters,
 } from './meta';
 import { emptyLevels, newSave, type SaveData, type Settings } from './save';
+import {
+  containerOf,
+  containerUnlocked,
+  emptyPerks,
+  eventLightMultiplier,
+  perkEffects,
+  starCost,
+  starEffects,
+  starMaxed,
+  type WorldEventKind,
+} from './zoneMechanics';
 
 export type OfflineReport = { seconds: number; gain: number };
 
@@ -58,6 +75,10 @@ type Transient = {
   stressFireflies: number;
   /** Son bulunan nadir böcek (bildirim için); `n` her bulunuşta artar. */
   lastRare: { id: string; n: number; duplicate: boolean } | null;
+  /** Dünya olayları ve kristal rezonansı bitiş zamanları (ms). */
+  moonUntil: number;
+  meteorUntil: number;
+  resonanceUntil: number;
 };
 
 export type GameState = SaveData & Transient;
@@ -94,6 +115,16 @@ export type GameActions = {
   claimChest: (now: number) => number;
   /** Kayıttan yükle. */
   hydrate: (data: SaveData) => void;
+  setContainer: (id: ContainerId) => boolean;
+  buyStar: (id: StarUpgradeId) => boolean;
+  /** Boss yenildi: ödül Işık ve jeton. */
+  winBoss: (zoneIndex: number, light: number, tokens: number) => void;
+  markHint: (zoneIndex: number) => void;
+  startWorldEvent: (kind: WorldEventKind, now: number) => void;
+  startResonance: (now: number) => void;
+  /** Açılan en ileri bölgeyi kaydeder (kaplar için). */
+  noteBestZone: (zoneIndex: number) => void;
+  takePerk: (branch: PerkBranch) => void;
   resetProgress: (now: number) => void;
   /** Kaydedilecek veri. */
   snapshot: (now: number) => SaveData;
@@ -104,6 +135,9 @@ const transient = (): Transient => ({
   activeFireflies: 0,
   recentGains: [],
   lastRare: null,
+  moonUntil: 0,
+  meteorUntil: 0,
+  resonanceUntil: 0,
   buyMode: 1,
   dawnCounter: 0,
   stressFireflies: 0,
@@ -112,7 +146,7 @@ const transient = (): Transient => ({
 export const initialGameState = (now = Date.now()): GameState => ({ ...newSave(now), ...transient() });
 
 type StatSource = Pick<GameState, 'levels' | 'skills' | 'stardustEarned' | 'zoneIndex' | 'purchases'> &
-  Partial<Pick<GameState, 'garden' | 'collection'>>;
+  Partial<Pick<GameState, 'garden' | 'collection' | 'container' | 'starLevels' | 'perks'>>;
 
 export function statsOf(s: StatSource): Stats {
   return computeStats({
@@ -123,6 +157,9 @@ export function statsOf(s: StatSource): Stats {
     purchaseMultiplier: purchaseMultiplier(s.purchases),
     garden: s.garden,
     collectionMultiplier: collectionMultiplier(s.collection, s.zoneIndex),
+    container: s.container,
+    starLevels: s.starLevels,
+    perks: s.perks,
   });
 }
 
@@ -148,12 +185,23 @@ export const useGame = create<GameState & GameActions>()((set, get) => ({
   emptyJar: (count, now = Date.now(), r1 = Math.random(), r2 = Math.random()) => {
     const s = get();
     const st = statsOf(s);
-    const gain = jarPayout(count, st.valuePerFirefly, boostMultiplier(now, s.boostUntil));
+    const gain = jarPayout(
+      count,
+      st.valuePerFirefly,
+      boostMultiplier(now, s.boostUntil) * eventLightMultiplier(now, s.moonUntil, s.resonanceUntil),
+    );
     if (gain <= 0) return 0;
     // Kavanoz jetonu, görev sayacı ve nadir böcek.
     let jarTokens = s.jarTokens + tokensForEmpty(count, st.jarCapacity);
     const filled = countsAsFilled(count, st.jarCapacity);
-    const rare = rollRare(s.zoneIndex, count, st.jarCapacity, r1, r2);
+    const rare = rollRare(
+      s.zoneIndex,
+      count,
+      st.jarCapacity,
+      r1,
+      r2,
+      containerOf(s.container).rareMult * perkEffects(s.perks).luck,
+    );
     let collection = s.collection;
     let lastRare = s.lastRare;
     let raresFound = s.raresFound;
@@ -178,6 +226,7 @@ export const useGame = create<GameState & GameActions>()((set, get) => ({
       recentGains,
       jarTokens,
       jarsFilled: s.jarsFilled + (filled ? 1 : 0),
+      runJars: s.runJars + (filled ? 1 : 0),
       collection,
       raresFound,
       lastRare,
@@ -219,9 +268,14 @@ export const useGame = create<GameState & GameActions>()((set, get) => ({
     const dust = stardustForPrestige(s.runLight);
     const levels = emptyLevels();
     if (s.skills.keepAuto) levels.autoEmpty = s.levels.autoEmpty;
+    const head = starEffects(s.starLevels).headStart;
     set({
-      light: 0,
+      light: head,
       runLight: 0,
+      bossDone: [],
+      perks: emptyPerks(),
+      perksTaken: 0,
+      runJars: 0,
       zoneLight: ZONES.map(() => 0),
       zoneIndex: 0,
       levels,
@@ -348,6 +402,52 @@ export const useGame = create<GameState & GameActions>()((set, get) => ({
 
   hydrate: (data) => set({ ...data, ...transient() }),
 
+  setContainer: (id) => {
+    const s = get();
+    if (!containerUnlocked(id, s.bestZone) || s.container === id) return false;
+    set({ container: id });
+    return true;
+  },
+
+  buyStar: (id) => {
+    const s = get();
+    const level = s.starLevels[id];
+    if (starMaxed(id, level)) return false;
+    const cost = starCost(id, level);
+    if (s.stardust < cost) return false;
+    set({ stardust: s.stardust - cost, starLevels: { ...s.starLevels, [id]: level + 1 } });
+    return true;
+  },
+
+  winBoss: (zoneIndex, light, tokens) => {
+    const s = get();
+    if (s.bossDone.includes(zoneIndex)) return;
+    set({ bossDone: [...s.bossDone, zoneIndex], jarTokens: s.jarTokens + tokens });
+    get().grantLight(light);
+  },
+
+  markHint: (zoneIndex) => {
+    const s = get();
+    if (!s.hintsSeen.includes(zoneIndex)) set({ hintsSeen: [...s.hintsSeen, zoneIndex] });
+  },
+
+  startWorldEvent: (kind, now) => {
+    if (kind === 'moon') set({ moonUntil: now + WORLD_EVENTS.moon.durationSec * 1000 });
+    else set({ meteorUntil: now + WORLD_EVENTS.meteor.durationSec * 1000 });
+  },
+
+  startResonance: (now) => set({ resonanceUntil: now + CRYSTAL.resonanceSec * 1000 }),
+
+  takePerk: (branch) => {
+    const s = get();
+    if (s.perks[branch] >= PERKS[branch].maxTier) return;
+    set({ perks: { ...s.perks, [branch]: s.perks[branch] + 1 }, perksTaken: s.perksTaken + 1 });
+  },
+
+  noteBestZone: (zoneIndex) => {
+    if (zoneIndex > get().bestZone) set({ bestZone: zoneIndex });
+  },
+
   resetProgress: (now) => {
     // Ayarlar ve satın alımlar (parası ödenmiş) sıfırlanmaz.
     const { settings, purchases } = get();
@@ -385,6 +485,14 @@ export const useGame = create<GameState & GameActions>()((set, get) => ({
       upgradesBought: s.upgradesBought,
       raresFound: s.raresFound,
       daily: s.daily,
+      bestZone: s.bestZone,
+      container: s.container,
+      bossDone: s.bossDone,
+      starLevels: s.starLevels,
+      hintsSeen: s.hintsSeen,
+      perks: s.perks,
+      perksTaken: s.perksTaken,
+      runJars: s.runJars,
     };
   },
 }));
@@ -414,6 +522,9 @@ export function useStats(): Stats {
       purchases: s.purchases,
       garden: s.garden,
       collection: s.collection,
+      container: s.container,
+      starLevels: s.starLevels,
+      perks: s.perks,
     })),
   );
   return useMemo(() => statsOf(input), [input]);
