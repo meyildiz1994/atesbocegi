@@ -187,8 +187,11 @@ export function countByStatus(s: SimState, status: number): number {
 }
 
 /** Boş bir yuvaya kenardan içeri süzülen yeni bir ateşböceği koyar. -1: yer yok. */
-export function spawnFirefly(s: SimState, width: number, height: number, inside = false, kind: number = KIND.normal): number {
+export function spawnFirefly(s: SimState, width: number, height: number, inside = false, kindArg?: number): number {
   'worklet';
+  // Varsayılan parametre dış değişkene (KIND) bakamaz: worklet'te kapanış gövdede açılır,
+  // UI thread'de `KIND` tanımsız olur ve uygulama çöker. Bu yüzden varsayılan gövdede.
+  const kind = kindArg ?? KIND.normal;
   let slot = -1;
   for (let i = 0; i < s.capacity; i++) {
     if (s.status[i] === STATUS_DEAD) {
