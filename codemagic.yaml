@@ -25,13 +25,8 @@ workflows:
       node: 22
       xcode: latest
       cocoapods: default
-    triggering:
-      events:
-        - push
-      branch_patterns:
-        - pattern: main
-          include: true
-      cancel_previous_builds: true
+    # Otomatik tetikleme kapalı (Emre, 24 Kasım): build'ler ücretli; değişiklikler toplanıp
+    # Codemagic'te elle "Start new build" ile alınır.
     scripts:
       - name: Bağımlılıklar
         script: npm ci
