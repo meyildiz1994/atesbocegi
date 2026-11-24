@@ -13,8 +13,11 @@ workflows:
       app_store_connect: ScaryMob
     environment:
       ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.atesbocegi.game
+        # Game Center yetkisi içeren profil (24 Kasım'da yenilendi). Eski atesbocegi_appstore geçersiz.
+        provisioning_profiles:
+          - atesbocegi_appstore_gc
+        certificates:
+          - scarymob_dist
       vars:
         XCODE_WORKSPACE: Glowjar.xcworkspace
         XCODE_SCHEME: Glowjar
