@@ -1,7 +1,7 @@
 import { useEventListener } from 'expo';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useEffect, useRef, useState } from 'react';
-import { Image, Pressable, StyleSheet, Text } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, useWindowDimensions } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -15,10 +15,15 @@ const LOGO = require('../../assets/ui/logo.png');
 const FAILSAFE_MS = 14_000;
 /** Logonun belirdiği an (sn). */
 const LOGO_AT = 5.5;
+/** Logonun en geniş hali (pt); büyük ekranlarda da ölçülü kalsın. */
+const LOGO_MAX_W = 380;
 
 /** Açılış videosu (Gemini ile üretildi): her açılışta oynar, dokununca geçilir. */
 export function IntroVideo({ onDone }: { onDone: () => void }) {
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  // Yüzde genişlik iOS'ta görselin kendi boyutuna (900 pt) düşüp taşıyordu: boyut sayı olarak verilir.
+  const logoW = Math.min(width * 0.78, LOGO_MAX_W);
   const sound = useGame((s) => s.settings.sound);
   const [logo, setLogo] = useState(false);
   const done = useRef(false);
@@ -59,7 +64,7 @@ export function IntroVideo({ onDone }: { onDone: () => void }) {
       <VideoView player={player} style={StyleSheet.absoluteFill} contentFit="cover" nativeControls={false} />
       {logo ? (
         <Animated.View entering={FadeIn.duration(900)} pointerEvents="none" style={[styles.logoWrap, { top: insets.top + 40 }]}>
-          <Image source={LOGO} style={styles.logo} resizeMode="contain" />
+          <Image source={LOGO} style={{ width: logoW, height: (logoW * 478) / 900 }} resizeMode="contain" />
         </Animated.View>
       ) : null}
       <Pressable style={StyleSheet.absoluteFill} onPress={finish} accessibilityRole="button" accessibilityLabel={t('intro.skip')}>
@@ -72,7 +77,6 @@ export function IntroVideo({ onDone }: { onDone: () => void }) {
 const styles = StyleSheet.create({
   root: { backgroundColor: '#000' },
   logoWrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
-  logo: { width: '86%', aspectRatio: 900 / 478 },
   skip: {
     position: 'absolute',
     alignSelf: 'center',
