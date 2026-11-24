@@ -21,6 +21,7 @@ import { moonRules } from '../../game/moonCycle';
 import { t } from '../../i18n';
 import { playSfx } from '../../services/audio';
 import { hapticJarEmpty, hapticSuccess } from '../../services/haptics';
+import { SoftGlow } from '../SoftGlow';
 
 const CAP = 46;
 const TICK_MS = 200;
@@ -212,7 +213,7 @@ function Mushroom({
         accessibilityState={{ disabled: !ripe }}
         style={[styles.hit, { transform: [{ scale }] }]}
       >
-        {ripe ? <View style={styles.glow} /> : null}
+        {ripe ? <SoftGlow size={CAP * 2.4} color={RIPE} style={{ opacity: 0.6 }} /> : null}
         <View style={[styles.cap, ripe ? styles.capRipe : styles.capGrowing]}>
           <View style={[styles.dot, { left: 10, top: 8 }]} />
           <View style={[styles.dot, { left: 26, top: 5, width: 7, height: 7 }]} />
@@ -228,14 +229,6 @@ const RIPE = '#ff9a4a';
 const styles = StyleSheet.create({
   spot: { position: 'absolute', width: CAP * 2, height: CAP * 2, alignItems: 'center', justifyContent: 'center' },
   hit: { width: CAP + 8, height: CAP + 8, alignItems: 'center', justifyContent: 'center' },
-  glow: {
-    position: 'absolute',
-    width: CAP * 1.5,
-    height: CAP * 1.5,
-    borderRadius: CAP,
-    backgroundColor: RIPE,
-    opacity: 0.28,
-  },
   cap: {
     width: 48,
     height: 26,

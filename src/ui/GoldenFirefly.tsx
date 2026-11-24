@@ -23,6 +23,7 @@ import { showRewarded, useRewardedReady } from '../services/ads';
 import { hapticSuccess } from '../services/haptics';
 import { UI_ICONS } from './icons';
 import { useAdOffer } from './useAdOffer';
+import { SoftGlow } from './SoftGlow';
 
 const CHECK_MS = 1000;
 /** Ekranın üst ve alt kısmında (HUD ve kavanoz) uçmasın. */
@@ -117,7 +118,7 @@ function Flight({
         accessibilityLabel={t('golden.a11y')}
         style={styles.hit}
       >
-        <View style={styles.halo} />
+        <SoftGlow size={S * 3} color={GOLDEN.color} style={{ opacity: 0.5 }} />
         <Image source={UI_ICONS.golden} style={styles.sprite} />
       </Pressable>
     </Animated.View>
@@ -147,7 +148,7 @@ function RewardCard({ reward, onDone }: { reward: Reward; onDone: () => void }) 
     <Animated.View entering={FadeIn} exiting={FadeOut} style={[StyleSheet.absoluteFill, styles.backdrop]}>
       <Animated.View entering={ZoomIn.springify()} style={styles.card}>
         <View style={styles.cardBug}>
-          <View style={styles.halo} />
+          <SoftGlow size={S * 4} color={GOLDEN.color} style={{ opacity: 0.5 }} />
           <Image source={UI_ICONS.golden} style={styles.cardSprite} />
         </View>
         <Text style={styles.title}>{t('golden.title')}</Text>
@@ -176,14 +177,6 @@ const S = GOLDEN.size;
 const styles = StyleSheet.create({
   flight: { position: 'absolute', left: 0, top: 0 },
   hit: { width: S * 2, height: S * 2, alignItems: 'center', justifyContent: 'center' },
-  halo: {
-    position: 'absolute',
-    width: S * 2,
-    height: S * 2,
-    borderRadius: S,
-    backgroundColor: GOLDEN.color,
-    opacity: 0.25,
-  },
   sprite: { width: S * 1.6, height: S * 1.6 },
   cardSprite: { width: S * 2.4, height: S * 2.4 },
   adIcon: { width: 24, height: 24 },

@@ -15,6 +15,7 @@ import { track } from '../services/analytics';
 import { hapticSuccess } from '../services/haptics';
 import { buy, iapAvailable, loadProducts, restore, type ProductKind, type StoreProduct } from '../services/iap';
 import { UI_ICONS } from './icons';
+import { SoftGlow } from './SoftGlow';
 
 type Tab = 'treasure' | 'offers' | 'pass' | 'skins';
 const TABS: Tab[] = ['treasure', 'offers', 'pass', 'skins'];
@@ -167,6 +168,12 @@ function Treasure({ shop }: { shop: Shop }) {
           </Pressable>
         ))}
       </View>
+      {sub === 'tokens' ? (
+        <View style={styles.explain}>
+          <Image source={UI_ICONS.upgrades} style={styles.explainIcon} />
+          <Text style={styles.explainText}>{t('store.tokenExplain')}</Text>
+        </View>
+      ) : null}
       <View style={styles.grid}>
         {sub === 'tokens'
           ? STORE.tokenPacks.map((p, i) => (
@@ -177,6 +184,7 @@ function Treasure({ shop }: { shop: Shop }) {
                 name={t(`store.pack.${p.id}` as I18nKey)}
                 bonus={p.bonus}
                 amount={formatNumber(p.tokens)}
+                sub={t('store.tokenUse')}
                 icon={UI_ICONS.upgrades}
                 art={<Pile icon={UI_ICONS.upgrades} tier={i} />}
               />
@@ -271,7 +279,7 @@ function Pile({ icon, tier, gold }: { icon: number; tier: number; gold?: boolean
   const chest = tier >= 3;
   return (
     <View style={styles.pile}>
-      <View style={[styles.pileGlow, gold && styles.pileGlowGold, { transform: [{ scale: 0.7 + tier * 0.15 }] }]} />
+      <SoftGlow size={150} color={gold ? '#ffd24a' : '#8fd0ff'} style={{ left: -5, top: -25, opacity: gold ? 0.45 : 0.35, transform: [{ scale: 0.7 + tier * 0.15 }] }} />
       {chest ? <Image source={UI_ICONS.chest} style={styles.pileChest} /> : null}
       {pile.map(([x, y, size], i) => (
         <Image
@@ -381,7 +389,7 @@ function OfferCard(props: { color: string; title: string; tag?: string; lines: s
       <View style={styles.packTop} />
       <View style={styles.offerRow}>
         <View style={styles.offerArt}>
-          <View style={[styles.offerGlow, { backgroundColor: props.color }]} />
+          <SoftGlow size={100} color={props.color} style={{ opacity: 0.45 }} />
           <Image source={props.icon} style={styles.offerIcon} />
         </View>
         <View style={styles.offerInfo}>
@@ -550,7 +558,7 @@ const SKIN_ART: Record<SkinId | 'default', number> = {
 function SkinArt({ id, color, locked }: { id: SkinId | null; color: string; locked: boolean }) {
   return (
     <View style={styles.skinWrap}>
-      <View style={[styles.skinGlow, { backgroundColor: color }]} />
+      <SoftGlow size={150} color={color} style={{ opacity: 0.5 }} />
       <Image source={SKIN_ART[id ?? 'default']} style={[styles.skinImg, locked && styles.skinLocked]} resizeMode="contain" />
     </View>
   );
@@ -620,6 +628,9 @@ const styles = StyleSheet.create({
   subTabActive: { backgroundColor: CARD_TOP },
   subTabText: { color: COLORS.hudSubText, fontWeight: '800', fontSize: 14 },
   subTabTextActive: { color: '#fff' },
+  explain: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#0f1c31', borderRadius: 12, padding: 10, marginBottom: 10 },
+  explainIcon: { width: 30, height: 30 },
+  explainText: { flex: 1, color: COLORS.hudText, fontSize: 12, lineHeight: 16 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 },
   pack: {
     width: '48.5%',
@@ -632,22 +643,23 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   packTop: { position: 'absolute', left: 0, right: 0, top: 0, height: '45%', backgroundColor: CARD_TOP, opacity: 0.55 },
-  packName: { color: '#fff', fontSize: 15, fontWeight: '900', textShadowColor: '#000a', textShadowRadius: 3, paddingHorizontal: 34 },
+  packName: { color: '#fff', fontSize: 15, fontWeight: '900', textShadowColor: '#000a', textShadowRadius: 3, paddingHorizontal: 8 },
   packAmountRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
   packAmountIcon: { width: 20, height: 20 },
   packAmount: { color: '#fff', fontSize: 20, fontWeight: '900', textShadowColor: '#000a', textShadowRadius: 3 },
   packSub: { color: '#bcd6ff', fontSize: 11, fontWeight: '700' },
   packArt: { height: 104, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center' },
+  // Rozet adın üstüne binmesin: görselin sağ alt köşesinde, fiyatın hemen üstünde.
   bonus: {
     position: 'absolute',
-    top: 6,
-    left: -2,
+    right: 6,
+    bottom: 48,
     backgroundColor: '#ff5a5a',
     paddingHorizontal: 7,
     paddingVertical: 2,
-    borderTopRightRadius: 8,
-    borderBottomRightRadius: 8,
-    transform: [{ rotate: '-8deg' }],
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ffd0d0',
   },
   bonusText: { color: '#fff', fontWeight: '900', fontSize: 12 },
   priceBar: {
@@ -665,20 +677,8 @@ const styles = StyleSheet.create({
   pile: { width: 140, height: 100 },
   skinArt: { height: 128, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center' },
   skinWrap: { width: 128, height: 128, alignItems: 'center', justifyContent: 'center' },
-  skinGlow: { position: 'absolute', width: 96, height: 96, borderRadius: 48, opacity: 0.22 },
   skinImg: { width: 128, height: 128 },
   skinLocked: { opacity: 0.85 },
-  pileGlow: {
-    position: 'absolute',
-    left: 20,
-    top: 0,
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#8fd0ff',
-    opacity: 0.18,
-  },
-  pileGlowGold: { backgroundColor: '#ffd24a', opacity: 0.22 },
   pileChest: { position: 'absolute', left: 30, top: -6, width: 80, height: 80, opacity: 0.95 },
   offers: { gap: 12 },
   legal: { marginTop: -4, paddingHorizontal: 6, gap: 6 },
@@ -688,7 +688,6 @@ const styles = StyleSheet.create({
   offer: { backgroundColor: CARD, borderRadius: 16, borderWidth: 2, overflow: 'hidden', padding: 12, gap: 10 },
   offerRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   offerArt: { width: 72, height: 72, alignItems: 'center', justifyContent: 'center' },
-  offerGlow: { position: 'absolute', width: 72, height: 72, borderRadius: 36, opacity: 0.22 },
   offerIcon: { width: 60, height: 60 },
   offerInfo: { flex: 1, gap: 2 },
   offerTitle: { fontSize: 18, fontWeight: '900' },

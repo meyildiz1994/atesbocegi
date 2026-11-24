@@ -241,7 +241,7 @@
   "store.tab.offers": "Teklifler",
   "store.tab.pass": "Gece Kartı",
   "store.tab.skins": "Kostümler",
-  "store.sub.tokens": "Jetonlar",
+  "store.sub.tokens": "Kavanoz Jetonu",
   "store.sub.light": "Işık",
   "store.pack.tokens1": "Avuç Jeton",
   "store.pack.tokens2": "Jeton Kesesi",
@@ -338,5 +338,11 @@
   "settings.leaderboards": "Sıralamalar (Game Center)",
   "store.vipLegal": "Glowjar VIP aylık otomatik yenilenen bir aboneliktir ({{price}}/ay). Ödeme Apple Kimliği hesabından alınır. Dönem bitmeden en az 24 saat önce iptal edilmezse abonelik kendiliğinden yenilenir. Aboneliği App Store hesap ayarlarından yönetebilir ve iptal edebilirsin.",
   "settings.terms": "Kullanım Koşulları",
-  "store.bonus": "+%{{n}}"
+  "store.bonus": "+%{{n}}",
+  "fever.byCombo": "{{n}} böceği art arda yakaladın!",
+  "fever.byChance": "Ateşböcekleri toplanıyor!",
+  "combo.toFever": "{{n}} seride Combo Fever",
+  "combo.resting": "Combo Fever dinleniyor",
+  "store.tokenUse": "Bahçe ve Kule için",
+  "store.tokenExplain": "Kavanoz jetonu: her dolu kavanoz 1 tane verir. Gece Bahçesi'ni büyütür, Gece Kulesi'nde ek hak alır. Şafak'ta kaybolmaz."
 }

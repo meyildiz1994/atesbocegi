@@ -18,3 +18,12 @@ export function subscribeCombo(fn: (count: number) => void): () => void {
   listeners.add(fn);
   return () => listeners.delete(fn);
 }
+
+/** Combo Fever bir sonraki kez ne zaman tetiklenebilir (ms); bekleme süresi göstergesi için. */
+let feverReadyAt = 0;
+export function setFeverReadyAt(ms: number): void {
+  feverReadyAt = ms;
+}
+export function feverReady(now = Date.now()): boolean {
+  return now >= feverReadyAt;
+}

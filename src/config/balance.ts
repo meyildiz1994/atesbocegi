@@ -619,7 +619,7 @@ export const FEVER = {
   randomMaxSec: 300,
   cooldownSec: 75,
   /** Toplanma süresi (sn), patlama yarıçapı (px) ve Işık çarpanı. */
-  gatherSec: 1.6,
+  gatherSec: 1.2,
   popRadius: 170,
   multiplier: 10,
 } as const;

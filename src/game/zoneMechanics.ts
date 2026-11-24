@@ -130,8 +130,18 @@ export function bossDue(zoneIndex: number, runLight: number, done: readonly numb
 }
 
 /** 60 sn'de beslenmesi gereken böcek: son yakalama hızına göre. */
-export function bossGoal(catchesPerSec: number): number {
-  return Math.max(BOSS.minGoal, Math.round(catchesPerSec * BOSS.durationSec * BOSS.goalShare));
+/**
+ * Boss hedefi: son 30 sn'deki yakalama hızı × 60 sn × 0,75, çarpanla (Ay Döngüsü) birlikte
+ * okunaklı bir sayıya yuvarlanır (258 değil 250).
+ */
+export function bossGoal(catchesPerSec: number, mult = 1): number {
+  return niceGoal(Math.max(BOSS.minGoal, catchesPerSec * BOSS.durationSec * BOSS.goalShare * mult));
+}
+
+/** Hedefleri yuvarlak gösterir: 100'e kadar 5'in, 1000'e kadar 50'nin, sonra 100'ün katı. */
+export function niceGoal(n: number): number {
+  const step = n < 100 ? 5 : n < 1000 ? 50 : 100;
+  return Math.max(step, Math.round(n / step) * step);
 }
 
 export function bossReward(zoneIndex: number): number {

@@ -241,7 +241,7 @@
   "store.tab.offers": "Offers",
   "store.tab.pass": "Night Pass",
   "store.tab.skins": "Skins",
-  "store.sub.tokens": "Tokens",
+  "store.sub.tokens": "Jar Tokens",
   "store.sub.light": "Light",
   "store.pack.tokens1": "Token Handful",
   "store.pack.tokens2": "Token Pouch",
@@ -338,5 +338,11 @@
   "settings.leaderboards": "Leaderboards (Game Center)",
   "store.vipLegal": "Glowjar VIP is an auto-renewing monthly subscription ({{price}}/month). Payment is charged to your Apple ID account. It renews automatically unless cancelled at least 24 hours before the end of the current period. Manage or cancel it in your App Store account settings.",
   "settings.terms": "Terms of Use",
-  "store.bonus": "+{{n}}%"
+  "store.bonus": "+{{n}}%",
+  "fever.byCombo": "You caught {{n}} in a row!",
+  "fever.byChance": "The fireflies are gathering!",
+  "combo.toFever": "Combo Fever at {{n}}",
+  "combo.resting": "Combo Fever is resting",
+  "store.tokenUse": "For Garden & Tower",
+  "store.tokenExplain": "Jar tokens: every full jar gives one. They grow your Night Garden and buy extra Night Tower tries. Kept through Dawn."
 }

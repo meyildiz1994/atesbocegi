@@ -59,7 +59,7 @@ export function BossEvent() {
       if (s.zoneIndex !== frontier || s.offlineReport || zoneLive.value.towerOn || clock() < retryAt.current) return;
       if (!bossDue(s.zoneIndex, s.runLight, s.bossDone)) return;
       zoneRef.current = s.zoneIndex;
-      setState({ kind: 'offer', goal: Math.round(bossGoal(catchRate()) * moonRules(s.moonCycle).goal), reward: bossReward(s.zoneIndex) * skyEffects(s.sky).bossReward });
+      setState({ kind: 'offer', goal: bossGoal(catchRate(), moonRules(s.moonCycle).goal), reward: bossReward(s.zoneIndex) * skyEffects(s.sky).bossReward });
     }, CHECK_MS);
     return () => clearInterval(id);
   }, [unlocked, state]);
@@ -190,10 +190,8 @@ function GiantFirefly({ size }: { size: number }) {
     p.value = withRepeat(withTiming(1, { duration: 1400, easing: Easing.inOut(Easing.sin) }), -1, true);
   }, [p]);
   const style = useAnimatedStyle(() => ({ transform: [{ translateY: -6 + 12 * p.value }, { scale: 0.96 + 0.08 * p.value }] }));
-  const halo = useAnimatedStyle(() => ({ opacity: 0.25 + 0.25 * p.value }));
   return (
     <Animated.View style={[{ width: size * 1.6, height: size * 1.6, alignItems: 'center', justifyContent: 'center' }, style]}>
-      <Animated.View style={[styles.halo, { width: size * 1.6, height: size * 1.6, borderRadius: size }, halo]} />
       <Image source={UI_ICONS.golden} style={{ width: size, height: size }} />
     </Animated.View>
   );
@@ -225,7 +223,6 @@ const styles = StyleSheet.create({
   buttonText: { color: '#2a1a00', fontWeight: '800', fontSize: 16 },
   secondary: { backgroundColor: 'transparent', borderWidth: 1, borderColor: COLORS.panelBorder },
   secondaryText: { color: COLORS.hudSubText },
-  halo: { position: 'absolute', backgroundColor: GOLD },
   fight: { position: 'absolute', alignSelf: 'center', alignItems: 'center' },
   barRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   bar: { width: 180, height: 12, borderRadius: 6, backgroundColor: '#0a1a1fcc', overflow: 'hidden', borderWidth: 1, borderColor: GOLD },

@@ -3,6 +3,7 @@ import { createSimState, seedFireflies, spawnWindGust, stepSimulation, STATUS_DE
 import {
   bossDue,
   bossGoal,
+  niceGoal,
   chainOrder,
   crystalWeights,
   emptyPerks,
@@ -143,6 +144,11 @@ describe('kristal, boss, yükseltmeler', () => {
     expect(bossDue(1, next * BOSS.appearAt, [])).toBe(true);
     expect(bossDue(1, next, [1])).toBe(false);
     expect(bossGoal(0)).toBe(BOSS.minGoal);
+    // Hedef okunaklı: 258 değil 250, 1234 değil 1200; ay çarpanı yuvarlamadan önce uygulanır.
+    expect(bossGoal(258 / (BOSS.durationSec * BOSS.goalShare))).toBe(250);
+    expect(bossGoal(1234 / (BOSS.durationSec * BOSS.goalShare))).toBe(1200);
+    expect(bossGoal(1, 1.5) % 5).toBe(0);
+    expect(niceGoal(63)).toBe(65);
   });
   it('kart teklifleri iki farklı dal ve büyüyen aralık', () => {
     const c = perkChoices(emptyPerks(), 0.1, 0.9);
