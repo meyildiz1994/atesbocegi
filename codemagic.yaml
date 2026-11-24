@@ -18,10 +18,8 @@ workflows:
       vars:
         XCODE_WORKSPACE: Glowjar.xcworkspace
         XCODE_SCHEME: Glowjar
-        # Test build'lerinde FPS sayacını göster (mağaza sürümünde 0 yapılacak).
-        EXPO_PUBLIC_SHOW_FPS: "1"
-        # Test build'lerinde Google test reklamları (mağaza sürümünde kaldırılacak).
-        EXPO_PUBLIC_ADMOB_TEST: "1"
+        # Mağaza sürümü (24 Kasım): FPS sayacı kapalı, gerçek reklamlar.
+        # Deneme build'i için geçici olarak EXPO_PUBLIC_SHOW_FPS / EXPO_PUBLIC_ADMOB_TEST "1" eklenebilir.
       node: 22
       xcode: latest
       cocoapods: default
