@@ -1,8 +1,9 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown, ZoomIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { APP_CONFIG } from '../config/app';
 import { COLORS, MONETIZATION, NIGHT_PASS, STORE, UI, VIP, ZONES, type SkinId } from '../config/balance';
 import { localDay } from '../game/meta';
 import { starterDiscountActive } from '../game/monetization';
@@ -329,6 +330,19 @@ function Offers({ shop }: { shop: Shop }) {
           )
         }
       />
+      {purchases.vip ? null : (
+        <View style={styles.legal}>
+          <Text style={styles.legalText}>{t('store.vipLegal', { price: shop.price('vip') })}</Text>
+          <View style={styles.legalLinks}>
+            <Text style={styles.legalLink} onPress={() => void Linking.openURL(APP_CONFIG.termsUrl)} accessibilityRole="link">
+              {t('settings.terms')}
+            </Text>
+            <Text style={styles.legalLink} onPress={() => void Linking.openURL(APP_CONFIG.privacyPolicyUrl)} accessibilityRole="link">
+              {t('settings.privacyPolicy')}
+            </Text>
+          </View>
+        </View>
+      )}
       <OfferCard
         color={COLORS.jarFull}
         title={t('store.starter')}
@@ -667,6 +681,10 @@ const styles = StyleSheet.create({
   pileGlowGold: { backgroundColor: '#ffd24a', opacity: 0.22 },
   pileChest: { position: 'absolute', left: 30, top: -6, width: 80, height: 80, opacity: 0.95 },
   offers: { gap: 12 },
+  legal: { marginTop: -4, paddingHorizontal: 6, gap: 6 },
+  legalText: { color: COLORS.hudSubText, fontSize: 11, lineHeight: 15 },
+  legalLinks: { flexDirection: 'row', gap: 18 },
+  legalLink: { color: COLORS.hudText, fontSize: 12, fontWeight: '700', textDecorationLine: 'underline', paddingVertical: 6 },
   offer: { backgroundColor: CARD, borderRadius: 16, borderWidth: 2, overflow: 'hidden', padding: 12, gap: 10 },
   offerRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   offerArt: { width: 72, height: 72, alignItems: 'center', justifyContent: 'center' },

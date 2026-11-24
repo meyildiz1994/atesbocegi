@@ -78,6 +78,7 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
         ) : null}
         {gameCenterAvailable() ? <LinkRow label={t('settings.leaderboards')} onPress={() => void showLeaderboard('light')} /> : null}
         {privacyOptionsRequired() ? <LinkRow label={t('settings.adPrivacy')} onPress={showPrivacyOptions} /> : null}
+        <LinkRow label={t('settings.terms')} onPress={() => Linking.openURL(APP_CONFIG.termsUrl)} />
         {APP_CONFIG.privacyPolicyUrl ? (
           <LinkRow label={t('settings.privacyPolicy')} onPress={() => Linking.openURL(APP_CONFIG.privacyPolicyUrl)} />
         ) : null}
