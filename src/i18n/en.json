@@ -337,5 +337,6 @@
   "tower.rule.wind.desc": "Gusts come often; don't miss the wind fireflies. {{sec}} seconds.",
   "settings.leaderboards": "Leaderboards (Game Center)",
   "store.vipLegal": "Glowjar VIP is an auto-renewing monthly subscription ({{price}}/month). Payment is charged to your Apple ID account. It renews automatically unless cancelled at least 24 hours before the end of the current period. Manage or cancel it in your App Store account settings.",
-  "settings.terms": "Terms of Use"
+  "settings.terms": "Terms of Use",
+  "store.bonus": "+{{n}}%"
 }

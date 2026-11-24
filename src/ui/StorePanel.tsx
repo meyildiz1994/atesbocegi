@@ -224,7 +224,7 @@ function PackCard(props: {
       <View style={styles.packArt}>{props.art}</View>
       {props.bonus > 0 ? (
         <View style={styles.bonus}>
-          <Text style={styles.bonusText}>+%{props.bonus}</Text>
+          <Text style={styles.bonusText}>{t('store.bonus', { n: props.bonus })}</Text>
         </View>
       ) : null}
       <PriceBar label={shop.price(kind)} busy={shop.busy === kind} />
