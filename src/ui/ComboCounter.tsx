@@ -42,7 +42,7 @@ export function ComboCounter() {
 
   const style = useAnimatedStyle(() => ({ opacity: opacity.value, transform: [{ scale: pop.value }] }));
   return (
-    <Animated.View pointerEvents="none" style={[styles.wrap, { top: insets.top + 172 }, style]}>
+    <Animated.View pointerEvents="none" style={[styles.wrap, { top: insets.top + 200 }, style]}>
       <Text style={styles.text}>{unlocked && ready ? `×${count} / ${feverAt}` : `×${count}`}</Text>
       {/* Combo Fever'ın nasıl açıldığı: seri hedefi ya da bekleme. */}
       {unlocked ? <Text style={styles.hint}>{ready ? t('combo.toFever', { n: feverAt }) : t('combo.resting')}</Text> : null}

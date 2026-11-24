@@ -56,7 +56,7 @@ export function MetaPanel({ onClose }: { onClose: () => void }) {
             accessibilityState={{ selected: tab === id }}
           >
             <Image source={TAB_ICONS[id]} style={styles.tabIcon} />
-            <Text style={[styles.tabText, tab === id && styles.tabTextActive]}>{t(`meta.tab.${id}` as I18nKey)}</Text>
+            <Text style={[styles.tabText, tab === id && styles.tabTextActive]} numberOfLines={1} adjustsFontSizeToFit>{t(`meta.tab.${id}` as I18nKey)}</Text>
           </Pressable>
         ))}
       </View>
@@ -271,12 +271,13 @@ const styles = StyleSheet.create({
   },
   tokenIcon: { width: 22, height: 22 },
   tokenText: { color: COLORS.badge, fontWeight: '800', fontSize: 15, fontVariant: ['tabular-nums'] },
-  tabs: { flexDirection: 'row', gap: 8, paddingHorizontal: 14, paddingBottom: 10 },
+  tabs: { flexDirection: 'row', gap: 6, paddingHorizontal: 14, paddingBottom: 10 },
+  // Simge üstte, yazı altta: dar ekranda (iPhone SE) dört sekme yan yana sığsın.
   tab: {
     flex: 1,
     minHeight: UI.minTouch,
-    flexDirection: 'row',
-    gap: 6,
+    paddingVertical: 5,
+    gap: 2,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 12,
@@ -284,8 +285,8 @@ const styles = StyleSheet.create({
     borderColor: COLORS.panelBorder,
   },
   tabActive: { borderColor: COLORS.accent, backgroundColor: COLORS.cardBgAffordable },
-  tabIcon: { width: 26, height: 26 },
-  tabText: { color: COLORS.hudSubText, fontWeight: '700', fontSize: 13 },
+  tabIcon: { width: 24, height: 24 },
+  tabText: { color: COLORS.hudSubText, fontWeight: '700', fontSize: 11 },
   tabTextActive: { color: COLORS.accent },
   list: { paddingHorizontal: 14, paddingBottom: 8, gap: 10 },
   card: {

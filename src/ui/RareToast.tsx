@@ -34,7 +34,7 @@ export function RareToast() {
       entering={ZoomIn.springify()}
       exiting={FadeOut}
       pointerEvents="none"
-      style={[styles.wrap, { top: insets.top + 210 }]}
+      style={[styles.wrap, { top: insets.top + 262 }]}
     >
       <View style={[styles.card, { borderColor: color, shadowColor: color }]}>
         <View style={[styles.orb, { backgroundColor: color, shadowColor: color }]} />
