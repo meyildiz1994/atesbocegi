@@ -6,7 +6,7 @@
 export const APP_CONFIG = {
   /** Apple'ın standart kullanım koşulları (abonelik için zorunlu bağlantı). */
   termsUrl: 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
-  privacyPolicyUrl: process.env.EXPO_PUBLIC_PRIVACY_URL ?? 'https://meyildiz.net/glowjar/privacy.html',
+  privacyPolicyUrl: process.env.EXPO_PUBLIC_PRIVACY_URL ?? 'https://meyildiz.net/games/glowjar/privacy.html',
   /** PostHog proje anahtarı (genel, istemci tarafı) ve sunucusu. Anahtar yoksa olaylar yalnızca cihazda tutulur. */
   posthog: {
     key: process.env.EXPO_PUBLIC_POSTHOG_KEY ?? '',
