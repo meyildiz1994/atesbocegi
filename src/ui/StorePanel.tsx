@@ -34,7 +34,7 @@ type Shop = {
   onBuy: (k: ProductKind) => void;
 };
 
-/** Mağaza: Hazine (jeton ve Işık paketleri), Teklifler, Gece Kartı, Kostümler. */
+/** Mağaza: Hazine (kavanoz ve Işık paketleri), Teklifler, Gece Kartı, Kostümler. */
 export function StorePanel({ onClose }: { onClose: () => void }) {
   const insets = useSafeAreaInsets();
   const [tab, setTab] = useState<Tab>('treasure');
@@ -151,7 +151,7 @@ function fallbackPrice(k: ProductKind): string {
 }
 
 // ---------------------------------------------------------------------------
-// Hazine: jeton ve Işık paketleri, büyüyen yığınlar.
+// Hazine: kavanoz ve Işık paketleri, büyüyen yığınlar.
 
 function Treasure({ shop }: { shop: Shop }) {
   const [sub, setSub] = useState<'tokens' | 'light'>('tokens');
