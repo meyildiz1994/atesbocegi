@@ -336,7 +336,7 @@
   "tower.rule.sparse.desc": "Böcekler seyrek geliyor. {{sec}} saniyede hedef kadar yakala.",
   "tower.rule.wind.desc": "Rüzgâr sık esiyor; rüzgâr böceklerini kaçırma. Süre {{sec}} saniye.",
   "settings.leaderboards": "Sıralamalar (Game Center)",
-  "store.vipLegal": "Glowjar VIP aylık otomatik yenilenen bir aboneliktir ({{price}}/ay). Ödeme Apple Kimliği hesabından alınır. Dönem bitmeden en az 24 saat önce iptal edilmezse abonelik kendiliğinden yenilenir. Aboneliği App Store hesap ayarlarından yönetebilir ve iptal edebilirsin.",
+  "store.vipLegal": "Gece Işığı (VIP) aylık otomatik yenilenen bir aboneliktir ({{price}}/ay). Ödeme Apple Kimliği hesabından alınır. Dönem bitmeden en az 24 saat önce iptal edilmezse abonelik kendiliğinden yenilenir. Aboneliği App Store hesap ayarlarından yönetebilir ve iptal edebilirsin.",
   "settings.terms": "Kullanım Koşulları",
   "store.bonus": "+%{{n}}",
   "fever.byCombo": "{{n}} böceği art arda yakaladın!",
