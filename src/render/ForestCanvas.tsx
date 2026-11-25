@@ -23,7 +23,7 @@ import {
   spawnWindGust,
   type SimState,
 } from '../game/simulation';
-import { emitCatch, emitGust, emitPop, pulseQueue, zoneLive } from '../game/zoneBus';
+import { emitCatch, emitGust, emitPop, pulseQueue, touchLive, zoneLive } from '../game/zoneBus';
 import { skyEffects } from '../game/constellations';
 import { moonRules } from '../game/moonCycle';
 import { containerOf, crystalWeights, fogBand, fogRingScale, windGustIndex } from '../game/zoneMechanics';
@@ -212,6 +212,7 @@ export function ForestCanvas({ onLightGained }: Props) {
     onBegin: (e) => {
       'worklet';
       fingerActive.value = true;
+      touchLive.value = true;
       fingerX.value = e.x;
       fingerY.value = e.y;
       ringVisibility.value = 1;
@@ -224,6 +225,7 @@ export function ForestCanvas({ onLightGained }: Props) {
     onFinalize: () => {
       'worklet';
       fingerActive.value = false;
+      touchLive.value = false;
       ringVisibility.value = withTiming(0, { duration: RING.fadeOutTime * 1000 });
     },
   });

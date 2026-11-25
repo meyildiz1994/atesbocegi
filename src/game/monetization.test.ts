@@ -19,12 +19,12 @@ it('ilk 10 dakikada reklam yok', () => {
   expect(adsAllowed(10 * 60)).toBe(true);
 });
 
-it('geçiş reklamı: 15. dk sonrası, 5 dk arayla, Reklamları Kaldır ile hiç', () => {
+it('geçiş reklamı: 4. dk sonrası, 4 dk arayla, Reklamları Kaldır ile hiç', () => {
   const base = { nowMs: T, playTimeSec: 20 * 60, lastInterstitialAt: 0, removeAds: false };
   expect(canShowInterstitial(base)).toBe(true);
-  expect(canShowInterstitial({ ...base, playTimeSec: 14 * 60 })).toBe(false);
-  expect(canShowInterstitial({ ...base, lastInterstitialAt: T - 4 * MIN })).toBe(false);
-  expect(canShowInterstitial({ ...base, lastInterstitialAt: T - 5 * MIN })).toBe(true);
+  expect(canShowInterstitial({ ...base, playTimeSec: 3 * 60 })).toBe(false);
+  expect(canShowInterstitial({ ...base, lastInterstitialAt: T - 3 * MIN })).toBe(false);
+  expect(canShowInterstitial({ ...base, lastInterstitialAt: T - 4 * MIN })).toBe(true);
   expect(canShowInterstitial({ ...base, removeAds: true })).toBe(false);
 });
 

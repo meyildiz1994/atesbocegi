@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 
+import { MONETIZATION } from '../config/balance';
+
 import { maybeShowInterstitial } from '../services/ads';
 import { track } from '../services/analytics';
 import { setAmbience } from '../services/audio';
 import { hapticSuccess } from '../services/haptics';
 import { unlockedZoneCount } from './economy';
 import { useGame } from './state';
+import { gameplayUnlocked } from './tutorial';
+import { eventBusy, touchLive } from './zoneBus';
 
 /**
  * Oyun olayları: yeni bölge açılınca başarı titreşimi ve analitik; ambiyansı
@@ -39,6 +43,17 @@ export function useGameEvents(): [number | null, () => void] {
         setUnlocked(n - 1);
       }
     });
+  }, []);
+
+  // Zamanlı geçiş reklamı: kurallar izin verince (her 4 dk), oyuncu dokunmuyorken ve olay yokken.
+  useEffect(() => {
+    const id = setInterval(() => {
+      const s = useGame.getState();
+      if (AppState.currentState !== 'active' || !gameplayUnlocked(s.tutorialStep) || s.offlineReport) return;
+      if (touchLive.value || eventBusy()) return;
+      void maybeShowInterstitial('timer');
+    }, MONETIZATION.interstitialCheckMs);
+    return () => clearInterval(id);
   }, []);
 
   const zoneIndex = useGame((s) => s.zoneIndex);

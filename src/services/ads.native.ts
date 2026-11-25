@@ -147,7 +147,7 @@ export function showRewarded(placement: string): Promise<boolean> {
 }
 
 /** Bölge geçişinde çağrılır; kurallar uygunsa geçiş reklamı gösterir. */
-export async function maybeShowInterstitial(): Promise<void> {
+export async function maybeShowInterstitial(placement: 'zone' | 'timer' = 'zone'): Promise<void> {
   const s = useGame.getState();
   const now = Date.now();
   if (!interstitial || !interstitialLoaded) return;
@@ -163,7 +163,7 @@ export async function maybeShowInterstitial(): Promise<void> {
   }
   s.markInterstitial(now);
   interstitialLoaded = false;
-  track('ad_watched', { placement: 'interstitial_zone' });
+  track('ad_watched', { placement: `interstitial_${placement}` });
   await interstitial.show().catch(() => undefined);
 }
 

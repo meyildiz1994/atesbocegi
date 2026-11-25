@@ -19,7 +19,7 @@ import { useGame } from '../../game/state';
 import { skyEffects } from '../../game/constellations';
 import { moonRules } from '../../game/moonCycle';
 import { gameplayUnlocked } from '../../game/tutorial';
-import { catchRate, onCatch, zoneLive } from '../../game/zoneBus';
+import { catchRate, onCatch, setEventBusy, zoneLive } from '../../game/zoneBus';
 import { bossDue, bossGoal, bossReward } from '../../game/zoneMechanics';
 import { t } from '../../i18n';
 import { track } from '../../services/analytics';
@@ -103,6 +103,14 @@ export function BossEvent() {
     const id = setTimeout(() => setState(null), 3200);
     return () => clearTimeout(id);
   }, [state]);
+
+  // Boss teklifi ya da savaşı sürerken zamanlı reklam araya girmesin.
+  const busy = state !== null;
+  useEffect(() => {
+    if (!busy) return;
+    setEventBusy(true);
+    return () => setEventBusy(false);
+  }, [busy]);
 
   // Zone değişirse teklif kapanır.
   const zoneIndex = useGame((s) => s.zoneIndex);

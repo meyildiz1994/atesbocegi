@@ -24,6 +24,18 @@ export const zoneLive = makeMutable({
   towerWind: false,
 });
 
+/** Parmak ekranda mı (UI thread yazar, JS okur): reklam oyuncu dokunurken araya girmesin. */
+export const touchLive = makeMutable(false);
+
+/** Ekranda süren olaylar (boss, kule vb.): sayaç sıfırdan büyükse zamanlı reklam beklemeye alınır. */
+let busyCount = 0;
+export function setEventBusy(on: boolean): void {
+  busyCount = Math.max(0, busyCount + (on ? 1 : -1));
+}
+export function eventBusy(): boolean {
+  return busyCount > 0 || zoneLive.value.towerOn || zoneLive.value.gatherOn;
+}
+
 export function queuePulse(x: number, y: number, r: number): void {
   pulseQueue.modify((q) => {
     'worklet';

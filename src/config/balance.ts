@@ -366,9 +366,11 @@ export const MONETIZATION = {
   /** Bu oyun süresinden (sn) önce hiçbir reklam teklifi/gösterimi yok. */
   noAdsBeforeSec: 10 * 60,
   /** Geçiş reklamı: ilk bu kadar oyun süresinde (sn) yok… */
-  interstitialAfterSec: 15 * 60,
-  /** …ve en fazla bu sıklıkta (sn), sadece bölge geçişinde. */
-  interstitialMinGapSec: 5 * 60,
+  interstitialAfterSec: 4 * 60,
+  /** …sonra her bu kadar sürede (sn) bir; oyuncu dokunmuyorken ve bir olay sürmüyorken gösterilir (Emre, 25 Kasım). */
+  interstitialMinGapSec: 4 * 60,
+  /** Zamanlı geçiş reklamı için kontrol aralığı (ms). */
+  interstitialCheckMs: 5000,
   /** Ödüllü "×2 Işık" süresi (sn) ve çarpanı. */
   boostSeconds: 120,
   boostMultiplier: 2,

@@ -14,7 +14,7 @@ export async function showRewarded(_placement: string): Promise<boolean> {
   return useGame.getState().purchases.removeAds;
 }
 
-export async function maybeShowInterstitial(): Promise<void> {}
+export async function maybeShowInterstitial(_placement: 'zone' | 'timer' = 'zone'): Promise<void> {}
 
 export function privacyOptionsRequired(): boolean {
   return false;
