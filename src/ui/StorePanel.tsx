@@ -558,7 +558,7 @@ const SKIN_ART: Record<SkinId | 'default', number> = {
 function SkinArt({ id, color, locked }: { id: SkinId | null; color: string; locked: boolean }) {
   return (
     <View style={styles.skinWrap}>
-      <SoftGlow size={150} color={color} style={{ opacity: 0.5 }} />
+      <SoftGlow size={170} color={color} style={{ opacity: 0.75 }} />
       <Image source={SKIN_ART[id ?? 'default']} style={[styles.skinImg, locked && styles.skinLocked]} resizeMode="contain" />
     </View>
   );
@@ -678,7 +678,7 @@ const styles = StyleSheet.create({
   skinArt: { height: 128, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center' },
   skinWrap: { width: 128, height: 128, alignItems: 'center', justifyContent: 'center' },
   skinImg: { width: 128, height: 128 },
-  skinLocked: { opacity: 0.85 },
+  skinLocked: { opacity: 1 },
   pileChest: { position: 'absolute', left: 30, top: -6, width: 80, height: 80, opacity: 0.95 },
   offers: { gap: 12 },
   legal: { marginTop: -4, paddingHorizontal: 6, gap: 6 },
