@@ -18,6 +18,7 @@ import { gameplayUnlocked } from '../../game/tutorial';
 import { zoneLive } from '../../game/zoneBus';
 import { nextWorldEventAt, pickWorldEvent, type WorldEventKind } from '../../game/zoneMechanics';
 import { t } from '../../i18n';
+import { SoftGlow } from '../SoftGlow';
 import { track } from '../../services/analytics';
 import { hapticSuccess } from '../../services/haptics';
 
@@ -67,16 +68,18 @@ export function WorldEvents() {
   );
 }
 
+const HALO = 300;
+
 function Moon() {
   const { width } = useWindowDimensions();
   const p = useSharedValue(0);
   useEffect(() => {
     p.value = withRepeat(withTiming(1, { duration: 3000, easing: Easing.inOut(Easing.sin) }), -1, true);
   }, [p]);
-  const halo = useAnimatedStyle(() => ({ opacity: 0.18 + 0.12 * p.value, transform: [{ scale: 1 + 0.05 * p.value }] }));
+  const halo = useAnimatedStyle(() => ({ opacity: 0.4 + 0.2 * p.value, transform: [{ scale: 1 + 0.05 * p.value }] }));
   return (
     <Animated.View entering={FadeIn.duration(1500)} exiting={FadeOut.duration(1500)} style={[styles.moonWrap, { left: width - 150 }]}>
-      <Animated.View style={[styles.moonHalo, halo]} />
+      <SoftGlow animated size={HALO} color={MOON} style={[{ left: (120 - HALO) / 2, top: (120 - HALO) / 2 }, halo]} />
       <View style={styles.moon} />
     </Animated.View>
   );
@@ -126,7 +129,6 @@ const styles = StyleSheet.create({
   moonText: { color: MOON },
   left: { color: COLORS.hudSubText, fontSize: 12, fontWeight: '700' },
   moonWrap: { position: 'absolute', top: 150, width: 120, height: 120, alignItems: 'center', justifyContent: 'center' },
-  moonHalo: { position: 'absolute', width: 220, height: 220, borderRadius: 110, backgroundColor: MOON },
   moon: { width: 74, height: 74, borderRadius: 37, backgroundColor: MOON, opacity: 0.92 },
   meteor: {
     position: 'absolute',

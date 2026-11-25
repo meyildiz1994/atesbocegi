@@ -182,9 +182,10 @@ function Mushroom({
       ),
     );
   }, [ripe, ripeAt, ring]);
+  // Çizgi halka yerine yumuşak bir ışık: dışarıdan mantara doğru toplanıp parlaklaşır.
   const ringStyle = useAnimatedStyle(() => ({
-    opacity: ripe ? 0.35 + 0.65 * ring.value : 0,
-    transform: [{ scale: 2.1 - 1.1 * ring.value }],
+    opacity: ripe ? 0.15 + 0.6 * ring.value : 0,
+    transform: [{ scale: 1.9 - 1.1 * ring.value }],
   }));
 
   // Patlama halkası.
@@ -195,15 +196,15 @@ function Mushroom({
     boom.value = withTiming(1, { duration: 650, easing: Easing.out(Easing.cubic) });
   }, [burstN, boom]);
   const boomStyle = useAnimatedStyle(() => ({
-    opacity: boom.value >= 1 ? 0 : 1 - boom.value,
-    transform: [{ scale: 0.6 + 3.4 * boom.value }],
+    opacity: boom.value >= 1 ? 0 : 0.9 * (1 - boom.value),
+    transform: [{ scale: 0.5 + 1.8 * boom.value }],
   }));
 
   const scale = 0.55 + 0.45 * growth;
   return (
     <View pointerEvents="box-none" style={[styles.spot, { left: x - CAP, top: y - CAP }]}>
-      <Animated.View pointerEvents="none" style={[styles.boom, boomStyle]} />
-      <Animated.View pointerEvents="none" style={[styles.ring, ringStyle]} />
+      <SoftGlow animated size={CAP * 2} color={RIPE} style={boomStyle} />
+      <SoftGlow animated size={CAP * 2} color="#ffe2a8" style={ringStyle} />
       <Pressable
         onPress={onPress}
         disabled={!ripe}
@@ -248,22 +249,6 @@ const styles = StyleSheet.create({
   dot: { position: 'absolute', width: 9, height: 9, borderRadius: 5, backgroundColor: '#fff3d6', opacity: 0.85 },
   stem: { width: 16, height: 16, borderBottomLeftRadius: 6, borderBottomRightRadius: 6, backgroundColor: '#c9b49a', opacity: 0.7 },
   stemRipe: { backgroundColor: '#fff0d0', opacity: 1 },
-  ring: {
-    position: 'absolute',
-    width: CAP,
-    height: CAP,
-    borderRadius: CAP / 2,
-    borderWidth: 2.5,
-    borderColor: '#ffe2a8',
-  },
-  boom: {
-    position: 'absolute',
-    width: CAP,
-    height: CAP,
-    borderRadius: CAP / 2,
-    borderWidth: 6,
-    borderColor: RIPE,
-  },
   label: {
     position: 'absolute',
     width: 220,
